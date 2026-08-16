@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VCLevel. Ferramentas de gestao financeira em saude</title>
+<meta name="description" content="Sete ferramentas de gestao financeira para clinicas privadas. Todo o processamento acontece neste browser.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231f4b6e'/%3E%3Cpath d='M7 9h4l5 12 5-12h4L18 25h-4z' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="web/tokens.css">
+<link rel="stylesheet" href="web/app.css">
+</head>
+<body>
+<div class="disposicao">
+  <nav class="lateral">
+    <div class="marca">VCLevel<span>Gestao financeira em saude</span></div>
+
+    <div class="menu">
+      <div class="menu-titulo">Dados</div>
+      <a href="#dados" data-rota="dados"><span class="codigo">1</span>Carregar SAF-T</a>
+      <a href="#perfil" data-rota="perfil"><span class="codigo">2</span>Perfil de cliente</a>
+    </div>
+
+    <div class="menu">
+      <div class="menu-titulo">Ferramentas</div>
+      <a href="#f1" data-rota="f1"><span class="codigo">F1</span>Painel mensal</a>
+      <a href="#f2" data-rota="f2"><span class="codigo">F2</span>Convencoes</a>
+      <a href="#f3" data-rota="f3"><span class="codigo">F3</span>Prontidao para transacao</a>
+      <a href="#f4" data-rota="f4"><span class="codigo">F4</span>Barometro</a>
+      <a href="#f5" data-rota="f5"><span class="codigo">F5</span>Planos de tratamento</a>
+      <a href="#f6" data-rota="f6"><span class="codigo">F6</span>Equipamento</a>
+      <a href="#f7" data-rota="f7"><span class="codigo">F7</span>Remuneracao</a>
+    </div>
+
+    <div class="menu">
+      <div class="menu-titulo">Transversal</div>
+      <a href="#privacidade" data-rota="privacidade"><span class="codigo">P</span>Arquitetura de dados</a>
+      <a href="#pressupostos" data-rota="pressupostos"><span class="codigo">A</span>Pressupostos</a>
+    </div>
+
+    <div class="estado-dados" id="estado-dados">
+      <strong>Sem dados carregados.</strong>
+      Nada foi lido e nada sai deste browser.
+    </div>
+  </nav>
+
+  <main class="conteudo">
+
+    <!-- Dados -->
+    <section class="seccao" id="seccao-dados">
+      <header class="cabecalho-pagina">
+        <h1>Carregar SAF-T</h1>
+        <p class="funcao">O ficheiro e lido dentro deste browser. Os identificadores de paciente sao
+        substituidos por um pseudonimo com chave aleatoria gerada aqui, que nunca e guardada nem
+        transmitida. Nenhuma linha de faturacao sai desta pagina.</p>
+      </header>
+
+      <div class="zona-ficheiro" id="zona-ficheiro">
+        <p><strong>Arrasta o ficheiro SAF-T para aqui</strong> ou escolhe-o abaixo.</p>
+        <input type="file" id="ficheiro-saft" accept=".xml,text/xml" aria-label="Ficheiro SAF-T">
+      </div>
+
+      <div id="resumo-saft"></div>
+    </section>
+
+    <!-- Perfil -->
+    <section class="seccao" id="seccao-perfil">
+      <header class="cabecalho-pagina">
+        <h1>Perfil de cliente</h1>
+        <p class="funcao">Preenchido uma vez, consumido pelas sete ferramentas. E isto que torna o
+        retainer viavel: o que se pede todos os meses reduz-se a SAF-T, agenda e saldo bancario.
+        O perfil fica guardado neste browser. Nao contem dados de pacientes.</p>
+      </header>
+      <div id="editor-perfil"></div>
+    </section>
+
+    <!-- Ferramentas -->
+    <section class="seccao" id="seccao-f1">
+      <header class="cabecalho-pagina">
+        <h1>F1. Painel mensal do CFO Clinico</h1>
+        <p class="funcao">Metrica primaria sempre por dia util clinico e por hora-gabinete disponivel.
+        O mes anterior aparece como informacao e nunca dispara alerta. Maximo de tres alertas,
+        ordenados por impacto em euros.</p>
+      </header>
+      <div id="controlo-f1"></div>
+      <div id="saida-f1"></div>
+    </section>
+
+    <section class="seccao" id="seccao-f2">
+      <header class="cabecalho-pagina">
+        <h1>F2. Simulador de convencoes</h1>
+        <p class="funcao">A unidade de decisao e a hora-gabinete, nao o ato. A resposta depende da
+        ocupacao e inverte-se: a mesma convencao e boa com gabinetes vazios e ma com a clinica cheia.</p>
+      </header>
+      <div id="controlo-f2"></div>
+      <div id="saida-f2"></div>
+    </section>
+
+    <section class="seccao" id="seccao-f3">
+      <header class="cabecalho-pagina">
+        <h1>F3. Prontidao para transacao</h1>
+        <p class="funcao">Nao e uma avaliacao. Os cinco testes de diligencia correm antes de se falar
+        de valor, e nenhum numero sai apresentado como preco.</p>
+      </header>
+      <div id="controlo-f3"></div>
+      <div id="saida-f3"></div>
+    </section>
+
+    <section class="seccao" id="seccao-f4">
+      <header class="cabecalho-pagina">
+        <h1>F4. Barometro de clinicas privadas</h1>
+        <p class="funcao">Os indicadores sao calculados a partir do teu SAF-T com a nossa formula, nao
+        perguntados. Recebes o teu percentil no momento. Para o barometro sobem apenas agregados,
+        e so com consentimento expresso.</p>
+      </header>
+      <div id="controlo-f4"></div>
+      <div id="saida-f4"></div>
+    </section>
+
+    <section class="seccao" id="seccao-f5">
+      <header class="cabecalho-pagina">
+        <h1>F5. Funil de planos de tratamento</h1>
+        <p class="funcao">Primeiro a auditoria de completude do registo. Uma taxa de aceitacao
+        calculada sobre registo incompleto mede disciplina de registo, nao conversao.</p>
+      </header>
+      <div id="controlo-f5"></div>
+      <div id="saida-f5"></div>
+    </section>
+
+    <section class="seccao" id="seccao-f6">
+      <header class="cabecalho-pagina">
+        <h1>F6. Investimento em equipamento</h1>
+        <p class="funcao">A primeira pergunta e quantos atos por mes sao precisos para o equilibrio, e
+        se a procura observada chega la. Se nao chegar, a analise financeira acaba ai.</p>
+      </header>
+      <div id="controlo-f6"></div>
+      <div id="saida-f6"></div>
+    </section>
+
+    <section class="seccao" id="seccao-f7">
+      <header class="cabecalho-pagina">
+        <h1>F7. Remuneracao de socios e prestadores</h1>
+        <p class="funcao">Duas vistas lado a lado: custo efetivo por hora-gabinete para a clinica e
+        rendimento liquido para o profissional. A contribuicao de entidade contratante entra no custo
+        por hora, nao em rodape.</p>
+      </header>
+      <div id="controlo-f7"></div>
+      <div id="saida-f7"></div>
+    </section>
+
+    <!-- Transversais -->
+    <section class="seccao" id="seccao-privacidade">
+      <header class="cabecalho-pagina">
+        <h1>Arquitetura de dados</h1>
+        <p class="funcao">Esta pagina existe porque a protecao de dados e a objecao numero um de
+        qualquer diretor clinico, e responde-se com arquitetura, nao com um aviso legal no rodape.</p>
+      </header>
+      <div id="saida-privacidade"></div>
+    </section>
+
+    <section class="seccao" id="seccao-pressupostos">
+      <header class="cabecalho-pagina">
+        <h1>Pressupostos</h1>
+        <p class="funcao">Tudo o que ainda nao esta confirmado, com o identificador que aparece no
+        codigo, nos testes e no ecra. Alterar um pressuposto e editar um unico ficheiro.</p>
+      </header>
+      <div id="saida-pressupostos"></div>
+    </section>
+
+  </main>
+</div>
+
+<script type="module" src="web/app.js"></script>
+</body>
+</html>

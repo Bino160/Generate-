@@ -1,0 +1,104 @@
+/*
+ * Tokens partilhados. Ver qa/07-ui-ux.md.
+ *
+ * A escala de severidade nao usa verde, amarelo e vermelho como semaforo de
+ * metrica, porque a especificacao rejeita o semaforo. Usa-se para gravidade de
+ * alerta, que e coisa diferente: ha um numero de euros por tras.
+ */
+
+:root {
+  color-scheme: light dark;
+
+  --fundo: #fbfaf8;
+  --fundo-elevado: #ffffff;
+  --fundo-suave: #f2f0ec;
+  --texto: #1a1815;
+  --texto-suave: #5c574f;
+  --texto-tenue: #6e675e;
+  --linha: #e2ddd4;
+  --linha-forte: #cbc4b8;
+
+  --acento: #1f4b6e;
+  --acento-suave: #e8f0f6;
+
+  --bom: #2e6b45;
+  --bom-fundo: #e9f3ec;
+  --atencao: #8a5a12;
+  --atencao-fundo: #fbf1de;
+  --mau: #9a3324;
+  --mau-fundo: #fbeae7;
+  --neutro: #55504a;
+  --neutro-fundo: #f2f0ec;
+
+  --raio: 6px;
+  --raio-pequeno: 4px;
+  --sombra: 0 1px 2px rgba(26, 24, 21, 0.06), 0 4px 12px rgba(26, 24, 21, 0.04);
+
+  --fonte: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --fonte-numero: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  --escala-0: 0.75rem;
+  --escala-1: 0.8125rem;
+  --escala-2: 0.9375rem;
+  --escala-3: 1.0625rem;
+  --escala-4: 1.375rem;
+  --escala-5: 1.875rem;
+
+  --espaco-1: 0.25rem;
+  --espaco-2: 0.5rem;
+  --espaco-3: 0.75rem;
+  --espaco-4: 1rem;
+  --espaco-5: 1.5rem;
+  --espaco-6: 2rem;
+  --espaco-7: 3rem;
+
+  --largura-texto: 68ch;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema="claro"]) {
+    --fundo: #16161a;
+    --fundo-elevado: #1e1e23;
+    --fundo-suave: #26262c;
+    --texto: #ecebe8;
+    --texto-suave: #a8a49d;
+    --texto-tenue: #8f8b84;
+    --linha: #33333a;
+    --linha-forte: #4a4a52;
+
+    --acento: #7fb3d9;
+    --acento-suave: #1c2b36;
+
+    --bom: #7cc79b;
+    --bom-fundo: #17281e;
+    --atencao: #e0b45f;
+    --atencao-fundo: #2c2415;
+    --mau: #e89184;
+    --mau-fundo: #2e1c19;
+    --neutro: #a8a49d;
+    --neutro-fundo: #26262c;
+
+    --sombra: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+}
+
+:root[data-tema="escuro"] {
+  --fundo: #16161a;
+  --fundo-elevado: #1e1e23;
+  --fundo-suave: #26262c;
+  --texto: #ecebe8;
+  --texto-suave: #a8a49d;
+  --texto-tenue: #8f8b84;
+  --linha: #33333a;
+  --linha-forte: #4a4a52;
+  --acento: #7fb3d9;
+  --acento-suave: #1c2b36;
+  --bom: #7cc79b;
+  --bom-fundo: #17281e;
+  --atencao: #e0b45f;
+  --atencao-fundo: #2c2415;
+  --mau: #e89184;
+  --mau-fundo: #2e1c19;
+  --neutro: #a8a49d;
+  --neutro-fundo: #26262c;
+}

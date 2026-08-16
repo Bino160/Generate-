@@ -1,0 +1,11 @@
+node_modules/
+.DS_Store
+*.log
+
+# Dados reais de cliente. Nunca entram no repositorio.
+dados/*
+!dados/README-DADOS.md
+*.saft.xml
+*_SAFT_*.xml
+perfil-*.json
+!perfil-exemplo.json
