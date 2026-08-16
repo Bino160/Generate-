@@ -198,7 +198,19 @@ export async function analisaSaft(texto, { anonimizador } = {}) {
       // Documento de venda
       if (doc && !linha) {
         switch (nome) {
-          case 'InvoiceNo': doc.numero = conteudo; break;
+          case 'InvoiceNo':
+            doc.numero = conteudo;
+            // A serie e tudo o que vem antes da barra. Em muitas clinicas ha uma
+            // serie por profissional ou por posto, e e a unica pista de autoria
+            // que o SAF-T deixa. Ver a nota sobre atribuicao em analise.js.
+            doc.serie = conteudo.includes('/') ? conteudo.slice(0, conteudo.lastIndexOf('/')).trim() : null;
+            break;
+          case 'SourceID':
+            // Ha dois SourceID: um dentro de DocumentStatus e outro no proprio
+            // documento. Este e o do documento, e identifica quem o emitiu no
+            // software de faturacao, que nao e necessariamente quem fez o ato.
+            if (!dentro('DocumentStatus')) doc.origemId = conteudo;
+            break;
           case 'ATCUD': doc.atcud = conteudo; break;
           case 'InvoiceStatus': doc.estado = conteudo; break;
           case 'InvoiceDate': doc.data = conteudo; break;

@@ -27,6 +27,7 @@ Estados: `CORRIGIDO`, `DECLARADO` (a limitação existe e a ferramenta di-lo),
 | F-013 | Médio | O leitor carrega o ficheiro inteiro como string. Um SAF-T de 200 MB ocupa cerca de 400 MB em memória antes de qualquer processamento | ACEITE para a dimensão de clínica alvo. Registado como limite conhecido |
 | F-014 | Alto | O empacotador cortava o pacote a meio. O código-fonte tem `caminho = '$'` e, numa cadeia de substituição, `$'` significa o resto do texto depois da correspondência | CORRIGIDO. As substituições usam função, e o empacotador passou a compilar o resultado antes de o escrever |
 | F-015 | Alto | A expressão regular global era partilhada e a função de leitura é recursiva: o módulo filho reiniciava o lastIndex e o módulo pai voltava ao princípio, duplicando os imports | CORRIGIDO. As correspondências são recolhidas antes de recorrer |
+| F-017 | Alto | O parser descartava a série do documento e o `SourceID`, que são as duas únicas pistas de autoria que o SAF-T deixa. Sem elas não havia forma nenhuma de aproximar produção por profissional | CORRIGIDO. Ambos guardados, com a série derivada do número do documento |
 | F-016 | Médio | O perfil dependia de localStorage existir. Numa página incorporada ou em navegação privada, o acesso lança em vez de devolver nulo | CORRIGIDO. Passa a viver em memória e a interface di-lo |
 
 ---
@@ -114,6 +115,10 @@ Estados: `CORRIGIDO`, `DECLARADO` (a limitação existe e a ferramenta di-lo),
 | U-012 | Alto | Escrever num campo e clicar logo a seguir perdia o clique. O evento change de um campo de texto dispara ao sair do campo, ou seja no instante em que o cursor já vai a caminho do botão, e o redesenho total arrancava esse botão | CORRIGIDO. Redesenho só em mudança de estrutura, e refresco das secções dependentes adiado para nunca cair entre carregar e largar o botão |
 | U-013 | Médio | O refresco das secções dependentes reintroduziu o mesmo erro um andar acima: editar um ato reconstruía a secção das convenções, que também tem botões | CORRIGIDO. O refresco espera 200 ms após a última alteração e qualquer toque no rato empurra-o mais 400 ms |
 | U-014 | Baixo | A barra lateral imprimia a palavra null, porque replaceChildren converte null em texto | CORRIGIDO |
+| U-015 | Alto | Não havia forma de ver os serviços mais vendidos nem os maiores clientes, que são as duas primeiras perguntas de qualquer clínica ao ver um SAF-T carregado | CORRIGIDO. Página Raio-X, com as duas ordenações e a terceira que interessa, por margem por hora |
+| U-016 | Crítico | Produção por profissional não era possível e não estava dito que não era possível. O SAF-T não tem campo de profissional em nenhuma versão do formato | CORRIGIDO. Atribuição por regra declarada sobre três pistas indiretas, com a fiabilidade de cada uma escrita, a fração coberta sempre visível, e as pistas por mapear listadas a partir do próprio ficheiro |
+| U-017 | Alto | Faltas, desmarcações e realizadas não estão no SAF-T e a ausência lia-se como lacuna da ferramenta em vez de propriedade do formato | CORRIGIDO. A página responde à pergunta por escrito: uma falta é a ausência de uma fatura, e lista os seis campos que a agenda tem de trazer e o que passa a ser medível |
+| U-018 | Médio | Documentos anulados e notas de crédito podiam ser confundidos com desmarcações | CORRIGIDO. Bloco próprio que mede as duas taxas e diz, na mesma página, que não são a mesma coisa |
 
 ---
 

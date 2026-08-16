@@ -34,6 +34,11 @@ import { funilPlanos } from '../src/ferramentas/f5-funil-planos.js';
 import { investimentoEquipamento } from '../src/ferramentas/f6-equipamento.js';
 import { remuneracao } from '../src/ferramentas/f7-remuneracao.js';
 
+import {
+  servicosVendidos, pacientesPorReceita, entidadesPorReceita,
+  criaAtribuicao, producaoPorProfissional, atosDesfeitos, porqueNaoHaFaltas,
+  PISTAS_DE_AUTORIA,
+} from '../src/core/analise.js';
 import { renderResultado, el } from './render.js';
 import { editorDeLista, seletorDeDias, grelhaDeOcupacao } from './editores.js';
 
@@ -85,7 +90,7 @@ function apagaPerfilGuardado() {
 // Encaminhamento
 // ---------------------------------------------------------------------------
 
-const ROTAS = ['dados', 'perfil', 'f1', 'f2', 'f3', 'f4', 'f5', 'f6', 'f7', 'privacidade', 'pressupostos'];
+const ROTAS = ['dados', 'perfil', 'raio-x', 'f1', 'f2', 'f3', 'f4', 'f5', 'f6', 'f7', 'privacidade', 'pressupostos'];
 
 function navega() {
   const rota = (location.hash.replace('#', '') || 'dados');
@@ -261,6 +266,7 @@ function desenhaPerfil() {
   perfil.precario ??= [];
   perfil.convencoes ??= [];
   perfil.correspondenciaEntidades ??= [];
+  perfil.atribuicaoProfissionais ??= [];
   perfil.agenda ??= { ocupacaoPorFaixa: {} };
 
   const guarda = ({ redesenhar = false, dependentes = [] } = {}) => {
@@ -277,6 +283,7 @@ function desenhaPerfil() {
     precario: () => seccaoPrecario(perfil, comDependentes(guarda, ['convencoes'])),
     convencoes: () => seccaoConvencoes(perfil, guarda),
     entidades: () => seccaoEntidades(perfil, guarda),
+    profissionais: () => seccaoProfissionais(perfil, guarda),
     estado: () => seccaoEstado(perfil),
   };
 
@@ -853,6 +860,7 @@ function contextoDoPeriodo() {
 function desenha(rota) {
   switch (rota) {
     case 'perfil': desenhaPerfil(); break;
+    case 'raio-x': desenhaRaioX(); break;
     case 'f1': desenhaF1(); break;
     case 'f2': desenhaF2(); break;
     case 'f3': desenhaF3(); break;
@@ -1243,4 +1251,293 @@ function componentesDeRutura(serie, mesAlvo) {
     'receita-por-dia-util': componentes,
     'ticket-medio': componentes,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Raio-X do SAF-T
+// ---------------------------------------------------------------------------
+
+/** Tabela simples a partir de linhas e de uma definicao de colunas. */
+function tabela(colunas, linhas, { vazio = 'Sem linhas.' } = {}) {
+  if (linhas.length === 0) return el('p', { classe: 'vazio-lista', texto: vazio });
+  return el('div', { classe: 'rolavel' }, el('table', {}, [
+    el('thead', {}, el('tr', {}, colunas.map((c) => el('th', { classe: c.numero ? 'numero' : '' }, c.titulo)))),
+    el('tbody', {}, linhas.map((l, i) => el('tr', {}, colunas.map((c) => {
+      const v = c.valor(l, i);
+      return el('td', { classe: c.numero ? 'numero' : '' },
+        v == null ? el('span', { classe: 'nulo', texto: 'n/d' }) : String(v));
+    })))),
+  ]));
+}
+
+const pct = (v, casas = 0) => (v == null ? null : formataPercentagem(v, casas));
+const eur = (v) => (v == null ? null : formata(v));
+
+function desenhaRaioX() {
+  if (!estado.saft) return exigeSaft('saida-raio-x');
+  const destino = document.getElementById('saida-raio-x');
+  const perfil = estado.perfil;
+
+  const catalogo = new Map((perfil.precario ?? []).map((a) => [a.codigo, a]));
+  const servicos = servicosVendidos(estado.saft, { precario: catalogo });
+  const pacientes = pacientesPorReceita(estado.saft);
+  const entidades = entidadesPorReceita(estado.saft, criaCorrespondencia(perfil));
+  const profissionais = producaoPorProfissional(estado.saft, criaAtribuicao(perfil.atribuicaoProfissionais ?? []));
+  const desfeitos = atosDesfeitos(estado.saft);
+  const faltas = porqueNaoHaFaltas();
+
+  destino.replaceChildren(
+    blocoServicos(servicos),
+    blocoPacientes(pacientes),
+    blocoEntidades(entidades),
+    blocoProfissionais(profissionais),
+    blocoDesfeitos(desfeitos),
+    blocoFaltas(faltas),
+  );
+}
+
+function blocoServicos(s) {
+  const colunas = [
+    { titulo: 'Ato', valor: (l) => l.descricao },
+    { titulo: 'Atos', numero: true, valor: (l) => l.atos },
+    { titulo: 'Receita', numero: true, valor: (l) => eur(l.receitaCent) },
+    { titulo: 'Peso', numero: true, valor: (l) => pct(l.pesoNaReceita) },
+    { titulo: 'Preco medio', numero: true, valor: (l) => eur(l.precoMedioCent) },
+    { titulo: 'Margem por hora', numero: true, valor: (l) => (l.margemPorHoraCent == null ? null : `${formata(l.margemPorHoraCent)}/h`) },
+  ];
+
+  const corpo = el('div', { classe: 'corpo' }, [
+    el('p', { classe: 'nota', texto: `${s.nDistintos} atos distintos no ficheiro. As notas de credito abatem na receita e na contagem: um ato faturado e depois creditado nao foi vendido.` }),
+    el('h4', { texto: 'Dez maiores por receita' }),
+    tabela(colunas, s.porReceita),
+    el('h4', { texto: 'Dez maiores por volume' }),
+    tabela(colunas, s.porVolume),
+  ]);
+
+  if (s.porMargemHora.length > 0) {
+    corpo.append(
+      el('h4', { texto: 'Dez maiores por margem por hora-gabinete' }),
+      el('p', { classe: 'nota', texto: 'E esta a ordem que decide, e quase nunca coincide com a de cima. Só aparece para os atos que tem duracao na tabela de precos.' }),
+      tabela(colunas, s.porMargemHora),
+    );
+  }
+
+  if (s.codigosSemPrecario.length > 0) {
+    corpo.append(el('div', { classe: 'lacuna', 'data-g': 'DEGRADA' }, [
+      el('div', { classe: 'gravidade', texto: 'degrada' }),
+      el('div', {}, [
+        el('div', { texto: `${s.codigosSemPrecario.length} codigos do SAF-T nao estao na tabela de precos, o que cobre ${pct(s.coberturaDoPrecario)} da receita. Sem duracao e custo variavel nao ha margem por hora para eles.` }),
+        el('div', { classe: 'resolver', texto: `Codigos em falta: ${s.codigosSemPrecario.slice(0, 12).join(', ')}${s.codigosSemPrecario.length > 12 ? ', e outros' : ''}.` }),
+      ]),
+    ]));
+  }
+
+  return el('section', { classe: 'bloco' }, [
+    el('header', {}, el('h3', { texto: 'Servicos vendidos' })),
+    corpo,
+  ]);
+}
+
+function blocoPacientes(p) {
+  return el('section', { classe: 'bloco' }, [
+    el('header', {}, el('h3', { texto: 'Pacientes por receita' })),
+    el('div', { classe: 'corpo' }, [
+      el('p', { classe: 'nota', texto: 'Identificados por pseudonimo. O nome do paciente nunca entra nesta ferramenta: quem precisa de saber quem e, abre o software clinico com o pseudonimo ao lado.' }),
+      tabela([
+        { titulo: '', numero: true, valor: (l, i) => i + 1 },
+        { titulo: 'Paciente', valor: (l) => l.pseudonimo.slice(0, 10) },
+        { titulo: 'Receita', numero: true, valor: (l) => eur(l.receitaCent) },
+        { titulo: 'Documentos', numero: true, valor: (l) => l.documentos },
+        { titulo: 'Primeiro', valor: (l) => l.primeiro },
+        { titulo: 'Ultimo', valor: (l) => l.ultimo },
+      ], p.topo, { vazio: 'Nenhum paciente identificado neste ficheiro.' }),
+      el('p', {}, [
+        el('strong', { texto: `Os dez maiores valem ${pct(p.pesoDoTopo)} da receita identificada. ` }),
+        `São ${p.nPacientes} pacientes no total.`,
+      ]),
+      p.cobertura != null && p.cobertura < 0.99
+        ? el('div', { classe: 'lacuna', 'data-g': 'DEGRADA' }, [
+          el('div', { classe: 'gravidade', texto: 'degrada' }),
+          el('div', {}, el('div', { texto: `Esta tabela cobre ${pct(p.cobertura)} da receita. O resto, ${formata(p.receitaConsumidorFinalCent)}, foi faturado sem paciente identificado e nao pode ser agrupado por pessoa.` })),
+        ])
+        : null,
+    ].filter(Boolean)),
+  ]);
+}
+
+function blocoEntidades(e) {
+  return el('section', { classe: 'bloco' }, [
+    el('header', {}, el('h3', { texto: 'Entidades pagadoras' })),
+    el('div', { classe: 'corpo' }, [
+      e.temRegras
+        ? el('p', { classe: 'nota', texto: `A maior entidade vale ${pct(e.pesoDaMaior)} da faturacao.` })
+        : el('div', { classe: 'lacuna', 'data-g': 'BLOQUEIA' }, [
+          el('div', { classe: 'gravidade', texto: 'bloqueia' }),
+          el('div', {}, [
+            el('div', { texto: 'Nao ha regras de correspondencia de entidades. O SAF-T nao tem campo de entidade pagadora, portanto sem regras tudo aparece como nao mapeado.' }),
+            el('div', { classe: 'resolver' }, el('a', { href: '#perfil', texto: 'Definir as regras no perfil' })),
+          ]),
+        ]),
+      tabela([
+        { titulo: 'Entidade', valor: (l) => l.entidade },
+        { titulo: 'Receita', numero: true, valor: (l) => eur(l.receitaCent) },
+        { titulo: 'Peso', numero: true, valor: (l) => pct(l.peso) },
+        { titulo: 'Atos', numero: true, valor: (l) => l.atos },
+        { titulo: 'Valor medio', numero: true, valor: (l) => eur(l.ticketMedioCent) },
+      ], e.linhas),
+    ]),
+  ]);
+}
+
+function blocoProfissionais(pr) {
+  const corpo = el('div', { classe: 'corpo' });
+
+  corpo.append(el('p', { classe: 'nota', texto: 'O SAF-T nao tem campo de profissional. Nenhuma versao do formato tem. O que existe sao pistas indiretas, e a ligacao faz-se por regras declaradas no perfil, para poder ser verificada em vez de adivinhada.' }));
+
+  if (!pr.temRegras) {
+    corpo.append(el('div', { classe: 'lacuna', 'data-g': 'BLOQUEIA' }, [
+      el('div', { classe: 'gravidade', texto: 'bloqueia' }),
+      el('div', {}, [
+        el('div', { texto: 'Ainda nao ha regras de atribuicao. Abaixo estao as pistas que existem neste ficheiro, com o numero de linhas de cada uma. Escolhe as que correspondem a um profissional e escreve a regra no perfil.' }),
+        el('div', { classe: 'resolver' }, el('a', { href: '#perfil', texto: 'Definir a atribuicao no perfil' })),
+      ]),
+    ]));
+  } else {
+    corpo.append(tabela([
+      { titulo: 'Profissional', valor: (l) => l.profissional },
+      { titulo: 'Producao', numero: true, valor: (l) => eur(l.receitaCent) },
+      // Peso dentro do que foi atribuido, nao do total. Com cobertura parcial as
+      // duas coisas divergem muito e confundi-las e o erro que o aviso abaixo evita.
+      { titulo: 'Peso no atribuido', numero: true, valor: (l) => pct(l.peso) },
+      { titulo: 'Atos', numero: true, valor: (l) => l.atos },
+      { titulo: 'Valor medio', numero: true, valor: (l) => eur(l.ticketMedioCent) },
+    ], pr.linhas));
+
+    corpo.append(el('div', { classe: pr.cobertura != null && pr.cobertura < 0.95 ? 'lacuna' : 'nota', 'data-g': 'DEGRADA' },
+      pr.cobertura != null && pr.cobertura < 0.95
+        ? [
+          el('div', { classe: 'gravidade', texto: 'degrada' }),
+          el('div', {}, el('div', { texto: `As regras cobrem ${pct(pr.cobertura)} da faturacao. Ficaram ${formata(pr.naoAtribuidoCent)} por atribuir, e comparar profissionais sobre bases diferentes e o erro que este aviso existe para evitar.` })),
+        ]
+        : `As regras cobrem ${pct(pr.cobertura)} da faturacao.`));
+  }
+
+  if (pr.pistasPorMapear.length > 0) {
+    const nomes = Object.fromEntries(PISTAS_DE_AUTORIA.map((p) => [p.id, p.nome]));
+    corpo.append(
+      el('h4', { texto: 'Pistas por mapear neste ficheiro' }),
+      tabela([
+        { titulo: 'Pista', valor: (l) => nomes[l.pista] ?? l.pista },
+        { titulo: 'Valor encontrado', valor: (l) => l.valor },
+        { titulo: 'Linhas', numero: true, valor: (l) => l.linhas },
+      ], pr.pistasPorMapear),
+    );
+  }
+
+  corpo.append(
+    el('h4', { texto: 'As tres pistas, e o que valem' }),
+    tabela([
+      { titulo: 'Pista', valor: (l) => l.nome },
+      { titulo: 'O que e', valor: (l) => l.descricao },
+      { titulo: 'Fiabilidade', valor: (l) => l.fiabilidade },
+    ], PISTAS_DE_AUTORIA),
+  );
+
+  return el('section', { classe: 'bloco' }, [
+    el('header', {}, el('h3', { texto: 'Producao por profissional' })),
+    corpo,
+  ]);
+}
+
+function blocoDesfeitos(d) {
+  return el('section', { classe: 'bloco' }, [
+    el('header', {}, el('h3', { texto: 'Documentos anulados e creditados' })),
+    el('div', { classe: 'corpo' }, [
+      el('div', { classe: 'rolavel' }, el('table', {}, el('tbody', {}, [
+        linha('Documentos anulados', `${d.nAnulados} de ${d.nDocumentos}`),
+        linha('Taxa de anulacao', pct(d.taxaDeAnulacao, 1) ?? 'n/d'),
+        linha('Notas de credito', String(d.nNotasCredito)),
+        linha('Valor creditado', formata(d.valorCreditadoCent)),
+        linha('Peso do credito na faturacao', pct(d.taxaDeCredito, 1) ?? 'n/d'),
+      ]))),
+      d.creditadoPorMes.length > 0
+        ? tabela([
+          { titulo: 'Mes', valor: (l) => l.mes },
+          { titulo: 'Creditado', numero: true, valor: (l) => eur(l.valorCent) },
+        ], d.creditadoPorMes)
+        : null,
+      el('p', { classe: 'nota', texto: d.naoSaoDesmarcacoes }),
+    ].filter(Boolean)),
+  ]);
+}
+
+function blocoFaltas(f) {
+  return el('section', { classe: 'bloco' }, [
+    el('header', {}, [
+      el('h3', { texto: 'Faltas, desmarcacoes e realizadas' }),
+      el('span', { classe: 'selo', texto: 'fora do SAF-T' }),
+    ]),
+    el('div', { classe: 'corpo' }, [
+      el('p', { texto: f.razao }),
+      el('h4', { texto: 'O que a agenda tem de trazer' }),
+      tabela([
+        { titulo: 'Campo', valor: (l) => l.campo },
+        { titulo: 'Para que serve', valor: (l) => l.porque },
+      ], f.oQuePrecisa),
+      el('h4', { texto: 'O que passa a ser medivel' }),
+      el('ul', {}, f.oQueSeMedeDepois.map((t) => el('li', { texto: t }))),
+      el('p', { classe: 'nota', texto: f.entretanto }),
+    ]),
+  ]);
+}
+
+// ---------------------------------------------------------------------------
+// Atribuicao de profissionais, no perfil
+// ---------------------------------------------------------------------------
+
+function seccaoProfissionais(perfil, guarda) {
+  const nomesDaEquipa = (perfil.equipa ?? []).map((p) => p.nome).filter(Boolean);
+
+  return editorDeLista({
+    titulo: 'Atribuicao de producao a profissionais',
+    nota: 'O SAF-T nao diz quem fez o ato. Estas regras ligam uma pista do ficheiro a um profissional, '
+      + 'e a coluna da direita mostra quantas linhas cada regra apanha, para se poder verificar em vez '
+      + 'de acreditar. A pista mais fiavel e a serie de faturacao, quando a clinica usa uma por pessoa.',
+    itens: perfil.atribuicaoProfissionais,
+    colunas: [
+      {
+        campo: 'profissional', etiqueta: 'Profissional', largura: '10rem',
+        tipo: nomesDaEquipa.length > 0 ? 'select' : 'texto',
+        opcoes: nomesDaEquipa,
+      },
+      {
+        campo: 'pista', etiqueta: 'Pista', tipo: 'select',
+        opcoes: PISTAS_DE_AUTORIA.map((p) => ({ id: p.id, nome: p.nome })),
+      },
+      { campo: 'padrao', etiqueta: 'Padrao', tipo: 'texto', largura: '11rem', ajuda: 'Exemplo: ^FT A$' },
+    ],
+    derivadas: [
+      {
+        etiqueta: 'Linhas que apanha',
+        calcula: (r) => {
+          if (!estado.saft || !r.padrao) return null;
+          const uma = criaAtribuicao([r]);
+          if (uma.regras === 0) return null;
+          try {
+            let n = 0;
+            for (const d of estado.saft.documentosValidos) {
+              for (const l of d.linhas) if (uma.resolve(d, l)) n += 1;
+            }
+            return String(n);
+          } catch {
+            return 'padrao invalido';
+          }
+        },
+      },
+    ],
+    novoItem: () => ({ profissional: nomesDaEquipa[0] ?? '', pista: 'serie', padrao: '' }),
+    aoMudar: guarda,
+    textoAcrescentar: 'Acrescentar regra',
+    textoVazio: 'Sem regras, o Raio-X mostra as pistas que existem no ficheiro para se escrever a primeira.',
+  });
 }

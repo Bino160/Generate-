@@ -30,6 +30,12 @@ com margem por hora calculada ao vivo, convenções ligadas ao catálogo de atos
 correspondência de entidades pagadoras. Sem ele, quatro das sete ferramentas não
 teriam por onde ser alimentadas.
 
+**O Raio-X do SAF-T**, em `src/core/analise.js`, responde às quatro perguntas que
+qualquer clínica faz assim que vê um ficheiro carregado. Serviços mais vendidos e
+maiores clientes saem diretos. Produção por profissional sai por regra declarada,
+porque o formato não tem campo de profissional. Faltas e desmarcações não saem, e
+a página explica que uma falta é, por definição, a ausência de uma fatura.
+
 **As sete ferramentas**, em `src/ferramentas/`:
 
 | | Ferramenta | A tese |
@@ -90,7 +96,7 @@ npm run qa                     tudo, mais o inventario de pressupostos
 ```
 
 O registo de achados, com severidade e estado, está em
-`qa/09-registo-de-achados.md`. Sessenta e três achados, dos quais oito críticos,
+`qa/09-registo-de-achados.md`. Sessenta e nove achados, dos quais nove críticos,
 todos corrigidos. Os que geraram correção têm teste de regressão nomeado com o
 código do achado.
 
