@@ -87,24 +87,83 @@ quem apresenta. Na impressão os campos viram linhas.
 
 ---
 
-## U-004. As entradas em JSON. Declarado, com plano
+## U-009 a U-011. O editor de perfil estava vazio por dentro. Corrigido
 
-O F1, o F2 e o F4 alimentam-se do SAF-T e do perfil. O F3, o F5, o F6 e o F7
-recebem documentos estruturados por área de texto em JSON, pré-preenchida com um
-exemplo real.
+O editor cobria doze campos avulsos de um modelo com onze secções. Faltava tudo
+o que interessa: horários, equipa, tabela de preços, convenções e correspondência
+de entidades. A consequência era que quatro das sete ferramentas só corriam se
+alguém escrevesse JSON à mão, e duas partes do modelo eram inalcançáveis:
 
-Isto é uma limitação, e é honesta por três razões:
+| Estava inalcançável | Porquê importa |
+| --- | --- |
+| Ocupação | É a variável que faz a resposta do F2 inverter-se, e metade do valor do F1 |
+| Alocação a faixas vazias | É a alternativa a sair de uma convenção, e quase ninguém a dá |
+| Rutura de nível | Foi o que construí em resposta à objeção do P-04 e não existia no ecrã |
 
-1. As entradas do F3 e do F5 **são** documentos estruturados. Os dados de
-   diligência do F3 têm cinco secções aninhadas e os planos do F5 têm passos com
-   estado e data. Um formulário para isso é um editor de documentos.
-2. O F6 e o F7 são pequenos e merecem formulário. É trabalho identificado.
-3. Um exemplo pré-preenchido ensina a forma esperada melhor do que um formulário
-   vazio de trinta campos.
+O que passou a existir:
 
-**Plano.** Formulário para o F6 e para o F7 na próxima iteração. Para o F3 e o
-F5, importador de ficheiro com mapeamento de colunas, que é o que a especificação
-já prevê em P-02 e que serve os dois.
+**Gabinetes com horário próprio.** Dias em caixas, não em números: ninguém sabe
+de cor que zero é domingo, e é essa a classe de erro que produz uma capacidade
+errada sem ninguém dar por isso.
+
+**Grelha de ocupação, sete por dois.** A capacidade de cada faixa é derivada dos
+horários e aparece ao lado da caixa, em cinzento. Só as horas ocupadas se
+introduzem. Uma faixa em branco fica por saber e a ferramenta di-lo, em vez de
+assumir zero.
+
+**Equipa com vínculo e tipo de remuneração.** Contrato de trabalho, prestador de
+serviços ou sócio. Fixo, percentagem ou misto com mínimo garantido. Sobre
+produção ou sobre recebido. Quem suporta materiais, laboratório e assistente. E
+os cinco indícios do artigo 12.º em caixas, cada um com a descrição por extenso,
+para o cliente poder discordar de um indício concreto.
+
+**Tabela de preços com margem ao vivo.** Três colunas derivadas recalculadas a
+cada tecla: margem, margem em percentagem e margem por hora. É deliberado. Quem
+preenche a tabela vê, linha a linha, que o ato com mais margem não é o ato com
+mais margem por hora. A ferramenta ensina a tese do F2 enquanto se preenche.
+
+**Convenções ligadas ao catálogo.** A convenção só acrescenta o que é dela, o
+preço e o volume. A duração e o custo variável vêm da tabela de preços, para que
+a mesma consulta não acabe com três durações diferentes em três convenções. E
+quando a margem por hora da convenção fica abaixo do que a mesma hora renderia em
+privado, aparece marcada a vermelho na própria linha.
+
+**Correspondência de entidades com contagem ao vivo.** Cada regra mostra quantas
+linhas do SAF-T carregado é que apanha, o que transforma escrever uma expressão
+regular às cegas em algo verificável.
+
+**O que continua em JSON.** O F3 e o F5. As entradas dos dois são documentos
+estruturados a sério: os dados de diligência do F3 têm cinco secções aninhadas e
+os planos do F5 têm passos com estado e data. Um formulário para isso é um editor
+de documentos. O caminho certo é o importador de ficheiro com mapeamento de
+colunas previsto no P-02, que serve os dois e serve também a agenda.
+
+---
+
+## U-012 e U-013. O erro que só aparece com mãos humanas. Corrigido
+
+A primeira versão do editor redesenhava tudo a cada alteração de campo. Passa nos
+testes que preenchem campos e falha com uma pessoa à frente, por uma razão
+específica: **o evento `change` de um campo de texto dispara ao sair do campo**,
+ou seja no instante exato em que o cursor já vai a caminho do botão seguinte. O
+redesenho arrancava o botão debaixo do rato e o clique perdia-se.
+
+Quem escrevesse o nome de um médico e clicasse logo a seguir em acrescentar via o
+botão não fazer nada. Sem erro, sem aviso, sem nada.
+
+A correção tem duas partes:
+
+1. Redesenho total só quando a estrutura muda, ou seja acrescentar e remover
+   linhas, que são cliques deliberados. Editar um campo atualiza as colunas
+   derivadas no sítio.
+2. As secções que dependem de outra são refrescadas 200 ms depois da última
+   alteração, e qualquer toque no rato empurra esse refresco mais 400 ms. Assim
+   nunca cai entre carregar e largar o botão.
+
+Ficou verificado por um percurso completo num browser real,
+`scripts/verifica-perfil.mjs`: preenche gabinetes, ocupação, equipa, preços,
+convenção e correspondência, e confirma que o F1, o F2 e o F7 passam a correr do
+perfil sem uma linha de JSON.
 
 ---
 

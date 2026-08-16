@@ -24,6 +24,12 @@ sete ferramentas soltas produzem sete definições diferentes de hora clínica.
 | Motor de benchmark | `src/core/benchmark.js` | Dois níveis, etiqueta de origem obrigatória |
 | Perfil de cliente | `src/core/perfil.js` | Preenchido uma vez, consumido por todas |
 
+**O perfil de cliente** cobre horários por gabinete, ocupação por faixa horária,
+colaboradores e prestadores com vínculo e tipo de remuneração, tabela de preços
+com margem por hora calculada ao vivo, convenções ligadas ao catálogo de atos, e
+correspondência de entidades pagadoras. Sem ele, quatro das sete ferramentas não
+teriam por onde ser alimentadas.
+
 **As sete ferramentas**, em `src/ferramentas/`:
 
 | | Ferramenta | A tese |
@@ -74,15 +80,17 @@ entrega o resto da análise.
 Oito frentes, em `qa/`. Três correm por máquina e falham a build.
 
 ```
-npm test                  144 testes unitarios e de contrato
-npm run qa:slop           verificador de texto, dez regras
-npm run qa:fontes         verificador de etiquetas de fonte
-node scripts/fumo.mjs     percurso completo num browser real
-npm run qa                tudo, mais o inventario de pressupostos
+npm test                       144 testes unitarios e de contrato
+npm run qa:slop                verificador de texto, dez regras
+npm run qa:fontes              verificador de etiquetas de fonte
+node scripts/fumo.mjs          percurso completo num browser real
+node scripts/verifica-perfil.mjs  preenche o perfil inteiro e confirma que o F1,
+                               o F2 e o F7 correm dele sem uma linha de JSON
+npm run qa                     tudo, mais o inventario de pressupostos
 ```
 
 O registo de achados, com severidade e estado, está em
-`qa/09-registo-de-achados.md`. Cinquenta e quatro achados, dos quais cinco críticos,
+`qa/09-registo-de-achados.md`. Sessenta e três achados, dos quais oito críticos,
 todos corrigidos. Os que geraram correção têm teste de regressão nomeado com o
 código do achado.
 

@@ -319,3 +319,63 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
     background: transparent;
   }
 }
+
+/* Editores de lista ---------------------------------------------------------- */
+
+table.editavel { font-size: var(--escala-1); }
+table.editavel th { vertical-align: bottom; }
+table.editavel td { padding: var(--espaco-2); vertical-align: middle; }
+table.editavel input, table.editavel select { padding: 4px var(--espaco-2); font-size: var(--escala-1); }
+table.editavel input[type="number"] { text-align: right; }
+table.editavel td.derivada, table.editavel th.derivada {
+  background: var(--fundo-suave);
+  font-family: var(--fonte-numero);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+table.editavel th.derivada { font-family: var(--fonte); }
+.ajuda-coluna {
+  display: block; font-weight: 400; text-transform: none; letter-spacing: 0;
+  color: var(--texto-tenue); font-size: var(--escala-0);
+}
+.abaixo-do-privado { color: var(--mau); font-weight: 600; }
+input.excede { border-color: var(--mau); color: var(--mau); }
+.de-quantas { display: block; font-size: var(--escala-0); color: var(--texto-tenue); }
+
+button.remover {
+  background: transparent; border: 1px solid var(--linha-forte); color: var(--texto-suave);
+  font-size: var(--escala-0); font-weight: 500; padding: 3px var(--espaco-2);
+}
+button.remover:hover { border-color: var(--mau); color: var(--mau); }
+
+.vazio-lista {
+  color: var(--texto-suave); font-size: var(--escala-1);
+  padding: var(--espaco-3) 0; max-width: var(--largura-texto);
+}
+
+tr.detalhe > td { background: var(--fundo-suave); padding: var(--espaco-4); }
+
+.dias { display: flex; gap: 2px; flex-wrap: wrap; }
+.dia { display: inline-flex; margin: 0; font-weight: 400; }
+.dia input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.dia span {
+  display: inline-block; padding: 3px 8px; border: 1px solid var(--linha-forte);
+  border-radius: var(--raio-pequeno); font-size: var(--escala-0); text-transform: uppercase;
+  letter-spacing: 0.04em; color: var(--texto-tenue); cursor: pointer; user-select: none;
+}
+.dia input:checked + span { background: var(--acento); border-color: var(--acento); color: var(--fundo-elevado); }
+.dia input:focus-visible + span { outline: 2px solid var(--acento); outline-offset: 2px; }
+
+.linha-dias { display: flex; align-items: center; gap: var(--espaco-3); flex-wrap: wrap; margin-bottom: var(--espaco-3); }
+.etiqueta-dias { font-size: var(--escala-0); text-transform: uppercase; letter-spacing: 0.05em; color: var(--texto-tenue); }
+
+.grupo-caixas { display: flex; flex-direction: column; gap: var(--espaco-2); margin-bottom: var(--espaco-4); }
+label.caixa { display: flex; align-items: flex-start; gap: var(--espaco-2); font-weight: 400; font-size: var(--escala-1); margin: 0; }
+label.caixa input { width: auto; margin-top: 3px; flex: none; }
+
+.detalhe-pessoa { display: flex; flex-direction: column; gap: var(--espaco-3); }
+.campos.compactos { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--espaco-3); }
+
+table.grelha td { text-align: right; }
+table.grelha td:first-child { text-align: left; white-space: nowrap; }
+.seccao-perfil { display: contents; }

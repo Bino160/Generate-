@@ -25,6 +25,9 @@ Estados: `CORRIGIDO`, `DECLARADO` (a limitação existe e a ferramenta di-lo),
 | F-011 | Alto | O SAF-T não tem campo de entidade pagadora nem de convenção. Sem tabela de correspondência o F2 não corre | DECLARADO. Limitação estrutural documentada em `saft.js`, correspondência por expressão regular no perfil |
 | F-012 | Alto | `prazoMedioPorEntidade` procurava o documento de origem com um `find` linear dentro do ciclo dos recibos. Quadrático: num SAF-T de dois anos o browser bloqueava | CORRIGIDO. Índice construído uma vez |
 | F-013 | Médio | O leitor carrega o ficheiro inteiro como string. Um SAF-T de 200 MB ocupa cerca de 400 MB em memória antes de qualquer processamento | ACEITE para a dimensão de clínica alvo. Registado como limite conhecido |
+| F-014 | Alto | O empacotador cortava o pacote a meio. O código-fonte tem `caminho = '$'` e, numa cadeia de substituição, `$'` significa o resto do texto depois da correspondência | CORRIGIDO. As substituições usam função, e o empacotador passou a compilar o resultado antes de o escrever |
+| F-015 | Alto | A expressão regular global era partilhada e a função de leitura é recursiva: o módulo filho reiniciava o lastIndex e o módulo pai voltava ao princípio, duplicando os imports | CORRIGIDO. As correspondências são recolhidas antes de recorrer |
+| F-016 | Médio | O perfil dependia de localStorage existir. Numa página incorporada ou em navegação privada, o acesso lança em vez de devolver nulo | CORRIGIDO. Passa a viver em memória e a interface di-lo |
 
 ---
 
@@ -105,6 +108,12 @@ Estados: `CORRIGIDO`, `DECLARADO` (a limitação existe e a ferramenta di-lo),
 | U-006 | Baixo | Os quadrantes distinguiam-se por cor. Cor sozinha não é sinal acessível | CORRIGIDO. Cada quadrante tem título em texto |
 | U-007 | Baixo | Sem folha de estilos de impressão o relatório de uma página não existia | CORRIGIDO |
 | U-008 | Médio | O F4 não dá devolução ao primeiro utilizador e isso pode ler-se como avaria | DECLARADO. A ferramenta explica que o estrato ainda não tem dimensão e mostra o n |
+| U-009 | Crítico | O editor de perfil cobria 12 campos de um modelo com 11 secções. Não havia onde meter horários, equipa, tabela de preços, convenções nem correspondência de entidades, o que deixava quatro das sete ferramentas dependentes de escrever JSON à mão | CORRIGIDO. Editor completo com editor de listas reutilizável e colunas derivadas |
+| U-010 | Crítico | Não existia caminho nenhum para introduzir a ocupação. O motor aceitava-a, a interface nunca a fornecia, portanto a taxa de ocupação era impossível de obter e o teste de capacidade do F2 nunca corria | CORRIGIDO. Grelha de sete por dois, com a capacidade de cada faixa derivada dos horários dos gabinetes |
+| U-011 | Crítico | A rutura de nível do P-04 nunca disparava, porque a interface nunca passava os componentes que a ativam. A classe que construí em resposta à tua objeção não existia no ecrã | CORRIGIDO. Decomposição da variação por entidade pagadora |
+| U-012 | Alto | Escrever num campo e clicar logo a seguir perdia o clique. O evento change de um campo de texto dispara ao sair do campo, ou seja no instante em que o cursor já vai a caminho do botão, e o redesenho total arrancava esse botão | CORRIGIDO. Redesenho só em mudança de estrutura, e refresco das secções dependentes adiado para nunca cair entre carregar e largar o botão |
+| U-013 | Médio | O refresco das secções dependentes reintroduziu o mesmo erro um andar acima: editar um ato reconstruía a secção das convenções, que também tem botões | CORRIGIDO. O refresco espera 200 ms após a última alteração e qualquer toque no rato empurra-o mais 400 ms |
+| U-014 | Baixo | A barra lateral imprimia a palavra null, porque replaceChildren converte null em texto | CORRIGIDO |
 
 ---
 

@@ -80,7 +80,7 @@ try {
   }
 
   process.stdout.write('Correr as ferramentas com entrada estruturada\n');
-  for (const rota of ['f3', 'f5', 'f6', 'f7']) {
+  for (const rota of ['f3', 'f5', 'f6']) {
     await pagina.goto(`${BASE}/#${rota}`);
     await pagina.waitForTimeout(100);
     await pagina.locator(`#controlo-${rota} button`).click();
@@ -101,15 +101,17 @@ try {
   verifica(f1.includes('calibrar') || f1.includes('Painel') || f1.length > 100, 'o F1 corre com o SAF-T carregado');
   verifica(f1.toLowerCase().includes('agenda'), 'o F1 declara a ausencia de agenda em vez de estimar ocupacao');
 
+  // Sem convencoes no perfil, o F2 encaminha para o perfil em vez de mostrar uma
+  // caixa de JSON. O percurso com o perfil preenchido esta em verifica-perfil.mjs,
+  // que e onde se verifica a matriz de decisao a serio.
   await pagina.goto(`${BASE}/#f2`);
-  await pagina.waitForTimeout(100);
-  await pagina.locator('#controlo-f2 button').click();
-  await pagina.waitForTimeout(300);
-  // innerText aplica text-transform, por isso os titulos dos quadrantes vem em
-  // maiusculas. A comparacao e insensivel a caixa de proposito.
-  const f2 = (await pagina.locator('#saida-f2').innerText()).toLowerCase();
-  verifica(f2.includes('manter') && f2.includes('sair'), 'o F2 produz a matriz de decisao');
-  verifica(f2.includes('ers'), 'o aviso contratual aparece no ecra');
+  await pagina.waitForTimeout(200);
+  const f2 = (await pagina.locator('#seccao-f2').innerText()).toLowerCase();
+  verifica(f2.includes('perfil'), 'o F2 sem convencoes encaminha para o perfil');
+  verifica(
+    (await pagina.locator('#controlo-f2 a[href="#perfil"]').count()) === 1,
+    'o encaminhamento e uma ligacao e nao so uma frase',
+  );
 
   process.stdout.write('Privacidade e rede\n');
   verifica(pedidosExternos.length === 0, `nenhum pedido para fora da origem (vieram ${pedidosExternos.length})`);

@@ -70,9 +70,9 @@ const REGRAS = [
   {
     id: 'placeholder',
     descricao: 'Texto de preenchimento que nao devia ter chegado aqui.',
-    // O sufixo exclui nomes de atributo e de propriedade, como placeholder: e
-    // placeholder=, que sao codigo e nao texto para o cliente.
-    padrao: /\b(lorem ipsum|coming soon|em breve|TBD|placeholder|XXX)\b(?![:=])/gi,
+    // Exclui nomes de atributo e de propriedade, que sao codigo e nao texto para
+    // o cliente: placeholder:, placeholder= e coluna.placeholder.
+    padrao: /(?<![.\w])(lorem ipsum|coming soon|em breve|TBD|placeholder|XXX)\b(?![:=])/gi,
   },
   {
     id: 'marca-de-trabalho',
