@@ -17,7 +17,9 @@ import { join, relative, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const raiz = fileURLToPath(new URL('..', import.meta.url));
-const IGNORAR = new Set(['node_modules', '.git', 'dados', 'qa']);
+// dist e produto da fonte, nao fonte. Verificar o gerado duplicaria cada achado
+// e apanharia codigo empacotado como se fosse prosa para o cliente.
+const IGNORAR = new Set(['node_modules', '.git', 'dados', 'dist', 'qa']);
 const EXTENSOES = new Set(['.js', '.mjs', '.html', '.css', '.md', '.json']);
 
 const REGRAS = [

@@ -9,3 +9,6 @@ dados/*
 *_SAFT_*.xml
 perfil-*.json
 !perfil-exemplo.json
+
+# Gerado por npm run empacota. Reconstroi-se a partir da fonte.
+dist/

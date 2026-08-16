@@ -15,7 +15,9 @@
     "qa": "node qa/executa-qa.mjs",
     "qa:slop": "node qa/slop-lint.mjs",
     "qa:fontes": "node qa/lint-fontes.mjs",
-    "servir": "node scripts/servidor.mjs"
+    "servir": "node scripts/servidor.mjs",
+    "empacota": "node scripts/empacota.mjs && node scripts/documentos.mjs",
+    "verifica:pacote": "node scripts/verifica-bundle.mjs && node scripts/verifica-docs.mjs"
   },
   "devDependencies": {
     "playwright": "^1.62.1"

@@ -122,3 +122,19 @@ qa/                      oito frentes de QA e o registo de achados
 scripts/                 servidor de desenvolvimento e teste de fumo
 docs/PRESSUPOSTOS.md     as cinco decisoes e os dezasseis pressupostos tecnicos
 ```
+
+---
+
+## Ver sem instalar nada
+
+O hub e os documentos existem também como ficheiro único, gerado a partir da
+fonte, que abre em qualquer browser sem servidor e sem rede.
+
+```
+npm run empacota          # gera dist/hub.html e dist/documentos.html
+npm run verifica:pacote   # confirma que os dois abrem e funcionam num browser
+```
+
+O empacotador não usa nenhuma ferramenta de mercado. São cem linhas em
+`scripts/empacota.mjs` que resolvem os módulos e validam a sintaxe do resultado
+antes de escrever, porque um pacote inválido não deve chegar ao disco.

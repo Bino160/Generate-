@@ -32,7 +32,7 @@ function reporta(regra, ficheiro, mensagem) {
 
 function ficheiros(dir, saida = []) {
   for (const nome of readdirSync(dir)) {
-    if (['node_modules', '.git', 'dados'].includes(nome)) continue;
+    if (['node_modules', '.git', 'dados', 'dist'].includes(nome)) continue;
     const caminho = join(dir, nome);
     if (statSync(caminho).isDirectory()) ficheiros(caminho, saida);
     else if (['.js', '.mjs'].includes(extname(caminho))) saida.push(caminho);

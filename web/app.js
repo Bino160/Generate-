@@ -38,18 +38,40 @@ const estado = {
   perfil: carregaPerfil(),
 };
 
+/**
+ * O armazenamento local pode nao existir: numa pagina incorporada, com cookies
+ * de terceiros bloqueados ou em navegacao privada, `localStorage` lanca em vez
+ * de devolver nulo. O perfil passa a viver so em memoria nesse caso, e o hub
+ * continua a funcionar por inteiro. Perder a persistencia e um incomodo, deixar
+ * de abrir e que nao pode acontecer.
+ */
+let persistenciaDisponivel = true;
+
 function carregaPerfil() {
   try {
     const guardado = localStorage.getItem(CHAVE_PERFIL);
     return guardado ? JSON.parse(guardado) : perfilVazio();
   } catch {
+    persistenciaDisponivel = false;
     return perfilVazio();
   }
 }
 
 function guardaPerfil() {
-  localStorage.setItem(CHAVE_PERFIL, JSON.stringify(estado.perfil));
+  try {
+    localStorage.setItem(CHAVE_PERFIL, JSON.stringify(estado.perfil));
+  } catch {
+    persistenciaDisponivel = false;
+  }
   atualizaEstadoLateral();
+}
+
+function apagaPerfilGuardado() {
+  try {
+    localStorage.removeItem(CHAVE_PERFIL);
+  } catch {
+    persistenciaDisponivel = false;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -85,6 +107,9 @@ function atualizaEstadoLateral() {
     el('strong', { texto: estado.saft ? `${estado.saft.resumo.nValidos} documentos lidos` : 'Sem SAF-T carregado' }),
     el('div', { texto: `Perfil ${Math.round(c.global * 100)}% completo.` }),
     el('div', { texto: 'Nada foi transmitido. Todo o calculo acontece neste browser.' }),
+    persistenciaDisponivel
+      ? null
+      : el('div', { texto: 'Este browser nao deixa guardar o perfil, por isso ele so dura ate fechares a pagina.' }),
   );
 }
 
@@ -573,7 +598,7 @@ function desenhaPrivacidade() {
       el('p', { texto: 'Fica o perfil de cliente: gabinetes, custos fixos, regime de IVA, tabela de precos. Nao ha ali dados de pacientes, mas ha a economia da clinica, o que num computador partilhado ja e de mais.' }),
       el('p', { texto: 'Nao fica o SAF-T, nao ficam pseudonimos e nao fica a chave. Isso vive so na memoria da pagina e desaparece quando o separador fecha.' }),
       botao('Apagar o perfil guardado neste browser', 'secundario', () => {
-        localStorage.removeItem(CHAVE_PERFIL);
+        apagaPerfilGuardado();
         estado.perfil = perfilVazio();
         estado.saft = null;
         estado.anonimizador?.esquece();
