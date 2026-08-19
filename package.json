@@ -1,0 +1,11 @@
+{
+  "name": "simulador-transparencia-fiscal",
+  "version": "1.0.0",
+  "description": "Simulador de impacto da reclassificacao de uma sociedade para o regime de transparencia fiscal (artigo 6.º do CIRC).",
+  "private": true,
+  "scripts": {
+    "test": "node --test \"tests/*.test.js\"",
+    "dev": "python3 -m http.server 8080"
+  },
+  "license": "MIT"
+}

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulador de Impacto da Reclassificação da Transparência Fiscal</title>
+<meta name="description" content="Quantifica o custo financeiro da reclassificação de uma sociedade para o regime de transparência fiscal do artigo 6.º do CIRC.">
+<link rel="stylesheet" href="assets/css/app.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚖️</text></svg>">
+</head>
+<body>
+
+<header class="topo">
+  <div class="topo__marca">
+    <span class="topo__sigla">TF</span>
+    <div>
+      <h1>Simulador de Impacto da Reclassificação da Transparência Fiscal</h1>
+      <p class="topo__sub">Artigo 6.º do CIRC · artigo 20.º do CIRS · quantificação do custo de um enquadramento incorreto</p>
+    </div>
+  </div>
+  <div class="topo__acoes">
+    <button type="button" class="btn btn--fantasma" data-acao="exemplo">Carregar exemplo</button>
+    <button type="button" class="btn btn--fantasma" data-acao="guardar">Guardar JSON</button>
+    <label class="btn btn--fantasma" for="ficheiro">Abrir JSON<input id="ficheiro" type="file" accept="application/json" hidden></label>
+    <button type="button" class="btn btn--fantasma" data-acao="limpar">Limpar</button>
+  </div>
+</header>
+
+<nav class="passos" aria-label="Etapas da simulação">
+  <button type="button" class="passo" data-ecra="1"><b>1</b> Dados da sociedade</button>
+  <button type="button" class="passo" data-ecra="2"><b>2</b> Dados dos sócios</button>
+  <button type="button" class="passo" data-ecra="3"><b>3</b> Parâmetros</button>
+  <button type="button" class="passo" data-ecra="4"><b>4</b> Resultado</button>
+</nav>
+
+<main>
+  <!-- ECRÃ 1 ------------------------------------------------------------ -->
+  <section class="ecra" id="ecra-1" hidden>
+    <div class="ecra__cabeca">
+      <h2>Ecrã 1 · Dados da sociedade</h2>
+      <p>Valores efetivamente declarados no exercício em análise. Retire-os da Modelo 22 e da demonstração de resultados.</p>
+    </div>
+    <div class="cartao">
+      <div class="grelha" id="form-sociedade"></div>
+    </div>
+    <div class="cartao cartao--nota">
+      <h3>Verificação automática</h3>
+      <ul id="coerencia-sociedade" class="lista-notas"></ul>
+    </div>
+    <div class="rodape-ecra">
+      <span></span>
+      <button type="button" class="btn btn--primario" data-ir="2">Continuar para os sócios →</button>
+    </div>
+  </section>
+
+  <!-- ECRÃ 2 ------------------------------------------------------------ -->
+  <section class="ecra" id="ecra-2" hidden>
+    <div class="ecra__cabeca">
+      <h2>Ecrã 2 · Dados dos sócios</h2>
+      <p>A matéria coletável é imputada a cada sócio na proporção da participação e tributada em IRS como rendimento líquido da categoria B (artigo 20.º do CIRS).</p>
+    </div>
+    <div id="lista-socios"></div>
+    <div class="barra-socios">
+      <button type="button" class="btn btn--secundario" data-acao="adicionar-socio">+ Adicionar sócio</button>
+      <div class="barra-socios__soma" id="soma-participacoes"></div>
+    </div>
+    <div class="rodape-ecra">
+      <button type="button" class="btn btn--fantasma" data-ir="1">← Sociedade</button>
+      <button type="button" class="btn btn--primario" data-ir="3">Continuar para os parâmetros →</button>
+    </div>
+  </section>
+
+  <!-- ECRÃ 3 ------------------------------------------------------------ -->
+  <section class="ecra" id="ecra-3" hidden>
+    <div class="ecra__cabeca">
+      <h2>Ecrã 3 · Parâmetros da simulação</h2>
+      <p>Tudo o que segue é parametrizável. Confirme sempre as taxas em vigor antes de emitir um relatório.</p>
+    </div>
+
+    <div class="cartao">
+      <h3>Cenário</h3>
+      <div class="grelha" id="form-cenario"></div>
+    </div>
+
+    <div class="cartao">
+      <h3>Juros compensatórios <small>artigo 35.º da LGT</small></h3>
+      <div class="grelha" id="form-juros"></div>
+    </div>
+
+    <div class="cartao">
+      <h3>Coimas <small>artigos 114.º e 119.º do RGIT</small></h3>
+      <div class="grelha" id="form-coimas"></div>
+    </div>
+
+    <div class="cartao">
+      <h3>IRS <small>artigos 31.º, 68.º e 78.º do CIRS</small></h3>
+      <div class="grelha" id="form-irs"></div>
+    </div>
+
+    <div class="cartao">
+      <h3>Recuperação do IRC</h3>
+      <div class="grelha" id="form-recuperacao"></div>
+    </div>
+
+    <div class="cartao">
+      <h3>Escalões de IRS do exercício <span id="rotulo-ano-escaloes"></span></h3>
+      <p class="ajuda" id="fonte-escaloes"></p>
+      <table class="tabela tabela--editavel" id="tabela-escaloes">
+        <thead><tr><th>Escalão</th><th>Limite superior do rendimento coletável (€)</th><th>Taxa (%)</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <button type="button" class="btn btn--secundario btn--pequeno" data-acao="adicionar-escalao">+ Adicionar escalão</button>
+      <button type="button" class="btn btn--fantasma btn--pequeno" data-acao="repor-escaloes">Repor tabela oficial</button>
+    </div>
+
+    <div class="rodape-ecra">
+      <button type="button" class="btn btn--fantasma" data-ir="2">← Sócios</button>
+      <button type="button" class="btn btn--primario" data-ir="4">Simular →</button>
+    </div>
+  </section>
+
+  <!-- ECRÃ 4 ------------------------------------------------------------ -->
+  <section class="ecra" id="ecra-4" hidden>
+    <div class="ecra__cabeca">
+      <h2>Ecrã 4 · Resultado</h2>
+      <p id="pergunta-central">«Quanto me custará se a Autoridade Tributária concluir que a minha sociedade foi incorretamente enquadrada?»</p>
+    </div>
+
+    <div id="avisos"></div>
+
+    <div class="cartoes" id="cartoes-financeiros"></div>
+
+    <div class="cartao">
+      <h3>Comparador</h3>
+      <div class="tabela-scroll">
+        <table class="tabela" id="tabela-comparador">
+          <thead><tr><th>Indicador</th><th>Situação atual</th><th>Situação corrigida</th><th>Variação</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="cartao">
+      <h3>Impacto por sócio</h3>
+      <div class="tabela-scroll">
+        <table class="tabela" id="tabela-socios">
+          <thead><tr><th>Sócio</th><th>%</th><th>Imputação</th><th>IRS atual</th><th>IRS corrigido</th><th>IRS adicional</th><th>Taxa marginal</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div id="barras-socios" class="barras"></div>
+    </div>
+
+    <div class="duas-colunas">
+      <div class="cartao">
+        <h3>Cenários de coima</h3>
+        <div id="cenarios-coima"></div>
+      </div>
+      <div class="cartao">
+        <h3>Recuperação do IRC</h3>
+        <div id="cenarios-irc"></div>
+      </div>
+    </div>
+
+    <div class="cartao">
+      <h3>Matriz de exposição líquida</h3>
+      <p class="ajuda">Exposição líquida = IRS adicional + juros + coima − IRC recuperado. Cada célula cruza um cenário de coima com um cenário de recuperação do IRC.</p>
+      <div class="tabela-scroll">
+        <table class="tabela" id="tabela-matriz">
+          <thead><tr><th>Coima \ IRC</th><th>Reembolso integral</th><th>Reembolso parcial</th><th>Reembolso inexistente</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="cartao">
+      <h3>Cronologia fiscal</h3>
+      <ol class="timeline" id="timeline"></ol>
+    </div>
+
+    <div class="cartao">
+      <h3>Memória de cálculo</h3>
+      <div id="memoria-calculo"></div>
+    </div>
+
+    <div class="rodape-ecra">
+      <button type="button" class="btn btn--fantasma" data-ir="3">← Parâmetros</button>
+      <div class="rodape-ecra__grupo">
+        <button type="button" class="btn btn--secundario" data-acao="exportar-json">Exportar dados (JSON)</button>
+        <button type="button" class="btn btn--primario" data-acao="relatorio">Gerar relatório PDF</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="rodape">
+  <p><strong>Aviso.</strong> Ferramenta de apoio à decisão. Os valores apresentados são estimativas construídas sobre parâmetros configuráveis e não substituem a liquidação da Autoridade Tributária nem parecer jurídico-fiscal. Este simulador pressupõe que a elegibilidade para o artigo 6.º do CIRC já foi previamente determinada.</p>
+  <p class="rodape__meta">Cálculo local no navegador. Nenhum dado é enviado para servidores.</p>
+</footer>
+
+<script src="assets/js/parametros.js"></script>
+<script src="assets/js/motor.js"></script>
+<script src="assets/js/formato.js"></script>
+<script src="assets/js/estado.js"></script>
+<script src="assets/js/relatorio.js"></script>
+<script src="assets/js/ui.js"></script>
+</body>
+</html>
