@@ -241,15 +241,14 @@
     }).join('');
   }
 
-  function html(d, r) {
+  function html(d, r, semBarra) {
     var titulo = 'Relatório de impacto — transparência fiscal — exercício de ' + r.meta.exercicio;
     return [
       '<!DOCTYPE html><html lang="pt-PT"><head><meta charset="utf-8"><title>' + esc(titulo) + '</title>',
       '<style>' + estilo() + '</style></head><body>',
-      '<div class="barra-imprimir">',
-      '<span>Use “Guardar como PDF” na janela de impressão.</span>',
-      '<button onclick="window.print()">Imprimir / Guardar PDF</button>',
-      '</div>',
+      semBarra ? '' : '<div class="barra-imprimir">' +
+      '<span>Use “Guardar como PDF” na janela de impressão.</span>' +
+      '<button onclick="window.print()">Imprimir / Guardar PDF</button></div>',
       '<div class="corpo">',
       '<div class="capa">',
       '<h1>Impacto da reclassificação para o regime de transparência fiscal</h1>',
@@ -271,11 +270,69 @@
     ].join('\n');
   }
 
+  /**
+   * Alternativa para contextos em que as janelas emergentes são bloqueadas
+   * (telemóvel, páginas em moldura): o relatório abre sobreposto à aplicação.
+   */
+  function sobrepor(d, r) {
+    var fundo = document.createElement('div');
+    fundo.setAttribute('role', 'dialog');
+    fundo.setAttribute('aria-label', 'Relatório');
+    fundo.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;background:#10151c;';
+
+    var barra = document.createElement('div');
+    barra.style.cssText = 'display:flex;gap:.5rem;align-items:center;justify-content:space-between;' +
+      'padding:.6rem .8rem;background:#0f3d6e;color:#fff;font:14px/1.4 system-ui,sans-serif;';
+    barra.appendChild(criarTexto('Relatório pronto. Imprima para guardar em PDF.'));
+
+    var acoes = document.createElement('div');
+    acoes.style.cssText = 'display:flex;gap:.5rem;';
+    var estiloBotao = 'font:inherit;padding:.4em 1em;border-radius:6px;border:0;cursor:pointer;';
+    var imprimir = document.createElement('button');
+    imprimir.type = 'button';
+    imprimir.textContent = 'Imprimir / PDF';
+    imprimir.style.cssText = estiloBotao;
+    var fechar = document.createElement('button');
+    fechar.type = 'button';
+    fechar.textContent = 'Fechar';
+    fechar.style.cssText = estiloBotao + 'background:transparent;color:#fff;border:1px solid rgba(255,255,255,.5);';
+    acoes.appendChild(imprimir);
+    acoes.appendChild(fechar);
+    barra.appendChild(acoes);
+
+    var moldura = document.createElement('iframe');
+    moldura.title = 'Relatório de impacto';
+    moldura.style.cssText = 'flex:1;width:100%;border:0;background:#fff;';
+    moldura.srcdoc = html(d, r, true);
+
+    imprimir.addEventListener('click', function () {
+      try {
+        moldura.contentWindow.focus();
+        moldura.contentWindow.print();
+      } catch (e) {
+        window.print();
+      }
+    });
+    fechar.addEventListener('click', function () { document.body.removeChild(fundo); });
+
+    fundo.appendChild(barra);
+    fundo.appendChild(moldura);
+    document.body.appendChild(fundo);
+  }
+
+  function criarTexto(t) {
+    var s = document.createElement('span');
+    s.textContent = t;
+    return s;
+  }
+
   raiz.Relatorio = {
     html: html,
+    sobrepor: sobrepor,
     abrir: function (d, r) {
-      var janela = window.open('', '_blank');
-      if (!janela) { alert('O navegador bloqueou a janela do relatório. Autorize as janelas emergentes.'); return; }
+      var janela = null;
+      try { janela = window.open('', '_blank'); } catch (e) { janela = null; }
+      if (!janela) { sobrepor(d, r); return; }
       janela.document.open();
       janela.document.write(html(d, r));
       janela.document.close();

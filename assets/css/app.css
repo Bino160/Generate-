@@ -24,8 +24,10 @@
   --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
 }
 
+/* Tema escuro. Três estados: escolha explícita (data-theme), preferência do
+   sistema (sem marcação) e escolha explícita de tema claro, que prevalece. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --tinta: #e8edf4;
     --tinta-suave: #aab6c8;
     --tinta-tenue: #7d8a9e;
@@ -43,6 +45,25 @@
     --positivo-claro: #12251f;
     --sombra: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .3);
   }
+}
+
+:root[data-theme="dark"] {
+  --tinta: #e8edf4;
+  --tinta-suave: #aab6c8;
+  --tinta-tenue: #7d8a9e;
+  --fundo: #0d1117;
+  --superficie: #151b23;
+  --linha: #242c38;
+  --linha-forte: #333d4d;
+  --marca: #7fb2ec;
+  --marca-clara: #16283d;
+  --alerta: #ff8a80;
+  --alerta-claro: #2c1614;
+  --aviso: #e5b567;
+  --aviso-claro: #2b2313;
+  --positivo: #6fd3ac;
+  --positivo-claro: #12251f;
+  --sombra: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .3);
 }
 
 * { box-sizing: border-box; }

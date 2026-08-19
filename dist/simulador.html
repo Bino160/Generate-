@@ -1,0 +1,2501 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulador de Transparência Fiscal</title>
+<meta name="description" content="Quantifica o custo financeiro da reclassificação de uma sociedade para o regime de transparência fiscal do artigo 6.º do CIRC.">
+<style>
+/* =====================================================================
+   Simulador de Impacto da Reclassificação da Transparência Fiscal
+   Folha de estilo única. Sem dependências externas.
+   ===================================================================== */
+
+:root {
+  --tinta: #10151c;
+  --tinta-suave: #4a5666;
+  --tinta-tenue: #77839a;
+  --fundo: #f4f6f9;
+  --superficie: #ffffff;
+  --linha: #dde3ec;
+  --linha-forte: #c3ccda;
+  --marca: #0f3d6e;
+  --marca-clara: #e8f0f9;
+  --alerta: #b3261e;
+  --alerta-claro: #fdecea;
+  --aviso: #8a5a00;
+  --aviso-claro: #fff5e0;
+  --positivo: #14664a;
+  --positivo-claro: #e6f4ef;
+  --raio: 12px;
+  --sombra: 0 1px 2px rgba(16, 21, 28, .06), 0 8px 24px rgba(16, 21, 28, .06);
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+}
+
+/* Tema escuro. Três estados: escolha explícita (data-theme), preferência do
+   sistema (sem marcação) e escolha explícita de tema claro, que prevalece. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --tinta: #e8edf4;
+    --tinta-suave: #aab6c8;
+    --tinta-tenue: #7d8a9e;
+    --fundo: #0d1117;
+    --superficie: #151b23;
+    --linha: #242c38;
+    --linha-forte: #333d4d;
+    --marca: #7fb2ec;
+    --marca-clara: #16283d;
+    --alerta: #ff8a80;
+    --alerta-claro: #2c1614;
+    --aviso: #e5b567;
+    --aviso-claro: #2b2313;
+    --positivo: #6fd3ac;
+    --positivo-claro: #12251f;
+    --sombra: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .3);
+  }
+}
+
+:root[data-theme="dark"] {
+  --tinta: #e8edf4;
+  --tinta-suave: #aab6c8;
+  --tinta-tenue: #7d8a9e;
+  --fundo: #0d1117;
+  --superficie: #151b23;
+  --linha: #242c38;
+  --linha-forte: #333d4d;
+  --marca: #7fb2ec;
+  --marca-clara: #16283d;
+  --alerta: #ff8a80;
+  --alerta-claro: #2c1614;
+  --aviso: #e5b567;
+  --aviso-claro: #2b2313;
+  --positivo: #6fd3ac;
+  --positivo-claro: #12251f;
+  --sombra: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .3);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--tinta);
+  background: var(--fundo);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 { margin: 0 0 .4em; line-height: 1.25; font-weight: 650; letter-spacing: -.01em; }
+h1 { font-size: 1.05rem; }
+h2 { font-size: 1.4rem; }
+h3 { font-size: 1rem; }
+h3 small { font-weight: 400; color: var(--tinta-tenue); font-size: .8rem; margin-left: .5em; }
+p { margin: 0 0 .8em; }
+
+/* ------------------------------ Topo ------------------------------- */
+.topo {
+  display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between;
+  padding: .9rem 1.5rem; background: var(--superficie); border-bottom: 1px solid var(--linha);
+}
+.topo__marca { display: flex; gap: .85rem; align-items: center; }
+.topo__sigla {
+  display: grid; place-items: center; width: 40px; height: 40px; flex: 0 0 40px;
+  border-radius: 10px; background: var(--marca); color: #fff; font-weight: 700; letter-spacing: .02em;
+}
+.topo__sub { margin: 0; font-size: .8rem; color: var(--tinta-tenue); }
+.topo__acoes { display: flex; flex-wrap: wrap; gap: .4rem; }
+
+/* ------------------------------ Passos ----------------------------- */
+.passos {
+  display: flex; gap: .25rem; padding: .6rem 1.5rem; overflow-x: auto;
+  background: var(--superficie); border-bottom: 1px solid var(--linha);
+  position: sticky; top: 0; z-index: 20;
+}
+.passo {
+  display: flex; gap: .5rem; align-items: center; white-space: nowrap;
+  padding: .45rem .85rem; border: 1px solid transparent; border-radius: 999px;
+  background: none; color: var(--tinta-suave); font: inherit; font-size: .88rem; cursor: pointer;
+}
+.passo b {
+  display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%;
+  background: var(--linha); color: var(--tinta-suave); font-size: .72rem;
+}
+.passo:hover { background: var(--marca-clara); }
+.passo[aria-current="true"] { background: var(--marca-clara); color: var(--marca); border-color: var(--marca); font-weight: 600; }
+.passo[aria-current="true"] b { background: var(--marca); color: var(--superficie); }
+
+/* ------------------------------ Layout ----------------------------- */
+main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
+.ecra__cabeca { margin-bottom: 1.1rem; }
+.ecra__cabeca p { color: var(--tinta-suave); max-width: 70ch; }
+
+.cartao {
+  background: var(--superficie); border: 1px solid var(--linha); border-radius: var(--raio);
+  padding: 1.1rem 1.2rem; margin-bottom: 1rem; box-shadow: var(--sombra);
+}
+.cartao--nota { background: var(--marca-clara); border-color: transparent; box-shadow: none; }
+.duas-colunas { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); align-items: start; }
+
+/* ------------------------------ Formulários ------------------------ */
+.grelha { display: grid; gap: .85rem 1rem; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
+.campo { display: flex; flex-direction: column; gap: .3rem; min-width: 0; }
+.campo--largo { grid-column: 1 / -1; }
+.campo > label { font-size: .8rem; font-weight: 600; color: var(--tinta-suave); }
+.campo .ajuda { font-size: .74rem; color: var(--tinta-tenue); margin: 0; }
+.campo input, .campo select {
+  width: 100%; padding: .5rem .6rem; font: inherit; font-size: .92rem; color: var(--tinta);
+  background: var(--fundo); border: 1px solid var(--linha-forte); border-radius: 8px;
+}
+.campo input:focus, .campo select:focus { outline: 2px solid var(--marca); outline-offset: 1px; border-color: var(--marca); }
+.campo input[type="number"] { text-align: right; font-variant-numeric: tabular-nums; }
+.campo--interruptor { flex-direction: row; align-items: center; gap: .5rem; }
+.campo--interruptor input { width: auto; }
+.campo--interruptor label { font-weight: 500; }
+
+/* ------------------------------ Botões ----------------------------- */
+.btn {
+  display: inline-flex; align-items: center; gap: .4rem; padding: .5rem .9rem;
+  font: inherit; font-size: .88rem; font-weight: 550; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--linha-forte); background: var(--superficie); color: var(--tinta);
+}
+.btn:hover { border-color: var(--marca); color: var(--marca); }
+.btn--primario { background: var(--marca); border-color: var(--marca); color: #fff; }
+.btn--primario:hover { filter: brightness(1.12); color: #fff; }
+.btn--secundario { background: var(--marca-clara); border-color: transparent; color: var(--marca); }
+.btn--fantasma { background: transparent; }
+.btn--pequeno { padding: .3rem .6rem; font-size: .8rem; }
+.btn--perigo:hover { border-color: var(--alerta); color: var(--alerta); }
+
+.rodape-ecra { display: flex; justify-content: space-between; gap: .6rem; margin: 1.4rem 0 2rem; flex-wrap: wrap; }
+.rodape-ecra__grupo { display: flex; gap: .5rem; flex-wrap: wrap; }
+
+/* ------------------------------ Sócios ----------------------------- */
+.socio { position: relative; }
+.socio__cabeca { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: .8rem; }
+.socio__titulo { font-weight: 650; }
+.socio__quota { font-family: var(--mono); font-size: .82rem; color: var(--tinta-tenue); }
+.barra-socios { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.barra-socios__soma { font-size: .88rem; font-weight: 600; }
+.barra-socios__soma.ok { color: var(--positivo); }
+.barra-socios__soma.erro { color: var(--alerta); }
+
+/* ------------------------------ Cartões financeiros ---------------- */
+.cartoes { display: grid; gap: .8rem; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); margin-bottom: 1rem; }
+.kpi {
+  background: var(--superficie); border: 1px solid var(--linha); border-left: 4px solid var(--marca);
+  border-radius: var(--raio); padding: .9rem 1rem; box-shadow: var(--sombra);
+}
+.kpi__rotulo { font-size: .76rem; text-transform: uppercase; letter-spacing: .05em; color: var(--tinta-tenue); }
+.kpi__valor { font-size: 1.5rem; font-weight: 680; font-variant-numeric: tabular-nums; letter-spacing: -.02em; margin: .15rem 0; }
+.kpi__nota { font-size: .76rem; color: var(--tinta-suave); }
+.kpi--destaque { border-left-color: var(--alerta); background: linear-gradient(180deg, var(--alerta-claro), var(--superficie) 60%); }
+.kpi--destaque .kpi__valor { color: var(--alerta); font-size: 1.8rem; }
+.kpi--positivo { border-left-color: var(--positivo); }
+.kpi--positivo .kpi__valor { color: var(--positivo); }
+
+/* ------------------------------ Tabelas ---------------------------- */
+.tabela-scroll { overflow-x: auto; }
+.tabela { width: 100%; border-collapse: collapse; font-size: .88rem; }
+.tabela th, .tabela td { padding: .5rem .6rem; text-align: right; border-bottom: 1px solid var(--linha); white-space: nowrap; }
+.tabela th:first-child, .tabela td:first-child { text-align: left; }
+.tabela thead th { font-size: .74rem; text-transform: uppercase; letter-spacing: .04em; color: var(--tinta-tenue); border-bottom: 1px solid var(--linha-forte); }
+.tabela td { font-variant-numeric: tabular-nums; }
+.tabela tbody tr:last-child td { border-bottom: none; }
+.tabela tr.destaque td { font-weight: 700; background: var(--marca-clara); }
+.tabela .subiu { color: var(--alerta); }
+.tabela .desceu { color: var(--positivo); }
+.tabela--editavel input { width: 100%; padding: .3rem .4rem; text-align: right; font: inherit; font-size: .85rem; background: var(--fundo); color: var(--tinta); border: 1px solid var(--linha-forte); border-radius: 6px; }
+.celula-pior { background: var(--alerta-claro); font-weight: 650; }
+.celula-melhor { background: var(--positivo-claro); }
+
+/* ------------------------------ Avisos ----------------------------- */
+.aviso-caixa { border-radius: 10px; padding: .7rem .9rem; margin-bottom: .6rem; font-size: .88rem; border: 1px solid transparent; }
+.aviso-caixa--erro { background: var(--alerta-claro); border-color: var(--alerta); color: var(--alerta); }
+.aviso-caixa--aviso { background: var(--aviso-claro); border-color: var(--aviso); color: var(--aviso); }
+.aviso-caixa--info { background: var(--marca-clara); border-color: var(--marca); color: var(--marca); }
+.lista-notas { margin: 0; padding-left: 1.1rem; font-size: .86rem; color: var(--tinta-suave); }
+.lista-notas li { margin-bottom: .25rem; }
+.lista-notas li.erro { color: var(--alerta); }
+.lista-notas li.ok { color: var(--positivo); }
+
+/* ------------------------------ Timeline --------------------------- */
+.timeline { list-style: none; margin: 0; padding: 0 0 0 1.4rem; border-left: 2px solid var(--linha); }
+.timeline li { position: relative; padding: 0 0 1rem .9rem; }
+.timeline li::before {
+  content: ""; position: absolute; left: -1.87rem; top: .35rem; width: 11px; height: 11px;
+  border-radius: 50%; background: var(--superficie); border: 2px solid var(--linha-forte);
+}
+.timeline li.passado::before { background: var(--marca); border-color: var(--marca); }
+.timeline li.limite::before { border-color: var(--alerta); background: var(--alerta-claro); }
+.timeline li.referencia::before { background: var(--aviso); border-color: var(--aviso); }
+.timeline__data { font-family: var(--mono); font-size: .76rem; color: var(--tinta-tenue); }
+.timeline__titulo { font-weight: 600; font-size: .92rem; }
+.timeline__texto { font-size: .82rem; color: var(--tinta-suave); }
+
+/* ------------------------------ Barras ----------------------------- */
+.barras { margin-top: .8rem; display: grid; gap: .5rem; }
+.barra { display: grid; grid-template-columns: minmax(90px, 22%) 1fr auto; gap: .6rem; align-items: center; font-size: .82rem; }
+.barra__trilho { height: 10px; background: var(--linha); border-radius: 999px; overflow: hidden; }
+.barra__preenchido { height: 100%; background: var(--marca); border-radius: 999px; }
+.barra__valor { font-variant-numeric: tabular-nums; color: var(--tinta-suave); }
+
+/* ------------------------------ Cenários --------------------------- */
+.cenario {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 1rem;
+  padding: .6rem 0; border-bottom: 1px solid var(--linha);
+}
+.cenario:last-child { border-bottom: none; }
+.cenario__rotulo { font-weight: 600; font-size: .9rem; }
+.cenario__fundamento { font-size: .76rem; color: var(--tinta-tenue); max-width: 46ch; }
+.cenario__valor { font-variant-numeric: tabular-nums; font-weight: 650; white-space: nowrap; }
+.cenario.selecionado { background: var(--marca-clara); border-radius: 8px; padding-left: .6rem; padding-right: .6rem; }
+
+.memoria { font-size: .85rem; }
+.memoria summary { cursor: pointer; font-weight: 600; padding: .45rem 0; }
+.memoria table { margin-bottom: .6rem; }
+.ajuda { font-size: .78rem; color: var(--tinta-tenue); }
+
+/* ------------------------------ Rodapé ----------------------------- */
+.rodape { max-width: 1160px; margin: 0 auto; padding: 1.5rem; font-size: .8rem; color: var(--tinta-tenue); border-top: 1px solid var(--linha); }
+.rodape__meta { margin: 0; }
+
+@media (max-width: 640px) {
+  .topo { padding: .8rem 1rem; }
+  main { padding: 1rem; }
+  h2 { font-size: 1.2rem; }
+}
+
+</style>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚖️</text></svg>">
+</head>
+<body>
+
+<header class="topo">
+  <div class="topo__marca">
+    <span class="topo__sigla">TF</span>
+    <div>
+      <h1>Simulador de Impacto da Reclassificação da Transparência Fiscal</h1>
+      <p class="topo__sub">Artigo 6.º do CIRC · artigo 20.º do CIRS · quantificação do custo de um enquadramento incorreto</p>
+    </div>
+  </div>
+  <div class="topo__acoes">
+    <button type="button" class="btn btn--fantasma" data-acao="exemplo">Carregar exemplo</button>
+    <button type="button" class="btn btn--fantasma" data-acao="guardar">Guardar JSON</button>
+    <label class="btn btn--fantasma" for="ficheiro">Abrir JSON<input id="ficheiro" type="file" accept="application/json" hidden></label>
+    <button type="button" class="btn btn--fantasma" data-acao="limpar">Limpar</button>
+  </div>
+</header>
+
+<nav class="passos" aria-label="Etapas da simulação">
+  <button type="button" class="passo" data-ecra="1"><b>1</b> Dados da sociedade</button>
+  <button type="button" class="passo" data-ecra="2"><b>2</b> Dados dos sócios</button>
+  <button type="button" class="passo" data-ecra="3"><b>3</b> Parâmetros</button>
+  <button type="button" class="passo" data-ecra="4"><b>4</b> Resultado</button>
+</nav>
+
+<main>
+  <!-- ECRÃ 1 ------------------------------------------------------------ -->
+  <section class="ecra" id="ecra-1" hidden>
+    <div class="ecra__cabeca">
+      <h2>Ecrã 1 · Dados da sociedade</h2>
+      <p>Valores efetivamente declarados no exercício em análise. Retire-os da Modelo 22 e da demonstração de resultados.</p>
+    </div>
+    <div class="cartao">
+      <div class="grelha" id="form-sociedade"></div>
+    </div>
+    <div class="cartao cartao--nota">
+      <h3>Verificação automática</h3>
+      <ul id="coerencia-sociedade" class="lista-notas"></ul>
+    </div>
+    <div class="rodape-ecra">
+      <span></span>
+      <button type="button" class="btn btn--primario" data-ir="2">Continuar para os sócios →</button>
+    </div>
+  </section>
+
+  <!-- ECRÃ 2 ------------------------------------------------------------ -->
+  <section class="ecra" id="ecra-2" hidden>
+    <div class="ecra__cabeca">
+      <h2>Ecrã 2 · Dados dos sócios</h2>
+      <p>A matéria coletável é imputada a cada sócio na proporção da participação e tributada em IRS como rendimento líquido da categoria B (artigo 20.º do CIRS).</p>
+    </div>
+    <div id="lista-socios"></div>
+    <div class="barra-socios">
+      <button type="button" class="btn btn--secundario" data-acao="adicionar-socio">+ Adicionar sócio</button>
+      <div class="barra-socios__soma" id="soma-participacoes"></div>
+    </div>
+    <div class="rodape-ecra">
+      <button type="button" class="btn btn--fantasma" data-ir="1">← Sociedade</button>
+      <button type="button" class="btn btn--primario" data-ir="3">Continuar para os parâmetros →</button>
+    </div>
+  </section>
+
+  <!-- ECRÃ 3 ------------------------------------------------------------ -->
+  <section class="ecra" id="ecra-3" hidden>
+    <div class="ecra__cabeca">
+      <h2>Ecrã 3 · Parâmetros da simulação</h2>
+      <p>Tudo o que segue é parametrizável. Confirme sempre as taxas em vigor antes de emitir um relatório.</p>
+    </div>
+
+    <div class="cartao">
+      <h3>Cenário</h3>
+      <div class="grelha" id="form-cenario"></div>
+    </div>
+
+    <div class="cartao">
+      <h3>Juros compensatórios <small>artigo 35.º da LGT</small></h3>
+      <div class="grelha" id="form-juros"></div>
+    </div>
+
+    <div class="cartao">
+      <h3>Coimas <small>artigos 114.º e 119.º do RGIT</small></h3>
+      <div class="grelha" id="form-coimas"></div>
+    </div>
+
+    <div class="cartao">
+      <h3>IRS <small>artigos 31.º, 68.º e 78.º do CIRS</small></h3>
+      <div class="grelha" id="form-irs"></div>
+    </div>
+
+    <div class="cartao">
+      <h3>Recuperação do IRC</h3>
+      <div class="grelha" id="form-recuperacao"></div>
+    </div>
+
+    <div class="cartao">
+      <h3>Escalões de IRS do exercício <span id="rotulo-ano-escaloes"></span></h3>
+      <p class="ajuda" id="fonte-escaloes"></p>
+      <table class="tabela tabela--editavel" id="tabela-escaloes">
+        <thead><tr><th>Escalão</th><th>Limite superior do rendimento coletável (€)</th><th>Taxa (%)</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <button type="button" class="btn btn--secundario btn--pequeno" data-acao="adicionar-escalao">+ Adicionar escalão</button>
+      <button type="button" class="btn btn--fantasma btn--pequeno" data-acao="repor-escaloes">Repor tabela oficial</button>
+    </div>
+
+    <div class="rodape-ecra">
+      <button type="button" class="btn btn--fantasma" data-ir="2">← Sócios</button>
+      <button type="button" class="btn btn--primario" data-ir="4">Simular →</button>
+    </div>
+  </section>
+
+  <!-- ECRÃ 4 ------------------------------------------------------------ -->
+  <section class="ecra" id="ecra-4" hidden>
+    <div class="ecra__cabeca">
+      <h2>Ecrã 4 · Resultado</h2>
+      <p id="pergunta-central">«Quanto me custará se a Autoridade Tributária concluir que a minha sociedade foi incorretamente enquadrada?»</p>
+    </div>
+
+    <div id="avisos"></div>
+
+    <div class="cartoes" id="cartoes-financeiros"></div>
+
+    <div class="cartao">
+      <h3>Comparador</h3>
+      <div class="tabela-scroll">
+        <table class="tabela" id="tabela-comparador">
+          <thead><tr><th>Indicador</th><th>Situação atual</th><th>Situação corrigida</th><th>Variação</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="cartao">
+      <h3>Impacto por sócio</h3>
+      <div class="tabela-scroll">
+        <table class="tabela" id="tabela-socios">
+          <thead><tr><th>Sócio</th><th>%</th><th>Imputação</th><th>IRS atual</th><th>IRS corrigido</th><th>IRS adicional</th><th>Taxa marginal</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div id="barras-socios" class="barras"></div>
+    </div>
+
+    <div class="duas-colunas">
+      <div class="cartao">
+        <h3>Cenários de coima</h3>
+        <div id="cenarios-coima"></div>
+      </div>
+      <div class="cartao">
+        <h3>Recuperação do IRC</h3>
+        <div id="cenarios-irc"></div>
+      </div>
+    </div>
+
+    <div class="cartao">
+      <h3>Matriz de exposição líquida</h3>
+      <p class="ajuda">Exposição líquida = IRS adicional + juros + coima − IRC recuperado. Cada célula cruza um cenário de coima com um cenário de recuperação do IRC.</p>
+      <div class="tabela-scroll">
+        <table class="tabela" id="tabela-matriz">
+          <thead><tr><th>Coima \ IRC</th><th>Reembolso integral</th><th>Reembolso parcial</th><th>Reembolso inexistente</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="cartao">
+      <h3>Cronologia fiscal</h3>
+      <ol class="timeline" id="timeline"></ol>
+    </div>
+
+    <div class="cartao">
+      <h3>Memória de cálculo</h3>
+      <div id="memoria-calculo"></div>
+    </div>
+
+    <div class="rodape-ecra">
+      <button type="button" class="btn btn--fantasma" data-ir="3">← Parâmetros</button>
+      <div class="rodape-ecra__grupo">
+        <button type="button" class="btn btn--secundario" data-acao="exportar-json">Exportar dados (JSON)</button>
+        <button type="button" class="btn btn--primario" data-acao="relatorio">Gerar relatório PDF</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="rodape">
+  <p><strong>Aviso.</strong> Ferramenta de apoio à decisão. Os valores apresentados são estimativas construídas sobre parâmetros configuráveis e não substituem a liquidação da Autoridade Tributária nem parecer jurídico-fiscal. Este simulador pressupõe que a elegibilidade para o artigo 6.º do CIRC já foi previamente determinada.</p>
+  <p class="rodape__meta">Cálculo local no navegador. Nenhum dado é enviado para servidores.</p>
+</footer>
+
+<script>
+/**
+ * parametros.js
+ * Tabelas fiscais parametrizáveis do simulador.
+ *
+ * Todos os valores aqui definidos sao apenas VALORES POR OMISSAO.
+ * O Ecra 3 (Parametros da simulacao) permite alterar qualquer um deles
+ * sem tocar no codigo. Cada tabela indica a base legal e o estado
+ * ("confirmado" / "provisorio") para que o utilizador saiba o que deve validar.
+ */
+(function (raiz, fabrica) {
+  if (typeof module !== 'undefined' && module.exports) module.exports = fabrica();
+  else raiz.Parametros = fabrica();
+})(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
+
+  /* ------------------------------------------------------------------ *
+   * Escaloes de IRS - taxas gerais (artigo 68.º do CIRS)
+   * limite = limite superior do escalao (null = sem limite)
+   * ------------------------------------------------------------------ */
+  var ESCALOES_IRS = {
+    2023: {
+      estado: 'confirmado',
+      fonte: 'Artigo 68.º do CIRS, redação da Lei n.º 24-D/2022 (OE 2023)',
+      escaloes: [
+        { limite: 7479, taxa: 0.145 },
+        { limite: 11284, taxa: 0.21 },
+        { limite: 15992, taxa: 0.265 },
+        { limite: 20700, taxa: 0.285 },
+        { limite: 26355, taxa: 0.35 },
+        { limite: 38632, taxa: 0.37 },
+        { limite: 50483, taxa: 0.435 },
+        { limite: 78834, taxa: 0.45 },
+        { limite: null, taxa: 0.48 }
+      ]
+    },
+    2024: {
+      estado: 'confirmado',
+      fonte: 'Artigo 68.º do CIRS, redação da Lei n.º 33/2024',
+      escaloes: [
+        { limite: 7703, taxa: 0.1325 },
+        { limite: 11623, taxa: 0.18 },
+        { limite: 16472, taxa: 0.23 },
+        { limite: 21321, taxa: 0.26 },
+        { limite: 27146, taxa: 0.3275 },
+        { limite: 39791, taxa: 0.37 },
+        { limite: 51997, taxa: 0.435 },
+        { limite: 81199, taxa: 0.45 },
+        { limite: null, taxa: 0.48 }
+      ]
+    },
+    2025: {
+      estado: 'confirmado',
+      fonte: 'Artigo 68.º do CIRS, redação da Lei n.º 33/2025 (descida de taxas do 1.º ao 8.º escalão)',
+      escaloes: [
+        { limite: 8059, taxa: 0.125 },
+        { limite: 12160, taxa: 0.16 },
+        { limite: 17233, taxa: 0.215 },
+        { limite: 22306, taxa: 0.244 },
+        { limite: 28400, taxa: 0.314 },
+        { limite: 41629, taxa: 0.349 },
+        { limite: 44987, taxa: 0.431 },
+        { limite: 83696, taxa: 0.446 },
+        { limite: null, taxa: 0.48 }
+      ]
+    },
+    2026: {
+      estado: 'provisorio',
+      fonte: 'ESTIMATIVA não confirmada. Replica a tabela de 2025 até à publicação do Orçamento do Estado. Confirme antes de usar.',
+      escaloes: [
+        { limite: 8059, taxa: 0.125 },
+        { limite: 12160, taxa: 0.16 },
+        { limite: 17233, taxa: 0.215 },
+        { limite: 22306, taxa: 0.244 },
+        { limite: 28400, taxa: 0.314 },
+        { limite: 41629, taxa: 0.349 },
+        { limite: 44987, taxa: 0.431 },
+        { limite: 83696, taxa: 0.446 },
+        { limite: null, taxa: 0.48 }
+      ]
+    }
+  };
+
+  /* ------------------------------------------------------------------ *
+   * Taxa adicional de solidariedade (artigo 68.º-A do CIRS)
+   * ------------------------------------------------------------------ */
+  var SOLIDARIEDADE = [
+    { de: 80000, ate: 250000, taxa: 0.025 },
+    { de: 250000, ate: null, taxa: 0.05 }
+  ];
+
+  /* ------------------------------------------------------------------ *
+   * Juros compensatorios (artigo 35.º da LGT + artigo 559.º do Codigo Civil)
+   * ------------------------------------------------------------------ */
+  var JUROS = {
+    fonte: 'Artigo 35.º da LGT. Taxa dos juros legais fixada em 4% ao ano (Portaria n.º 291/2003).',
+    taxaAnual: 0.04,
+    baseDias: 365,
+    limiteDias: null, // preencher para impor o tecto de 180 dias do artigo 35.º, n.º 7 da LGT
+    // Termo do prazo de entrega da declaracao Modelo 3 do ano seguinte ao exercicio.
+    diaLimiteIRS: 30,
+    mesLimiteIRS: 6
+  };
+
+  /* ------------------------------------------------------------------ *
+   * Coimas (RGIT)
+   * ------------------------------------------------------------------ */
+  var COIMAS = {
+    fonte: 'Artigos 114.º e 119.º do RGIT; limites e reduções dos artigos 26.º, 29.º e 30.º do RGIT.',
+    // Artigo 114.º, n.º 2 do RGIT - falta de entrega da prestacao tributaria, negligencia.
+    percentagemMinima: 0.15,
+    percentagemMaxima: 0.50,
+    // Reducao por regularizacao voluntaria antes de qualquer procedimento inspectivo
+    // (artigo 29.º, n.º 1, alinea a) do RGIT: 12,5% do montante minimo legal).
+    reducaoVoluntaria: 0.125,
+    // Coima aplicada em pratica corrente quando ha correccao oficiosa sem dolo.
+    fatorProvavel: 1.0, // multiplicador do limite minimo legal
+    // Pisos e tectos (pessoas singulares, negligencia).
+    coimaMinimaAbsoluta: 375,
+    tectoNegligencia: 22500,
+    // Coima autonoma por declaracao inexacta ou omitida (artigo 119.º do RGIT).
+    coimaDeclaracaoMinima: 375,
+    coimaDeclaracaoMaxima: 22500,
+    aplicarCoimaDeclaracaoPorSocio: true
+  };
+
+  /* ------------------------------------------------------------------ *
+   * Parametros de IRS diversos
+   * ------------------------------------------------------------------ */
+  var IRS = {
+    deducaoEspecificaCategoriaA: 4104,
+    coeficienteCategoriaB: 0.75, // artigo 31.º do CIRS, regime simplificado, servicos do artigo 151.º
+    deducaoPorDependente: 600,
+    limiteDeducoesColeta: null, // null = sem limite global
+    quocienteConjugal: 2
+  };
+
+  /* ------------------------------------------------------------------ *
+   * Prazos (LGT)
+   * ------------------------------------------------------------------ */
+  var PRAZOS = {
+    caducidadeAnos: 4,        // artigo 45.º da LGT
+    revisaoOficiosaAnos: 4,   // artigo 78.º, n.º 1 da LGT
+    reclamacaoGraciosaDias: 120, // artigo 70.º do CPPT
+    prazoEntregaModelo22: { dia: 31, mes: 5 },
+    prazoEntregaModelo3: { dia: 30, mes: 6 }
+  };
+
+  /* ------------------------------------------------------------------ *
+   * Recuperacao do IRC
+   * ------------------------------------------------------------------ */
+  var RECUPERACAO = {
+    percentagemParcial: 0.5,
+    // As tributacoes autonomas mantem-se devidas pela sociedade transparente
+    // (artigo 12.º do CIRC), logo nao entram na base recuperavel por omissao.
+    incluirTributacoesAutonomas: false,
+    incluirDerramas: true
+  };
+
+  function porOmissao() {
+    return JSON.parse(JSON.stringify({
+      escaloesIRS: ESCALOES_IRS,
+      solidariedade: SOLIDARIEDADE,
+      juros: JUROS,
+      coimas: COIMAS,
+      irs: IRS,
+      prazos: PRAZOS,
+      recuperacao: RECUPERACAO
+    }));
+  }
+
+  function tabelaDoExercicio(parametros, exercicio) {
+    var tabelas = parametros.escaloesIRS || {};
+    if (tabelas[exercicio]) return tabelas[exercicio];
+    // Sem tabela para o exercicio: usa o ano mais proximo disponivel.
+    var anos = Object.keys(tabelas).map(Number).sort(function (a, b) { return a - b; });
+    if (!anos.length) return null;
+    var escolhido = anos[0];
+    for (var i = 0; i < anos.length; i++) if (anos[i] <= exercicio) escolhido = anos[i];
+    var t = tabelas[escolhido];
+    return {
+      estado: 'substituido',
+      fonte: 'Sem tabela de escalões para ' + exercicio + '. Aplicada a tabela de ' + escolhido + '. ' + (t.fonte || ''),
+      anoAplicado: escolhido,
+      escaloes: t.escaloes
+    };
+  }
+
+  return {
+    porOmissao: porOmissao,
+    tabelaDoExercicio: tabelaDoExercicio,
+    ESCALOES_IRS: ESCALOES_IRS
+  };
+});
+
+</script>
+<script>
+/**
+ * motor.js
+ * Motor de calculo do impacto da reclassificacao para o regime
+ * de transparencia fiscal (artigo 6.º do CIRC).
+ *
+ * PRESSUPOSTO: a elegibilidade para o artigo 6.º do CIRC ja foi determinada.
+ * Este motor nao decide se ha transparencia fiscal. Quantifica o custo.
+ *
+ * Sem dependencias externas. Funciona no browser (global `Motor`)
+ * e em Node (module.exports).
+ */
+(function (raiz, fabrica) {
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = fabrica(require('./parametros.js'));
+  } else {
+    raiz.Motor = fabrica(raiz.Parametros);
+  }
+})(typeof self !== 'undefined' ? self : this, function (Parametros) {
+  'use strict';
+
+  var DIA_MS = 24 * 60 * 60 * 1000;
+
+  function num(v) {
+    if (v === null || v === undefined || v === '') return 0;
+    var n = typeof v === 'number' ? v : parseFloat(String(v).replace(/\s/g, '').replace(',', '.'));
+    return isFinite(n) ? n : 0;
+  }
+
+  function arred(v, casas) {
+    var f = Math.pow(10, casas === undefined ? 2 : casas);
+    return Math.round((num(v) + Number.EPSILON) * f) / f;
+  }
+
+  function data(v) {
+    if (v instanceof Date) return v;
+    if (!v) return new Date();
+    var d = new Date(v);
+    return isNaN(d.getTime()) ? new Date() : d;
+  }
+
+  function dias(de, ate) {
+    return Math.max(0, Math.floor((data(ate).getTime() - data(de).getTime()) / DIA_MS));
+  }
+
+  /* ================================================================== *
+   * 1. Coleta de IRS
+   * ================================================================== */
+
+  /**
+   * Coleta pelas taxas gerais do artigo 68.º do CIRS, calculada
+   * por fatias marginais (equivalente ao metodo taxa media / taxa normal).
+   */
+  function coletaProgressiva(rendimentoColetavel, escaloes) {
+    var rc = Math.max(0, num(rendimentoColetavel));
+    var imposto = 0;
+    var anterior = 0;
+    for (var i = 0; i < escaloes.length; i++) {
+      var esc = escaloes[i];
+      var topo = esc.limite === null || esc.limite === undefined ? Infinity : num(esc.limite);
+      if (rc <= anterior) break;
+      var fatia = Math.min(rc, topo) - anterior;
+      if (fatia > 0) imposto += fatia * num(esc.taxa);
+      anterior = topo;
+      if (!isFinite(topo)) break;
+    }
+    return imposto;
+  }
+
+  function taxaMarginal(rendimentoColetavel, escaloes) {
+    var rc = Math.max(0, num(rendimentoColetavel));
+    for (var i = 0; i < escaloes.length; i++) {
+      var topo = escaloes[i].limite === null || escaloes[i].limite === undefined
+        ? Infinity : num(escaloes[i].limite);
+      if (rc <= topo) return num(escaloes[i].taxa);
+    }
+    return num(escaloes[escaloes.length - 1].taxa);
+  }
+
+  /** Taxa adicional de solidariedade (artigo 68.º-A do CIRS). */
+  function solidariedade(rendimentoColetavel, tabela) {
+    var rc = Math.max(0, num(rendimentoColetavel));
+    var total = 0;
+    (tabela || []).forEach(function (faixa) {
+      var de = num(faixa.de);
+      var ate = faixa.ate === null || faixa.ate === undefined ? Infinity : num(faixa.ate);
+      if (rc > de) total += (Math.min(rc, ate) - de) * num(faixa.taxa);
+    });
+    return total;
+  }
+
+  /**
+   * Liquidacao de IRS de um agregado.
+   * Aplica o quociente conjugal quando a tributacao e conjunta
+   * (artigo 69.º do CIRS).
+   */
+  function liquidarIRS(rendimentoColetavel, opcoes) {
+    var p = opcoes.parametros;
+    var escaloes = opcoes.escaloes;
+    var rc = Math.max(0, num(rendimentoColetavel));
+    var divisor = opcoes.conjunta ? num(p.irs.quocienteConjugal) || 2 : 1;
+
+    var coletaBase = coletaProgressiva(rc / divisor, escaloes) * divisor;
+    var adicional = solidariedade(rc / divisor, p.solidariedade) * divisor;
+    var coletaTotal = coletaBase + adicional;
+
+    var deducoes = num(opcoes.dependentes) * num(p.irs.deducaoPorDependente);
+    if (p.irs.limiteDeducoesColeta !== null && p.irs.limiteDeducoesColeta !== undefined) {
+      deducoes = Math.min(deducoes, num(p.irs.limiteDeducoesColeta));
+    }
+    deducoes = Math.min(deducoes, coletaTotal);
+
+    return {
+      rendimentoColetavel: arred(rc),
+      quociente: divisor,
+      coletaTaxasGerais: arred(coletaBase),
+      taxaAdicionalSolidariedade: arred(adicional),
+      coletaTotal: arred(coletaTotal),
+      deducoesColeta: arred(deducoes),
+      imposto: arred(Math.max(0, coletaTotal - deducoes)),
+      taxaMarginal: taxaMarginal(rc / divisor, escaloes),
+      taxaEfetiva: rc > 0 ? arred(Math.max(0, coletaTotal - deducoes) / rc, 6) : 0
+    };
+  }
+
+  /* ================================================================== *
+   * 2. Rendimento coletavel do socio
+   * ================================================================== */
+
+  function rendimentoColetavelSocio(socio, p, imputacao) {
+    var catA = Math.max(0, num(socio.rendimentosA) - num(p.irs.deducaoEspecificaCategoriaA));
+    var coef = socio.categoriaBJaLiquida ? 1 : (num(p.irs.coeficienteCategoriaB) || 1);
+    var catB = num(socio.rendimentosB) * coef;
+    var outros = num(socio.outrosRendimentos);
+    var conjuge = socio.tributacao === 'conjunta' ? num(socio.rendimentosConjuge) : 0;
+    return {
+      categoriaA: arred(catA),
+      categoriaB: arred(catB),
+      outros: arred(outros),
+      conjuge: arred(conjuge),
+      imputacao: arred(num(imputacao)),
+      total: arred(catA + catB + outros + conjuge + num(imputacao))
+    };
+  }
+
+  /* ================================================================== *
+   * 3. Cenario actual (sociedade tributada em IRC)
+   * ================================================================== */
+
+  function cenarioActual(dados, p) {
+    var s = dados.sociedade;
+    var ircColecta = num(s.ircLiquidado);
+    var derramas = num(s.derramaMunicipal) + num(s.derramaEstadual);
+    var ta = num(s.tributacoesAutonomas);
+    var totalDevido = ircColecta + derramas + ta;
+    var pagoAntecipado = num(s.pagamentosPorConta) + num(s.retencoes);
+
+    var escaloes = escaloesDoExercicio(p, s.exercicio);
+    var socios = (dados.socios || []).map(function (socio) {
+      var componentes = rendimentoColetavelSocio(socio, p, 0);
+      var liq = liquidarIRS(componentes.total, {
+        parametros: p,
+        escaloes: escaloes.escaloes,
+        conjunta: socio.tributacao === 'conjunta',
+        dependentes: socio.dependentes
+      });
+      return { nome: socio.nome, componentes: componentes, liquidacao: liq, irs: liq.imposto };
+    });
+
+    return {
+      irc: {
+        materiaColetavel: arred(s.materiaColetavel),
+        coleta: arred(ircColecta),
+        derramaMunicipal: arred(s.derramaMunicipal),
+        derramaEstadual: arred(s.derramaEstadual),
+        tributacoesAutonomas: arred(ta),
+        totalDevido: arred(totalDevido),
+        pagamentosPorConta: arred(s.pagamentosPorConta),
+        retencoes: arred(s.retencoes),
+        saldoApurado: arred(totalDevido - pagoAntecipado)
+      },
+      socios: socios,
+      irsTotal: arred(socios.reduce(function (a, x) { return a + x.irs; }, 0)),
+      impostoTotal: arred(totalDevido + socios.reduce(function (a, x) { return a + x.irs; }, 0))
+    };
+  }
+
+  /* ================================================================== *
+   * 4. Cenario corrigido (transparencia fiscal)
+   * ================================================================== */
+
+  function cenarioCorrigido(dados, p) {
+    var s = dados.sociedade;
+    var escaloes = escaloesDoExercicio(p, s.exercicio);
+    var mc = num(s.materiaColetavel);
+    var ta = num(s.tributacoesAutonomas);
+
+    var socios = (dados.socios || []).map(function (socio) {
+      var quota = num(socio.participacao) / 100;
+      var imputacao = mc * quota;
+      var componentes = rendimentoColetavelSocio(socio, p, imputacao);
+      var liq = liquidarIRS(componentes.total, {
+        parametros: p,
+        escaloes: escaloes.escaloes,
+        conjunta: socio.tributacao === 'conjunta',
+        dependentes: socio.dependentes
+      });
+      return {
+        nome: socio.nome,
+        participacao: num(socio.participacao),
+        imputacao: arred(imputacao),
+        componentes: componentes,
+        liquidacao: liq,
+        irs: liq.imposto
+      };
+    });
+
+    return {
+      irc: {
+        // Artigo 12.º do CIRC: a sociedade transparente nao e tributada em IRC,
+        // salvo quanto as tributacoes autonomas.
+        coleta: 0,
+        derramaMunicipal: 0,
+        derramaEstadual: 0,
+        tributacoesAutonomas: arred(ta),
+        totalDevido: arred(ta)
+      },
+      socios: socios,
+      irsTotal: arred(socios.reduce(function (a, x) { return a + x.irs; }, 0)),
+      impostoTotal: arred(ta + socios.reduce(function (a, x) { return a + x.irs; }, 0))
+    };
+  }
+
+  function escaloesDoExercicio(p, exercicio) {
+    var t = Parametros.tabelaDoExercicio(p, num(exercicio));
+    if (!t) throw new Error('Sem tabela de escalões de IRS configurada.');
+    return t;
+  }
+
+  /* ================================================================== *
+   * 5. Juros compensatorios (artigo 35.º da LGT)
+   * ================================================================== */
+
+  function calcularJuros(impostoEmFalta, dados, p) {
+    var base = Math.max(0, num(impostoEmFalta));
+    var exercicio = num(dados.sociedade.exercicio);
+    var inicio = dados.parametros && dados.parametros.dataInicioJuros
+      ? data(dados.parametros.dataInicioJuros)
+      : new Date(Date.UTC(exercicio + 1, num(p.juros.mesLimiteIRS) - 1, num(p.juros.diaLimiteIRS)));
+    var fim = data(dados.parametros && dados.parametros.dataReferencia);
+
+    var nDias = dias(inicio, fim);
+    var limitado = false;
+    if (p.juros.limiteDias !== null && p.juros.limiteDias !== undefined && nDias > num(p.juros.limiteDias)) {
+      nDias = num(p.juros.limiteDias);
+      limitado = true;
+    }
+    var baseDias = num(p.juros.baseDias) || 365;
+    var montante = base * num(p.juros.taxaAnual) * (nDias / baseDias);
+
+    return {
+      base: arred(base),
+      taxaAnual: num(p.juros.taxaAnual),
+      dataInicio: inicio.toISOString().slice(0, 10),
+      dataFim: fim.toISOString().slice(0, 10),
+      dias: nDias,
+      limiteAplicado: limitado,
+      montante: arred(montante)
+    };
+  }
+
+  /* ================================================================== *
+   * 6. Coimas (RGIT)
+   * ================================================================== */
+
+  function calcularCoimas(impostoEmFalta, dados, p) {
+    var base = Math.max(0, num(impostoEmFalta));
+    var nSocios = Math.max(1, (dados.socios || []).length);
+    var c = p.coimas;
+
+    var minimoLegal = Math.max(base * num(c.percentagemMinima), num(c.coimaMinimaAbsoluta));
+    var maximoLegal = Math.min(
+      Math.max(base * num(c.percentagemMaxima), num(c.coimaMinimaAbsoluta)),
+      num(c.tectoNegligencia)
+    );
+    if (maximoLegal < minimoLegal) maximoLegal = minimoLegal;
+
+    var declaracao = c.aplicarCoimaDeclaracaoPorSocio ? nSocios : 1;
+    var coimaDeclMin = num(c.coimaDeclaracaoMinima) * declaracao;
+    var coimaDeclMax = num(c.coimaDeclaracaoMaxima) * declaracao;
+
+    var minimo = minimoLegal * num(c.reducaoVoluntaria);
+    var provavel = minimoLegal * num(c.fatorProvavel);
+    var maximo = maximoLegal + coimaDeclMax;
+
+    return {
+      base: arred(base),
+      minimoLegal: arred(minimoLegal),
+      maximoLegal: arred(maximoLegal),
+      minimo: {
+        valor: arred(minimo),
+        rotulo: 'Regularização voluntária',
+        fundamento: 'Artigo 29.º, n.º 1, alínea a) do RGIT: redução a ' +
+          (num(c.reducaoVoluntaria) * 100) + '% do montante mínimo legal quando a regularização ' +
+          'ocorre por iniciativa do sujeito passivo, antes de qualquer procedimento inspetivo.'
+      },
+      provavel: {
+        valor: arred(provavel),
+        rotulo: 'Correção oficiosa sem dolo',
+        fundamento: 'Artigo 114.º, n.º 2 do RGIT: coima de ' +
+          (num(c.percentagemMinima) * 100) + '% a ' + (num(c.percentagemMaxima) * 100) +
+          '% do imposto em falta a título de negligência. Cenário ancorado no limite mínimo.'
+      },
+      maximo: {
+        valor: arred(maximo),
+        rotulo: 'Limite máximo com coimas declarativas',
+        fundamento: 'Limite máximo do artigo 114.º, n.º 2 do RGIT, com o teto do artigo 26.º, ' +
+          'acrescido das coimas do artigo 119.º do RGIT por declaração inexata (' +
+          declaracao + ' declaração(ões)).'
+      },
+      coimasDeclarativas: { minimo: arred(coimaDeclMin), maximo: arred(coimaDeclMax), declaracoes: declaracao }
+    };
+  }
+
+  /* ================================================================== *
+   * 7. Recuperacao do IRC
+   * ================================================================== */
+
+  function calcularRecuperacaoIRC(actual, dados, p) {
+    var irc = actual.irc;
+    var base = irc.coleta;
+    if (p.recuperacao.incluirDerramas) base += irc.derramaMunicipal + irc.derramaEstadual;
+    if (p.recuperacao.incluirTributacoesAutonomas) base += irc.tributacoesAutonomas;
+
+    var parcial = num(p.recuperacao.percentagemParcial);
+    var cenarios = {
+      integral: { rotulo: 'Reembolso integral', percentagem: 1, valor: arred(base) },
+      parcial: { rotulo: 'Reembolso parcial', percentagem: parcial, valor: arred(base * parcial) },
+      inexistente: { rotulo: 'Reembolso inexistente', percentagem: 0, valor: 0 }
+    };
+    var escolhido = (dados.parametros && dados.parametros.cenarioIRC) || 'parcial';
+    if (!cenarios[escolhido]) escolhido = 'parcial';
+
+    return {
+      base: arred(base),
+      cenarios: cenarios,
+      cenarioSelecionado: escolhido,
+      valorConsiderado: cenarios[escolhido].valor
+    };
+  }
+
+  /* ================================================================== *
+   * 8. Prazos e cronologia
+   * ================================================================== */
+
+  function construirTimeline(dados, p, juros, recuperacao) {
+    var exercicio = num(dados.sociedade.exercicio);
+    var ref = data(dados.parametros && dados.parametros.dataReferencia);
+    var iso = function (y, m, d) { return new Date(Date.UTC(y, m - 1, d)).toISOString().slice(0, 10); };
+
+    var eventos = [
+      {
+        data: iso(exercicio, 12, 31),
+        titulo: 'Fecho do exercício de ' + exercicio,
+        descricao: 'Apuramento do resultado contabilístico e da matéria coletável.',
+        tipo: 'facto'
+      },
+      {
+        data: iso(exercicio + 1, p.prazos.prazoEntregaModelo22.mes, p.prazos.prazoEntregaModelo22.dia),
+        titulo: 'Prazo de entrega da Modelo 22',
+        descricao: 'Declaração de rendimentos de IRC do exercício de ' + exercicio + '.',
+        tipo: 'prazo'
+      },
+      {
+        data: iso(exercicio + 1, p.prazos.prazoEntregaModelo3.mes, p.prazos.prazoEntregaModelo3.dia),
+        titulo: 'Prazo de entrega da Modelo 3 de IRS',
+        descricao: 'Termo do prazo em que a imputação deveria ter sido declarada pelos sócios. ' +
+          'Início da contagem dos juros compensatórios.',
+        tipo: 'prazo'
+      },
+      {
+        data: juros.dataFim,
+        titulo: 'Data de referência da simulação',
+        descricao: juros.dias + ' dias de juros compensatórios acumulados sobre ' +
+          formatarEuro(juros.base) + '.',
+        tipo: 'referencia'
+      },
+      {
+        data: iso(exercicio + 1 + num(p.prazos.revisaoOficiosaAnos), 12, 31),
+        titulo: 'Limite da revisão a favor do contribuinte',
+        descricao: 'Artigo 78.º, n.º 1 da LGT: ' + p.prazos.revisaoOficiosaAnos +
+          ' anos para pedir a revisão do IRC liquidado. Depois desta data o IRC deixa de ser recuperável.',
+        tipo: 'limite'
+      },
+      {
+        data: iso(exercicio + 1 + num(p.prazos.caducidadeAnos), 12, 31),
+        titulo: 'Caducidade do direito à liquidação',
+        descricao: 'Artigo 45.º da LGT: ' + p.prazos.caducidadeAnos +
+          ' anos. Depois desta data a Autoridade Tributária deixa de poder liquidar IRS adicional.',
+        tipo: 'limite'
+      }
+    ];
+
+    eventos.sort(function (a, b) { return a.data < b.data ? -1 : 1; });
+    var refIso = ref.toISOString().slice(0, 10);
+    eventos.forEach(function (e) { e.passado = e.data <= refIso; });
+    return eventos;
+  }
+
+  /** Formatacao monetaria em pt-PT, sem depender de Intl no lado do motor. */
+  function formatarEuro(v) {
+    var x = num(v);
+    var sinal = x < 0 ? '-' : '';
+    var partes = Math.abs(x).toFixed(2).split('.');
+    var inteiro = partes[0].replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0');
+    return sinal + inteiro + ',' + partes[1] + '\u00a0\u20ac';
+  }
+
+  /* ================================================================== *
+   * 9. Avisos e validacoes
+   * ================================================================== */
+
+  function validar(dados, p, tabela) {
+    var avisos = [];
+    var socios = dados.socios || [];
+    var soma = socios.reduce(function (a, s) { return a + num(s.participacao); }, 0);
+
+    if (!socios.length) {
+      avisos.push({ nivel: 'erro', texto: 'Não foi introduzido nenhum sócio. A imputação não pode ser calculada.' });
+    } else if (Math.abs(soma - 100) > 0.01) {
+      avisos.push({
+        nivel: 'erro',
+        texto: 'A soma das participações é de ' + arred(soma) + '%. Deve totalizar 100%. ' +
+          'A matéria coletável imputada está ' + (soma < 100 ? 'subavaliada' : 'sobreavaliada') + '.'
+      });
+    }
+
+    var s = dados.sociedade;
+    var mcTeorica = num(s.resultadoContabilistico) + num(s.correcoesFiscais);
+    if (num(s.materiaColetavel) > 0 && Math.abs(mcTeorica - num(s.materiaColetavel)) > 1) {
+      avisos.push({
+        nivel: 'aviso',
+        texto: 'Resultado contabilístico + correções fiscais = ' + formatarEuro(mcTeorica) +
+          ', mas a matéria coletável introduzida é ' + formatarEuro(s.materiaColetavel) +
+          '. Diferença de ' + formatarEuro(num(s.materiaColetavel) - mcTeorica) +
+          ' (pode justificar-se por prejuízos fiscais reportados ou benefícios).'
+      });
+    }
+
+    if (num(s.materiaColetavel) <= 0) {
+      avisos.push({ nivel: 'aviso', texto: 'Matéria coletável nula ou negativa: não há imputação a tributar em IRS.' });
+    }
+
+    if (tabela && tabela.estado === 'provisorio') {
+      avisos.push({ nivel: 'aviso', texto: 'A tabela de IRS de ' + s.exercicio + ' está marcada como PROVISÓRIA. ' + tabela.fonte });
+    }
+    if (tabela && tabela.estado === 'substituido') {
+      avisos.push({ nivel: 'aviso', texto: tabela.fonte });
+    }
+
+    var ref = data(dados.parametros && dados.parametros.dataReferencia);
+    var limiteRevisao = new Date(Date.UTC(num(s.exercicio) + 1 + num(p.prazos.revisaoOficiosaAnos), 11, 31));
+    if (ref > limiteRevisao) {
+      avisos.push({
+        nivel: 'erro',
+        texto: 'A data de referência ultrapassa o prazo de revisão do artigo 78.º da LGT (' +
+          limiteRevisao.toISOString().slice(0, 10) + '). O IRC pago dificilmente será recuperável.'
+      });
+    }
+    var limiteCaducidade = new Date(Date.UTC(num(s.exercicio) + 1 + num(p.prazos.caducidadeAnos), 11, 31));
+    if (ref > limiteCaducidade) {
+      avisos.push({
+        nivel: 'info',
+        texto: 'A data de referência ultrapassa o prazo de caducidade do artigo 45.º da LGT (' +
+          limiteCaducidade.toISOString().slice(0, 10) + '). A liquidação adicional de IRS poderá já não ser exigível.'
+      });
+    }
+    return avisos;
+  }
+
+  /* ================================================================== *
+   * 10. Simulacao completa
+   * ================================================================== */
+
+  function simular(dados) {
+    var p = mesclarParametros(dados.parametros);
+    var tabela = escaloesDoExercicio(p, dados.sociedade.exercicio);
+
+    var actual = cenarioActual(dados, p);
+    var corrigido = cenarioCorrigido(dados, p);
+
+    var creditoDistribuicoes = (dados.socios || []).reduce(function (a, s) {
+      return a + num(s.irsPagoDistribuicoes);
+    }, 0);
+
+    var irsAdicionalBruto = Math.max(0, corrigido.irsTotal - actual.irsTotal);
+    var irsAdicional = Math.max(0, irsAdicionalBruto - creditoDistribuicoes);
+
+    var juros = calcularJuros(irsAdicional, dados, p);
+    var coimas = calcularCoimas(irsAdicional, dados, p);
+    var recuperacao = calcularRecuperacaoIRC(actual, dados, p);
+
+    var porSocio = corrigido.socios.map(function (sc, i) {
+      var base = actual.socios[i] || { irs: 0 };
+      var delta = Math.max(0, sc.irs - base.irs);
+      return {
+        nome: sc.nome || ('Socio ' + (i + 1)),
+        participacao: sc.participacao,
+        imputacao: sc.imputacao,
+        irsAtual: base.irs,
+        irsCorrigido: sc.irs,
+        irsAdicional: arred(delta),
+        taxaMarginalAtual: base.liquidacao ? base.liquidacao.taxaMarginal : 0,
+        taxaMarginalCorrigida: sc.liquidacao.taxaMarginal,
+        rendimentoColetavelAtual: base.liquidacao ? base.liquidacao.rendimentoColetavel : 0,
+        rendimentoColetavelCorrigido: sc.liquidacao.rendimentoColetavel,
+        quotaImputacao: irsAdicionalBruto > 0 ? arred(delta / irsAdicionalBruto, 4) : 0
+      };
+    });
+
+    function exposicao(valorCoima, valorIRC) {
+      return arred(irsAdicional + juros.montante + valorCoima - valorIRC);
+    }
+
+    var exposicaoLiquida = exposicao(coimas.provavel.valor, recuperacao.valorConsiderado);
+
+    var matriz = ['minimo', 'provavel', 'maximo'].map(function (chaveCoima) {
+      return {
+        coima: chaveCoima,
+        valores: ['integral', 'parcial', 'inexistente'].map(function (chaveIRC) {
+          return {
+            irc: chaveIRC,
+            valor: exposicao(coimas[chaveCoima].valor, recuperacao.cenarios[chaveIRC].valor)
+          };
+        })
+      };
+    });
+
+    var comparador = [
+      { indicador: 'IRC (coleta + derramas)', atual: arred(actual.irc.coleta + actual.irc.derramaMunicipal + actual.irc.derramaEstadual), corrigido: 0 },
+      { indicador: 'Tributações autónomas', atual: actual.irc.tributacoesAutonomas, corrigido: corrigido.irc.tributacoesAutonomas },
+      { indicador: 'IRS dos sócios', atual: actual.irsTotal, corrigido: corrigido.irsTotal },
+      { indicador: 'Juros compensatórios', atual: 0, corrigido: juros.montante },
+      { indicador: 'Coimas (cenário provável)', atual: 0, corrigido: coimas.provavel.valor },
+      { indicador: 'Carga fiscal total', atual: arred(actual.impostoTotal), corrigido: arred(corrigido.impostoTotal + juros.montante + coimas.provavel.valor) }
+    ].map(function (l) {
+      l.variacao = arred(l.corrigido - l.atual);
+      return l;
+    });
+
+    return {
+      meta: {
+        exercicio: num(dados.sociedade.exercicio),
+        dataReferencia: juros.dataFim,
+        tabelaIRS: { estado: tabela.estado, fonte: tabela.fonte },
+        geradoEm: new Date().toISOString()
+      },
+      parametros: p,
+      atual: actual,
+      corrigido: corrigido,
+      socios: porSocio,
+      juros: juros,
+      coimas: coimas,
+      recuperacaoIRC: recuperacao,
+      indicadores: {
+        irsAdicionalBruto: arred(irsAdicionalBruto),
+        creditoDistribuicoes: arred(creditoDistribuicoes),
+        irsAdicional: arred(irsAdicional),
+        juros: juros.montante,
+        coimas: coimas.provavel.valor,
+        ircRecuperavel: recuperacao.valorConsiderado,
+        exposicaoBruta: arred(irsAdicional + juros.montante + coimas.provavel.valor),
+        exposicaoLiquida: exposicaoLiquida
+      },
+      matrizSensibilidade: matriz,
+      comparador: comparador,
+      timeline: construirTimeline(dados, p, juros, recuperacao),
+      avisos: validar(dados, p, tabela)
+    };
+  }
+
+  /** Funde parametros do utilizador sobre os valores por omissao. */
+  function mesclarParametros(personalizados) {
+    var base = Parametros.porOmissao();
+    if (!personalizados) return base;
+    Object.keys(base).forEach(function (chave) {
+      if (personalizados[chave] === undefined) return;
+      if (Array.isArray(base[chave]) || typeof base[chave] !== 'object') {
+        base[chave] = personalizados[chave];
+      } else {
+        Object.keys(personalizados[chave] || {}).forEach(function (sub) {
+          base[chave][sub] = personalizados[chave][sub];
+        });
+      }
+    });
+    return base;
+  }
+
+  return {
+    simular: simular,
+    liquidarIRS: liquidarIRS,
+    coletaProgressiva: coletaProgressiva,
+    solidariedade: solidariedade,
+    calcularJuros: calcularJuros,
+    calcularCoimas: calcularCoimas,
+    calcularRecuperacaoIRC: calcularRecuperacaoIRC,
+    mesclarParametros: mesclarParametros,
+    rendimentoColetavelSocio: rendimentoColetavelSocio,
+    arred: arred,
+    num: num
+  };
+});
+
+</script>
+<script>
+/** formato.js - formatação de números, moeda, percentagens e datas em pt-PT. */
+(function (raiz, fabrica) {
+  if (typeof module !== 'undefined' && module.exports) module.exports = fabrica();
+  else raiz.Formato = fabrica();
+})(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
+
+  var moeda = new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' });
+  var moedaCurta = new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+  var numero = new Intl.NumberFormat('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  function n(v) {
+    if (v === null || v === undefined || v === '') return 0;
+    var x = typeof v === 'number' ? v : parseFloat(String(v).replace(/\s/g, '').replace(',', '.'));
+    return isFinite(x) ? x : 0;
+  }
+
+  return {
+    euro: function (v) { return moeda.format(n(v)); },
+    euroCurto: function (v) { return moedaCurta.format(n(v)); },
+    numero: function (v) { return numero.format(n(v)); },
+    percentagem: function (v, casas) {
+      return numeroCasas(n(v) * 100, casas === undefined ? 1 : casas) + '%';
+    },
+    percentagemDireta: function (v, casas) {
+      return numeroCasas(n(v), casas === undefined ? 2 : casas) + '%';
+    },
+    data: function (iso) {
+      if (!iso) return '—';
+      var d = new Date(iso);
+      if (isNaN(d.getTime())) return String(iso);
+      return String(d.getUTCDate()).padStart(2, '0') + '/' +
+        String(d.getUTCMonth() + 1).padStart(2, '0') + '/' + d.getUTCFullYear();
+    },
+    sinal: function (v) { return n(v) > 0 ? '+' : ''; },
+    numeroBruto: n
+  };
+
+  function numeroCasas(v, casas) {
+    return new Intl.NumberFormat('pt-PT', {
+      minimumFractionDigits: 0, maximumFractionDigits: casas
+    }).format(v);
+  }
+});
+
+</script>
+<script>
+/**
+ * estado.js - estado da aplicação, valores por omissão, persistência local
+ * e importação/exportação de ficheiros JSON.
+ */
+(function (raiz, fabrica) {
+  if (typeof module !== 'undefined' && module.exports) module.exports = fabrica(require('./parametros.js'));
+  else raiz.Estado = fabrica(raiz.Parametros);
+})(typeof self !== 'undefined' ? self : this, function (Parametros) {
+  'use strict';
+
+  var CHAVE = 'simulador-transparencia-fiscal/v1';
+
+  function socioVazio(n) {
+    return {
+      nome: 'Sócio ' + n,
+      participacao: 0,
+      rendimentosA: 0,
+      rendimentosB: 0,
+      categoriaBJaLiquida: false,
+      outrosRendimentos: 0,
+      tributacao: 'separada',
+      rendimentosConjuge: 0,
+      dependentes: 0,
+      irsPagoDistribuicoes: 0
+    };
+  }
+
+  function novo() {
+    var anoCorrente = new Date().getFullYear();
+    return {
+      versao: 1,
+      sociedade: {
+        designacao: '',
+        exercicio: anoCorrente - 2,
+        resultadoContabilistico: 0,
+        correcoesFiscais: 0,
+        materiaColetavel: 0,
+        ircLiquidado: 0,
+        derramaMunicipal: 0,
+        derramaEstadual: 0,
+        tributacoesAutonomas: 0,
+        pagamentosPorConta: 0,
+        retencoes: 0
+      },
+      socios: [socioVazio(1), socioVazio(2)],
+      parametros: {
+        dataReferencia: new Date().toISOString().slice(0, 10),
+        dataInicioJuros: '',
+        cenarioIRC: 'parcial'
+      }
+    };
+  }
+
+  function exemplo() {
+    var d = novo();
+    d.sociedade = {
+      designacao: 'Clínica Exemplo, Unipessoal Lda.',
+      exercicio: 2024,
+      resultadoContabilistico: 148000,
+      correcoesFiscais: 2000,
+      materiaColetavel: 150000,
+      ircLiquidado: 28500,
+      derramaMunicipal: 2250,
+      derramaEstadual: 0,
+      tributacoesAutonomas: 3400,
+      pagamentosPorConta: 18000,
+      retencoes: 850
+    };
+    d.socios = [
+      {
+        nome: 'Dra. Sócia maioritária', participacao: 70, rendimentosA: 42000, rendimentosB: 0,
+        categoriaBJaLiquida: false, outrosRendimentos: 0, tributacao: 'conjunta',
+        rendimentosConjuge: 28000, dependentes: 2, irsPagoDistribuicoes: 0
+      },
+      {
+        nome: 'Dr. Sócio minoritário', participacao: 30, rendimentosA: 24000, rendimentosB: 6000,
+        categoriaBJaLiquida: false, outrosRendimentos: 0, tributacao: 'separada',
+        rendimentosConjuge: 0, dependentes: 0, irsPagoDistribuicoes: 0
+      }
+    ];
+    d.parametros.dataReferencia = new Date().toISOString().slice(0, 10);
+    return d;
+  }
+
+  function normalizar(dados) {
+    var base = novo();
+    if (!dados || typeof dados !== 'object') return base;
+    base.sociedade = Object.assign(base.sociedade, dados.sociedade || {});
+    base.parametros = Object.assign(base.parametros, dados.parametros || {});
+    if (Array.isArray(dados.socios) && dados.socios.length) {
+      base.socios = dados.socios.map(function (s, i) { return Object.assign(socioVazio(i + 1), s); });
+    }
+    return base;
+  }
+
+  function guardar(dados) {
+    try { localStorage.setItem(CHAVE, JSON.stringify(dados)); return true; }
+    catch (e) { return false; }
+  }
+
+  function ler() {
+    try {
+      var bruto = localStorage.getItem(CHAVE);
+      return bruto ? normalizar(JSON.parse(bruto)) : null;
+    } catch (e) { return null; }
+  }
+
+  function apagar() {
+    try { localStorage.removeItem(CHAVE); } catch (e) { /* ignorado */ }
+  }
+
+  return {
+    CHAVE: CHAVE,
+    novo: novo,
+    exemplo: exemplo,
+    socioVazio: socioVazio,
+    normalizar: normalizar,
+    guardar: guardar,
+    ler: ler,
+    apagar: apagar
+  };
+});
+
+</script>
+<script>
+/**
+ * relatorio.js - geração do relatório imprimível (PDF via impressão do navegador).
+ * Estrutura: resumo executivo, fundamentação jurídica, simulação financeira,
+ * recomendações e plano de regularização.
+ */
+(function (raiz) {
+  'use strict';
+  var F = raiz.Formato;
+
+  function esc(v) {
+    return String(v === null || v === undefined ? '' : v)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function estilo() {
+    return [
+      '@page { size: A4; margin: 18mm 16mm; }',
+      'body { font: 11pt/1.5 Georgia, "Times New Roman", serif; color: #14181f; margin: 0; }',
+      'h1 { font-size: 19pt; margin: 0 0 .2em; }',
+      'h2 { font-size: 13pt; margin: 1.6em 0 .5em; padding-bottom: .2em; border-bottom: 1.5px solid #0f3d6e; color: #0f3d6e; page-break-after: avoid; }',
+      'h3 { font-size: 11.5pt; margin: 1.1em 0 .3em; page-break-after: avoid; }',
+      'p, li { margin: 0 0 .55em; text-align: justify; }',
+      '.capa { border-bottom: 3px solid #0f3d6e; padding-bottom: 1em; margin-bottom: 1.4em; }',
+      '.capa .sub { color: #4a5666; font-size: 10pt; }',
+      '.meta { font-size: 9pt; color: #67707f; margin-top: .6em; }',
+      '.destaque-caixa { background: #f2f6fb; border-left: 4px solid #0f3d6e; padding: .8em 1em; margin: 1em 0; page-break-inside: avoid; }',
+      '.numero-grande { font-size: 22pt; font-weight: bold; color: #b3261e; display: block; line-height: 1.1; }',
+      'table { width: 100%; border-collapse: collapse; margin: .6em 0 1em; font-size: 9.5pt; page-break-inside: avoid; }',
+      'th, td { border-bottom: 1px solid #d6dce6; padding: .38em .5em; text-align: right; }',
+      'th:first-child, td:first-child { text-align: left; }',
+      'thead th { background: #eef2f8; border-bottom: 1.5px solid #0f3d6e; font-size: 8.5pt; text-transform: uppercase; letter-spacing: .04em; }',
+      'tr.total td { font-weight: bold; background: #f7f9fc; }',
+      'td.celula-texto { text-align: left; }',
+      '.nota { font-size: 8.5pt; color: #4a5666; }',
+      '.legal { font-size: 9.5pt; color: #2c333d; }',
+      '.legal dt { font-weight: bold; margin-top: .5em; }',
+      '.legal dd { margin: 0 0 .4em; }',
+      '.aviso { border: 1px solid #b3261e; background: #fdecea; color: #7d1912; padding: .6em .8em; margin: .5em 0; font-size: 9.5pt; }',
+      '.rodape-doc { margin-top: 2em; padding-top: .7em; border-top: 1px solid #d6dce6; font-size: 8.5pt; color: #67707f; }',
+      'ol.plano li { margin-bottom: .5em; }',
+      '.quebra { page-break-before: always; }',
+      '@media print { .barra-imprimir { display: none !important; } }',
+      '.barra-imprimir { position: fixed; top: 0; left: 0; right: 0; background: #0f3d6e; color: #fff; padding: .6em 1em; font-family: system-ui, sans-serif; font-size: 10pt; display: flex; gap: 1em; align-items: center; justify-content: space-between; z-index: 9; }',
+      '.barra-imprimir button { font: inherit; padding: .35em .9em; border-radius: 6px; border: 0; cursor: pointer; }',
+      '.corpo { margin-top: 3.2em; }',
+      '@media print { .corpo { margin-top: 0; } }'
+    ].join('\n');
+  }
+
+  function tabela(cabecalhos, linhas) {
+    var th = cabecalhos.map(function (c) { return '<th>' + esc(c) + '</th>'; }).join('');
+    var tr = linhas.map(function (l) {
+      var classe = l.total ? ' class="total"' : '';
+      var celulas = (l.celulas || l).map(function (c) {
+        if (c && typeof c === 'object' && c.html !== undefined) return '<td class="celula-texto">' + c.html + '</td>';
+        return '<td>' + esc(c) + '</td>';
+      }).join('');
+      return '<tr' + classe + '>' + celulas + '</tr>';
+    }).join('');
+    return '<table><thead><tr>' + th + '</tr></thead><tbody>' + tr + '</tbody></table>';
+  }
+
+  function resumoExecutivo(d, r) {
+    var i = r.indicadores;
+    var nome = d.sociedade.designacao || 'a sociedade';
+    return [
+      '<h2>1. Resumo executivo</h2>',
+      '<div class="destaque-caixa">',
+      '<span class="numero-grande">' + esc(F.euro(i.exposicaoLiquida)) + '</span>',
+      '<strong>Exposição fiscal líquida estimada</strong> para o exercício de ' + esc(r.meta.exercicio) +
+      ', no cenário de coima provável e ' + esc(r.recuperacaoIRC.cenarios[r.recuperacaoIRC.cenarioSelecionado].rotulo.toLowerCase()) + ' do IRC.',
+      '</div>',
+      '<p>Caso a Autoridade Tributária conclua que ' + esc(nome) + ' preenchia os pressupostos do artigo 6.º do Código do IRC ' +
+      'no exercício de ' + esc(r.meta.exercicio) + ', a matéria coletável de ' + esc(F.euro(r.atual.irc.materiaColetavel)) +
+      ' deixa de ser tributada em sede de IRC e passa a ser imputada aos sócios, sendo englobada no respetivo IRS.</p>',
+      '<p>O efeito financeiro decompõe-se em quatro parcelas: o IRS adicional de ' + esc(F.euro(i.irsAdicional)) +
+      ', os juros compensatórios de ' + esc(F.euro(i.juros)) + ' correspondentes a ' + esc(r.juros.dias) + ' dias de mora, ' +
+      'a coima estimada de ' + esc(F.euro(i.coimas)) + ' e o IRC potencialmente recuperável de ' + esc(F.euro(i.ircRecuperavel)) +
+      ', este último a abater ao custo total.</p>',
+      tabela(['Indicador', 'Montante'], [
+        ['IRS adicional dos sócios', F.euro(i.irsAdicional)],
+        ['Juros compensatórios', F.euro(i.juros)],
+        ['Coimas (cenário provável)', F.euro(i.coimas)],
+        { celulas: ['Exposição bruta', F.euro(i.exposicaoBruta)], total: true },
+        ['IRC potencialmente recuperável', '−' + F.euro(i.ircRecuperavel)],
+        { celulas: ['Exposição fiscal líquida', F.euro(i.exposicaoLiquida)], total: true }
+      ]),
+      r.avisos.filter(function (a) { return a.nivel === 'erro'; })
+        .map(function (a) { return '<div class="aviso">' + esc(a.texto) + '</div>'; }).join('')
+    ].join('\n');
+  }
+
+  function fundamentacao(r) {
+    return [
+      '<h2>2. Fundamentação jurídica</h2>',
+      '<p>A presente simulação parte do pressuposto, previamente verificado, de que a sociedade se enquadra ' +
+      'no regime de transparência fiscal. Não é objeto deste relatório determinar se esse enquadramento existe, ' +
+      'mas apenas quantificar as consequências financeiras da sua aplicação.</p>',
+      '<dl class="legal">',
+      '<dt>Artigo 6.º do CIRC — Transparência fiscal</dt>',
+      '<dd>Imputa aos sócios a matéria coletável das sociedades de profissionais, ainda que não haja distribuição de lucros. ' +
+      'A sociedade deixa de ser tributada em IRC sobre essa matéria coletável.</dd>',
+      '<dt>Artigo 12.º do CIRC — Sociedades abrangidas pelo regime de transparência fiscal</dt>',
+      '<dd>As sociedades transparentes não são tributadas em IRC, salvo quanto às tributações autónomas. ' +
+      'Por isso o montante de ' + esc(F.euro(r.corrigido.irc.tributacoesAutonomas)) + ' se mantém devido no cenário corrigido.</dd>',
+      '<dt>Artigo 20.º do CIRS — Imputação especial</dt>',
+      '<dd>A matéria coletável imputada integra-se como rendimento líquido da categoria B na declaração de cada sócio, ' +
+      'sendo objeto de englobamento e sujeita às taxas gerais do artigo 68.º do CIRS.</dd>',
+      '<dt>Artigo 68.º e 68.º-A do CIRS — Taxas gerais e taxa adicional de solidariedade</dt>',
+      '<dd>Tabela aplicada: ' + esc(r.meta.tabelaIRS.fonte) + '</dd>',
+      '<dt>Artigo 35.º da LGT — Juros compensatórios</dt>',
+      '<dd>São devidos quando, por facto imputável ao sujeito passivo, for retardada a liquidação de parte do imposto. ' +
+      'Taxa aplicada de ' + esc(F.percentagem(r.juros.taxaAnual, 2)) + ' ao ano, contada de ' + esc(F.data(r.juros.dataInicio)) +
+      ' a ' + esc(F.data(r.juros.dataFim)) + '.</dd>',
+      '<dt>Artigos 114.º e 119.º do RGIT — Coimas</dt>',
+      '<dd>Falta de entrega da prestação tributária e inexatidão das declarações. ' +
+      'Redução por regularização voluntária nos termos dos artigos 29.º e 30.º do RGIT.</dd>',
+      '<dt>Artigos 45.º e 78.º da LGT — Prazos</dt>',
+      '<dd>Caducidade do direito à liquidação e revisão do ato tributário a favor do contribuinte, ' +
+      'ambos de quatro anos. É este segundo prazo que condiciona a recuperabilidade do IRC pago.</dd>',
+      '</dl>'
+    ].join('\n');
+  }
+
+  function simulacaoFinanceira(d, r) {
+    var comparador = tabela(['Indicador', 'Situação atual', 'Situação corrigida', 'Variação'],
+      r.comparador.map(function (l, idx) {
+        return {
+          celulas: [l.indicador, F.euro(l.atual), F.euro(l.corrigido), (l.variacao > 0 ? '+' : '') + F.euro(l.variacao)],
+          total: idx === r.comparador.length - 1
+        };
+      }));
+
+    var socios = tabela(['Sócio', 'Participação', 'Imputação', 'IRS atual', 'IRS corrigido', 'IRS adicional'],
+      r.socios.map(function (s) {
+        return [s.nome, F.percentagemDireta(s.participacao), F.euro(s.imputacao), F.euro(s.irsAtual), F.euro(s.irsCorrigido), F.euro(s.irsAdicional)];
+      }).concat([{
+        celulas: ['Total', F.percentagemDireta(r.socios.reduce(function (a, s) { return a + s.participacao; }, 0)),
+          F.euro(r.atual.irc.materiaColetavel), F.euro(r.atual.irsTotal), F.euro(r.corrigido.irsTotal), F.euro(r.indicadores.irsAdicionalBruto)],
+        total: true
+      }]));
+
+    var coimas = tabela(['Cenário e fundamento', 'Montante'], ['minimo', 'provavel', 'maximo'].map(function (k) {
+      var c = r.coimas[k];
+      return [
+        { html: '<strong>' + esc({ minimo: 'Mínimo', provavel: 'Provável', maximo: 'Máximo' }[k] + ' — ' + c.rotulo) +
+          '</strong><br><span class="nota">' + esc(c.fundamento) + '</span>' },
+        F.euro(c.valor)
+      ];
+    }));
+
+    var irc = tabela(['Cenário de recuperação do IRC', 'Percentagem', 'Montante'],
+      ['integral', 'parcial', 'inexistente'].map(function (k) {
+        var c = r.recuperacaoIRC.cenarios[k];
+        return [c.rotulo + (k === r.recuperacaoIRC.cenarioSelecionado ? ' (selecionado)' : ''), F.percentagem(c.percentagem, 0), F.euro(c.valor)];
+      }));
+
+    var matriz = tabela(['Coima \\ IRC', 'Reembolso integral', 'Reembolso parcial', 'Reembolso inexistente'],
+      r.matrizSensibilidade.map(function (l) {
+        return ['Coima ' + { minimo: 'mínima', provavel: 'provável', maximo: 'máxima' }[l.coima]]
+          .concat(l.valores.map(function (v) { return F.euro(v.valor); }));
+      }));
+
+    var cronologia = '<ul>' + r.timeline.map(function (e) {
+      return '<li><strong>' + esc(F.data(e.data)) + '</strong> — ' + esc(e.titulo) + '. ' + esc(e.descricao) + '</li>';
+    }).join('') + '</ul>';
+
+    return [
+      '<h2 class="quebra">3. Simulação financeira</h2>',
+      '<h3>3.1 Comparador entre a situação atual e a situação corrigida</h3>', comparador,
+      '<h3>3.2 Impacto por sócio</h3>', socios,
+      '<h3>3.3 Juros compensatórios</h3>',
+      '<p>Base de cálculo de ' + esc(F.euro(r.juros.base)) + ', à taxa anual de ' + esc(F.percentagem(r.juros.taxaAnual, 2)) +
+      ', durante ' + esc(r.juros.dias) + ' dias (' + esc(F.data(r.juros.dataInicio)) + ' a ' + esc(F.data(r.juros.dataFim)) +
+      '), num total de <strong>' + esc(F.euro(r.juros.montante)) + '</strong>.</p>',
+      '<h3>3.4 Cenários de coima</h3>', coimas,
+      '<h3>3.5 Recuperação do IRC</h3>',
+      '<p>Base recuperável de ' + esc(F.euro(r.recuperacaoIRC.base)) + ', correspondente à coleta de IRC e derramas pagas. ' +
+      'As tributações autónomas mantêm-se devidas e não integram esta base.</p>', irc,
+      '<h3>3.6 Matriz de exposição líquida</h3>', matriz,
+      '<h3>3.7 Cronologia fiscal</h3>', cronologia
+    ].join('\n');
+  }
+
+  function recomendacoes(d, r) {
+    var i = r.indicadores;
+    var linhas = [];
+    var prazoRevisao = r.timeline.filter(function (e) { return /revisão/i.test(e.titulo); })[0];
+
+    linhas.push('Confirmar documentalmente o preenchimento dos pressupostos do artigo 6.º do CIRC no exercício de ' +
+      r.meta.exercicio + ', em particular a natureza das atividades exercidas e a composição do capital social.');
+
+    if (i.ircRecuperavel > 0 && prazoRevisao) {
+      linhas.push('Avaliar o pedido de revisão do ato tributário do IRC ao abrigo do artigo 78.º da LGT. ' +
+        'O prazo termina em ' + F.data(prazoRevisao.data) + ' e estão em causa ' + F.euro(r.recuperacaoIRC.base) + '.');
+    } else {
+      linhas.push('O prazo de revisão do IRC pago está esgotado ou o cenário selecionado não prevê recuperação. ' +
+        'O IRC suportado deve ser considerado custo irrecuperável nesta análise.');
+    }
+
+    if (i.irsAdicional > 0) {
+      linhas.push('Ponderar a substituição das declarações Modelo 3 dos sócios do exercício de ' + r.meta.exercicio +
+        '. A regularização voluntária, antes de qualquer procedimento inspetivo, reduz a coima de ' +
+        F.euro(r.coimas.provavel.valor) + ' para ' + F.euro(r.coimas.minimo.valor) +
+        ', uma poupança de ' + F.euro(r.coimas.provavel.valor - r.coimas.minimo.valor) + '.');
+      linhas.push('Os juros compensatórios continuam a correr até à regularização, a um custo aproximado de ' +
+        F.euro(i.irsAdicional * r.juros.taxaAnual / 12) + ' por mês de atraso.');
+    }
+
+    linhas.push('Articular a substituição das Modelo 3 com o pedido de anulação do IRC, para evitar uma janela em que ' +
+      'o IRS adicional já é exigível e o IRC ainda não foi devolvido.');
+    linhas.push('Avaliar o impacto nos exercícios seguintes e corrigir o enquadramento declarativo para o futuro, ' +
+      'de modo a interromper a acumulação de exposição.');
+
+    return '<h2>4. Recomendações</h2><ol class="plano">' +
+      linhas.map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ol>';
+  }
+
+  function plano(d, r) {
+    var passos = [
+      ['Fase 1 — Diagnóstico e prova (0 a 30 dias)',
+        'Reunir contratos, certidões, pactos sociais, atas e evidência da atividade dos sócios. ' +
+        'Fixar por escrito a posição sobre o artigo 6.º do CIRC e quantificar o exercício ou exercícios afetados.'],
+      ['Fase 2 — Decisão sobre a via de regularização (30 a 45 dias)',
+        'Escolher entre a substituição declarativa voluntária e a espera por procedimento inspetivo. ' +
+        'A diferença estimada em coimas é de ' + F.euro(r.coimas.provavel.valor - r.coimas.minimo.valor) + '.'],
+      ['Fase 3 — Substituição das declarações de IRS (45 a 60 dias)',
+        'Entrega das Modelo 3 de substituição com a imputação de ' + F.euro(r.atual.irc.materiaColetavel) +
+        ' repartida pelos sócios, gerando IRS adicional de ' + F.euro(r.indicadores.irsAdicionalBruto) + '.'],
+      ['Fase 4 — Pedido de anulação do IRC (em simultâneo)',
+        'Reclamação graciosa ou pedido de revisão oficiosa para recuperação de ' + F.euro(r.recuperacaoIRC.base) +
+        ' de IRC e derramas, com pedido de compensação com a dívida de IRS sempre que admissível.'],
+      ['Fase 5 — Pagamento ou plano prestacional (60 a 90 dias)',
+        'Liquidação do saldo apurado ou requerimento de pagamento em prestações. ' +
+        'Exposição líquida a financiar: ' + F.euro(r.indicadores.exposicaoLiquida) + '.'],
+      ['Fase 6 — Correção prospetiva',
+        'Adequação do enquadramento declarativo dos exercícios seguintes e, se aplicável, revisão da estrutura societária.']
+    ];
+    return '<h2>5. Plano de regularização</h2>' + passos.map(function (p) {
+      return '<h3>' + esc(p[0]) + '</h3><p>' + esc(p[1]) + '</p>';
+    }).join('');
+  }
+
+  function html(d, r, semBarra) {
+    var titulo = 'Relatório de impacto — transparência fiscal — exercício de ' + r.meta.exercicio;
+    return [
+      '<!DOCTYPE html><html lang="pt-PT"><head><meta charset="utf-8"><title>' + esc(titulo) + '</title>',
+      '<style>' + estilo() + '</style></head><body>',
+      semBarra ? '' : '<div class="barra-imprimir">' +
+      '<span>Use “Guardar como PDF” na janela de impressão.</span>' +
+      '<button onclick="window.print()">Imprimir / Guardar PDF</button></div>',
+      '<div class="corpo">',
+      '<div class="capa">',
+      '<h1>Impacto da reclassificação para o regime de transparência fiscal</h1>',
+      '<div class="sub">' + esc(d.sociedade.designacao || 'Sociedade não identificada') + ' · Exercício de ' + esc(r.meta.exercicio) + '</div>',
+      '<div class="meta">Relatório gerado em ' + esc(F.data(r.meta.geradoEm)) +
+      ' · Data de referência da simulação: ' + esc(F.data(r.meta.dataReferencia)) + '</div>',
+      '</div>',
+      resumoExecutivo(d, r),
+      fundamentacao(r),
+      simulacaoFinanceira(d, r),
+      recomendacoes(d, r),
+      plano(d, r),
+      '<div class="rodape-doc">',
+      'Documento produzido pelo Simulador de Impacto da Reclassificação da Transparência Fiscal. ',
+      'Os valores apresentados são estimativas assentes em parâmetros configuráveis e nos dados introduzidos pelo utilizador. ',
+      'Não constituem liquidação de imposto nem substituem parecer jurídico-fiscal. ',
+      'A elegibilidade para o artigo 6.º do CIRC é pressuposto assumido e não objeto de apreciação neste documento.',
+      '</div></div></body></html>'
+    ].join('\n');
+  }
+
+  /**
+   * Alternativa para contextos em que as janelas emergentes são bloqueadas
+   * (telemóvel, páginas em moldura): o relatório abre sobreposto à aplicação.
+   */
+  function sobrepor(d, r) {
+    var fundo = document.createElement('div');
+    fundo.setAttribute('role', 'dialog');
+    fundo.setAttribute('aria-label', 'Relatório');
+    fundo.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;background:#10151c;';
+
+    var barra = document.createElement('div');
+    barra.style.cssText = 'display:flex;gap:.5rem;align-items:center;justify-content:space-between;' +
+      'padding:.6rem .8rem;background:#0f3d6e;color:#fff;font:14px/1.4 system-ui,sans-serif;';
+    barra.appendChild(criarTexto('Relatório pronto. Imprima para guardar em PDF.'));
+
+    var acoes = document.createElement('div');
+    acoes.style.cssText = 'display:flex;gap:.5rem;';
+    var estiloBotao = 'font:inherit;padding:.4em 1em;border-radius:6px;border:0;cursor:pointer;';
+    var imprimir = document.createElement('button');
+    imprimir.type = 'button';
+    imprimir.textContent = 'Imprimir / PDF';
+    imprimir.style.cssText = estiloBotao;
+    var fechar = document.createElement('button');
+    fechar.type = 'button';
+    fechar.textContent = 'Fechar';
+    fechar.style.cssText = estiloBotao + 'background:transparent;color:#fff;border:1px solid rgba(255,255,255,.5);';
+    acoes.appendChild(imprimir);
+    acoes.appendChild(fechar);
+    barra.appendChild(acoes);
+
+    var moldura = document.createElement('iframe');
+    moldura.title = 'Relatório de impacto';
+    moldura.style.cssText = 'flex:1;width:100%;border:0;background:#fff;';
+    moldura.srcdoc = html(d, r, true);
+
+    imprimir.addEventListener('click', function () {
+      try {
+        moldura.contentWindow.focus();
+        moldura.contentWindow.print();
+      } catch (e) {
+        window.print();
+      }
+    });
+    fechar.addEventListener('click', function () { document.body.removeChild(fundo); });
+
+    fundo.appendChild(barra);
+    fundo.appendChild(moldura);
+    document.body.appendChild(fundo);
+  }
+
+  function criarTexto(t) {
+    var s = document.createElement('span');
+    s.textContent = t;
+    return s;
+  }
+
+  raiz.Relatorio = {
+    html: html,
+    sobrepor: sobrepor,
+    abrir: function (d, r) {
+      var janela = null;
+      try { janela = window.open('', '_blank'); } catch (e) { janela = null; }
+      if (!janela) { sobrepor(d, r); return; }
+      janela.document.open();
+      janela.document.write(html(d, r));
+      janela.document.close();
+    }
+  };
+})(typeof self !== 'undefined' ? self : this);
+
+</script>
+<script>
+/**
+ * ui.js - interface do simulador: 4 ecrãs, formulários gerados por esquema,
+ * dashboard de resultados e ligação ao motor de cálculo.
+ */
+(function () {
+  'use strict';
+
+  var F = window.Formato;
+  var Motor = window.Motor;
+  var Parametros = window.Parametros;
+  var Estado = window.Estado;
+
+  var dados = Estado.ler() || Estado.novo();
+  var resultado = null;
+  var ecraAtual = 1;
+
+  /* ================================================================== *
+   * Esquemas de formulário
+   * ================================================================== */
+
+  var CAMPOS_SOCIEDADE = [
+    { chave: 'designacao', rotulo: 'Designação da sociedade', tipo: 'texto', largo: true, ajuda: 'Apenas para identificação no relatório.' },
+    { chave: 'exercicio', rotulo: 'Exercício fiscal', tipo: 'inteiro', min: 2000, max: 2100, ajuda: 'Ano a que respeita a matéria coletável.' },
+    { chave: 'resultadoContabilistico', rotulo: 'Resultado contabilístico (€)', tipo: 'euro', ajuda: 'Resultado líquido antes de correções fiscais.' },
+    { chave: 'correcoesFiscais', rotulo: 'Correções fiscais (€)', tipo: 'euro', ajuda: 'Acréscimos menos deduções do quadro 07 da Modelo 22.' },
+    { chave: 'materiaColetavel', rotulo: 'Matéria coletável (€)', tipo: 'euro', ajuda: 'Campo 311 da Modelo 22. É esta a base imputada aos sócios.' },
+    { chave: 'ircLiquidado', rotulo: 'IRC liquidado (€)', tipo: 'euro', ajuda: 'Coleta de IRC do exercício, antes de derramas.' },
+    { chave: 'derramaMunicipal', rotulo: 'Derrama municipal (€)', tipo: 'euro' },
+    { chave: 'derramaEstadual', rotulo: 'Derrama estadual (€)', tipo: 'euro' },
+    { chave: 'tributacoesAutonomas', rotulo: 'Tributações autónomas (€)', tipo: 'euro', ajuda: 'Mantêm-se devidas mesmo em transparência fiscal (artigo 12.º do CIRC).' },
+    { chave: 'pagamentosPorConta', rotulo: 'Pagamentos por conta (€)', tipo: 'euro' },
+    { chave: 'retencoes', rotulo: 'Retenções na fonte (€)', tipo: 'euro' }
+  ];
+
+  var CAMPOS_SOCIO = [
+    { chave: 'nome', rotulo: 'Nome', tipo: 'texto' },
+    { chave: 'participacao', rotulo: 'Participação (%)', tipo: 'decimal', min: 0, max: 100, passo: 0.01 },
+    { chave: 'rendimentosA', rotulo: 'Rendimentos categoria A (€)', tipo: 'euro', ajuda: 'Rendimento bruto do trabalho dependente.' },
+    { chave: 'rendimentosB', rotulo: 'Rendimentos categoria B (€)', tipo: 'euro', ajuda: 'Rendimento bruto próprio, fora da sociedade.' },
+    { chave: 'categoriaBJaLiquida', rotulo: 'Categoria B já líquida (não aplicar coeficiente)', tipo: 'booleano', largo: true },
+    { chave: 'outrosRendimentos', rotulo: 'Outros rendimentos englobados (€)', tipo: 'euro' },
+    { chave: 'tributacao', rotulo: 'Tributação', tipo: 'opcoes', opcoes: [['separada', 'Separada'], ['conjunta', 'Conjunta']] },
+    { chave: 'rendimentosConjuge', rotulo: 'Rendimento coletável do cônjuge (€)', tipo: 'euro', ajuda: 'Apenas na tributação conjunta.', visivel: function (s) { return s.tributacao === 'conjunta'; } },
+    { chave: 'dependentes', rotulo: 'Número de dependentes', tipo: 'inteiro', min: 0, max: 20 },
+    { chave: 'irsPagoDistribuicoes', rotulo: 'IRS já pago sobre lucros distribuídos (€)', tipo: 'euro', ajuda: 'Retenção de 28% sobre dividendos já suportada. É creditada no IRS adicional.' }
+  ];
+
+  var CAMPOS_CENARIO = [
+    { grupo: null, chave: 'dataReferencia', rotulo: 'Data de referência', tipo: 'data', ajuda: 'Data até à qual se contam os juros.' },
+    { grupo: null, chave: 'dataInicioJuros', rotulo: 'Início dos juros (opcional)', tipo: 'data', ajuda: 'Vazio = termo do prazo de entrega da Modelo 3.' },
+    { grupo: null, chave: 'cenarioIRC', rotulo: 'Cenário de recuperação do IRC', tipo: 'opcoes', opcoes: [['integral', 'Reembolso integral'], ['parcial', 'Reembolso parcial'], ['inexistente', 'Reembolso inexistente']] }
+  ];
+
+  var CAMPOS_JUROS = [
+    { grupo: 'juros', chave: 'taxaAnual', rotulo: 'Taxa anual (%)', tipo: 'percentagem', ajuda: 'Taxa dos juros legais. Por omissão 4%.' },
+    { grupo: 'juros', chave: 'baseDias', rotulo: 'Base de dias do ano', tipo: 'inteiro' },
+    { grupo: 'juros', chave: 'limiteDias', rotulo: 'Limite de dias (opcional)', tipo: 'inteiro', ajuda: 'Preencher com 180 para o teto do artigo 35.º, n.º 7 da LGT.' },
+    { grupo: 'juros', chave: 'diaLimiteIRS', rotulo: 'Dia limite da Modelo 3', tipo: 'inteiro', min: 1, max: 31 },
+    { grupo: 'juros', chave: 'mesLimiteIRS', rotulo: 'Mês limite da Modelo 3', tipo: 'inteiro', min: 1, max: 12 }
+  ];
+
+  var CAMPOS_COIMAS = [
+    { grupo: 'coimas', chave: 'percentagemMinima', rotulo: 'Coima mínima (% do imposto)', tipo: 'percentagem', ajuda: 'Artigo 114.º, n.º 2 do RGIT.' },
+    { grupo: 'coimas', chave: 'percentagemMaxima', rotulo: 'Coima máxima (% do imposto)', tipo: 'percentagem' },
+    { grupo: 'coimas', chave: 'reducaoVoluntaria', rotulo: 'Redução por regularização voluntária (%)', tipo: 'percentagem', ajuda: 'Artigo 29.º, n.º 1, alínea a) do RGIT.' },
+    { grupo: 'coimas', chave: 'coimaMinimaAbsoluta', rotulo: 'Piso da coima (€)', tipo: 'euro' },
+    { grupo: 'coimas', chave: 'tectoNegligencia', rotulo: 'Teto por negligência (€)', tipo: 'euro' },
+    { grupo: 'coimas', chave: 'coimaDeclaracaoMinima', rotulo: 'Coima declarativa mínima (€)', tipo: 'euro', ajuda: 'Artigo 119.º do RGIT, por declaração.' },
+    { grupo: 'coimas', chave: 'coimaDeclaracaoMaxima', rotulo: 'Coima declarativa máxima (€)', tipo: 'euro' },
+    { grupo: 'coimas', chave: 'aplicarCoimaDeclaracaoPorSocio', rotulo: 'Aplicar coima declarativa a cada sócio', tipo: 'booleano', largo: true }
+  ];
+
+  var CAMPOS_IRS = [
+    { grupo: 'irs', chave: 'deducaoEspecificaCategoriaA', rotulo: 'Dedução específica da categoria A (€)', tipo: 'euro' },
+    { grupo: 'irs', chave: 'coeficienteCategoriaB', rotulo: 'Coeficiente da categoria B', tipo: 'decimal', passo: 0.01, ajuda: 'Artigo 31.º do CIRS. 0,75 para serviços do artigo 151.º.' },
+    { grupo: 'irs', chave: 'deducaoPorDependente', rotulo: 'Dedução por dependente (€)', tipo: 'euro' },
+    { grupo: 'irs', chave: 'quocienteConjugal', rotulo: 'Quociente conjugal', tipo: 'decimal', passo: 0.5 },
+    { grupo: 'irs', chave: 'limiteDeducoesColeta', rotulo: 'Limite global de deduções (€, opcional)', tipo: 'euro' }
+  ];
+
+  var CAMPOS_RECUPERACAO = [
+    { grupo: 'recuperacao', chave: 'percentagemParcial', rotulo: 'Reembolso parcial (%)', tipo: 'percentagem' },
+    { grupo: 'recuperacao', chave: 'incluirDerramas', rotulo: 'Incluir derramas na base recuperável', tipo: 'booleano', largo: true },
+    { grupo: 'recuperacao', chave: 'incluirTributacoesAutonomas', rotulo: 'Incluir tributações autónomas na base recuperável', tipo: 'booleano', largo: true }
+  ];
+
+  /* ================================================================== *
+   * Utilitários de DOM
+   * ================================================================== */
+
+  function $(sel, raiz) { return (raiz || document).querySelector(sel); }
+  function $$(sel, raiz) { return Array.prototype.slice.call((raiz || document).querySelectorAll(sel)); }
+
+  function el(tag, props, filhos) {
+    var n = document.createElement(tag);
+    Object.keys(props || {}).forEach(function (k) {
+      if (k === 'class') n.className = props[k];
+      else if (k === 'texto') n.textContent = props[k];
+      else if (k === 'html') n.innerHTML = props[k];
+      else if (k.indexOf('on') === 0) n.addEventListener(k.slice(2), props[k]);
+      else if (props[k] !== null && props[k] !== undefined && props[k] !== false) n.setAttribute(k, props[k]);
+    });
+    (filhos || []).forEach(function (f) { if (f) n.appendChild(f); });
+    return n;
+  }
+
+  /* ================================================================== *
+   * Geração de campos
+   * ================================================================== */
+
+  function valorEfetivo(campo) {
+    if (!campo.grupo) return dados.parametros[campo.chave];
+    var base = Parametros.porOmissao();
+    var sobre = (dados.parametros[campo.grupo] || {});
+    return sobre[campo.chave] !== undefined ? sobre[campo.chave] : base[campo.grupo][campo.chave];
+  }
+
+  function definirParametro(campo, valor) {
+    if (!campo.grupo) { dados.parametros[campo.chave] = valor; return; }
+    if (!dados.parametros[campo.grupo]) dados.parametros[campo.grupo] = {};
+    dados.parametros[campo.grupo][campo.chave] = valor;
+  }
+
+  function criarCampo(campo, obterValor, definirValor) {
+    var valor = obterValor();
+    var id = 'c-' + (campo.grupo || 'x') + '-' + campo.chave + '-' + Math.random().toString(36).slice(2, 7);
+    var entrada;
+
+    if (campo.tipo === 'opcoes') {
+      entrada = el('select', { id: id });
+      campo.opcoes.forEach(function (o) {
+        entrada.appendChild(el('option', { value: o[0], texto: o[1], selected: valor === o[0] }));
+      });
+    } else if (campo.tipo === 'booleano') {
+      entrada = el('input', { id: id, type: 'checkbox', checked: !!valor });
+    } else if (campo.tipo === 'texto') {
+      entrada = el('input', { id: id, type: 'text', value: valor === null || valor === undefined ? '' : valor });
+    } else if (campo.tipo === 'data') {
+      entrada = el('input', { id: id, type: 'date', value: valor || '' });
+    } else {
+      var mostrado = valor === null || valor === undefined || valor === '' ? '' :
+        (campo.tipo === 'percentagem' ? +(valor * 100).toFixed(6) : valor);
+      entrada = el('input', {
+        id: id, type: 'number', value: mostrado,
+        step: campo.passo || (campo.tipo === 'inteiro' ? 1 : (campo.tipo === 'percentagem' ? 0.1 : 0.01)),
+        min: campo.min, max: campo.max, inputmode: 'decimal'
+      });
+    }
+
+    entrada.addEventListener('change', function () {
+      var v;
+      if (campo.tipo === 'booleano') v = entrada.checked;
+      else if (campo.tipo === 'texto' || campo.tipo === 'data' || campo.tipo === 'opcoes') v = entrada.value;
+      else if (entrada.value === '') v = campo.opcional === false ? 0 : null;
+      else if (campo.tipo === 'percentagem') v = parseFloat(entrada.value) / 100;
+      else if (campo.tipo === 'inteiro') v = parseInt(entrada.value, 10);
+      else v = parseFloat(entrada.value);
+      if (typeof v === 'number' && isNaN(v)) v = 0;
+      if ((campo.tipo === 'euro' || campo.tipo === 'decimal' || campo.tipo === 'inteiro') && v === null &&
+          campo.chave !== 'limiteDias' && campo.chave !== 'limiteDeducoesColeta') v = 0;
+      definirValor(v);
+      aoAlterar(campo);
+    });
+
+    var classe = 'campo' + (campo.largo ? ' campo--largo' : '') + (campo.tipo === 'booleano' ? ' campo--interruptor' : '');
+    var etiqueta = el('label', { for: id, texto: campo.rotulo });
+    var filhos = campo.tipo === 'booleano' ? [entrada, etiqueta] : [etiqueta, entrada];
+    if (campo.ajuda) filhos.push(el('p', { class: 'ajuda', texto: campo.ajuda }));
+    return el('div', { class: classe }, filhos);
+  }
+
+  function renderFormulario(alvo, campos, obter, definir, contexto) {
+    var no = $(alvo);
+    no.innerHTML = '';
+    campos.forEach(function (campo) {
+      if (campo.visivel && !campo.visivel(contexto)) return;
+      no.appendChild(criarCampo(campo,
+        function () { return obter(campo); },
+        function (v) { definir(campo, v); }));
+    });
+  }
+
+  function aoAlterar(campo) {
+    Estado.guardar(dados);
+    if (campo && campo.chave === 'tributacao') renderSocios();
+    if (campo && (campo.chave === 'exercicio')) renderEscaloes();
+    if (campo && campo.chave === 'participacao') atualizarSomaParticipacoes();
+    if (ecraAtual === 1) verificarCoerencia();
+    if (ecraAtual === 4) simular();
+  }
+
+  /* ================================================================== *
+   * Ecrã 1
+   * ================================================================== */
+
+  function renderSociedade() {
+    renderFormulario('#form-sociedade', CAMPOS_SOCIEDADE,
+      function (c) { return dados.sociedade[c.chave]; },
+      function (c, v) { dados.sociedade[c.chave] = v; },
+      dados.sociedade);
+    verificarCoerencia();
+  }
+
+  function verificarCoerencia() {
+    var s = dados.sociedade;
+    var lista = $('#coerencia-sociedade');
+    if (!lista) return;
+    var notas = [];
+    var teorica = F.numeroBruto(s.resultadoContabilistico) + F.numeroBruto(s.correcoesFiscais);
+    var mc = F.numeroBruto(s.materiaColetavel);
+
+    if (mc > 0 && Math.abs(teorica - mc) > 1) {
+      notas.push({ classe: 'erro', texto: 'Resultado contabilístico + correções = ' + F.euro(teorica) +
+        ', diferença de ' + F.euro(mc - teorica) + ' face à matéria coletável introduzida. Justificável por prejuízos fiscais reportados ou benefícios.' });
+    } else if (mc > 0) {
+      notas.push({ classe: 'ok', texto: 'Matéria coletável coerente com o resultado e as correções fiscais.' });
+    } else {
+      notas.push({ classe: '', texto: 'Introduza a matéria coletável para iniciar a simulação.' });
+    }
+
+    var totalIRC = F.numeroBruto(s.ircLiquidado) + F.numeroBruto(s.derramaMunicipal) +
+      F.numeroBruto(s.derramaEstadual) + F.numeroBruto(s.tributacoesAutonomas);
+    var saldo = totalIRC - F.numeroBruto(s.pagamentosPorConta) - F.numeroBruto(s.retencoes);
+    notas.push({ classe: '', texto: 'Imposto total suportado pela sociedade: ' + F.euro(totalIRC) +
+      '. Saldo apurado após pagamentos por conta e retenções: ' + F.euro(saldo) + '.' });
+
+    if (mc > 0 && F.numeroBruto(s.ircLiquidado) > 0) {
+      notas.push({ classe: '', texto: 'Taxa efetiva de IRC sobre a matéria coletável: ' +
+        F.percentagem(totalIRC / mc, 2) + '.' });
+    }
+
+    lista.innerHTML = '';
+    notas.forEach(function (n) { lista.appendChild(el('li', { class: n.classe, texto: n.texto })); });
+  }
+
+  /* ================================================================== *
+   * Ecrã 2
+   * ================================================================== */
+
+  function renderSocios() {
+    var alvo = $('#lista-socios');
+    alvo.innerHTML = '';
+    dados.socios.forEach(function (socio, indice) {
+      var cartao = el('div', { class: 'cartao socio' });
+      var cabeca = el('div', { class: 'socio__cabeca' }, [
+        el('div', {}, [
+          el('div', { class: 'socio__titulo', texto: socio.nome || ('Sócio ' + (indice + 1)) }),
+          el('div', { class: 'socio__quota', texto: F.percentagemDireta(socio.participacao) + ' do capital' })
+        ]),
+        el('button', {
+          type: 'button', class: 'btn btn--fantasma btn--pequeno btn--perigo', texto: 'Remover',
+          onclick: function () {
+            dados.socios.splice(indice, 1);
+            if (!dados.socios.length) dados.socios.push(Estado.socioVazio(1));
+            Estado.guardar(dados); renderSocios();
+          }
+        })
+      ]);
+      var grelha = el('div', { class: 'grelha' });
+      CAMPOS_SOCIO.forEach(function (campo) {
+        if (campo.visivel && !campo.visivel(socio)) return;
+        grelha.appendChild(criarCampo(campo,
+          function () { return socio[campo.chave]; },
+          function (v) {
+            socio[campo.chave] = v;
+            if (campo.chave === 'nome') $('.socio__titulo', cartao).textContent = v || ('Sócio ' + (indice + 1));
+            if (campo.chave === 'participacao') $('.socio__quota', cartao).textContent = F.percentagemDireta(v) + ' do capital';
+          }));
+      });
+      cartao.appendChild(cabeca);
+      cartao.appendChild(grelha);
+      alvo.appendChild(cartao);
+    });
+    atualizarSomaParticipacoes();
+  }
+
+  function atualizarSomaParticipacoes() {
+    var soma = dados.socios.reduce(function (a, s) { return a + F.numeroBruto(s.participacao); }, 0);
+    var no = $('#soma-participacoes');
+    if (!no) return;
+    var ok = Math.abs(soma - 100) < 0.01;
+    no.className = 'barra-socios__soma ' + (ok ? 'ok' : 'erro');
+    no.textContent = 'Soma das participações: ' + F.percentagemDireta(soma) +
+      (ok ? ' ✓' : ' — deve totalizar 100%');
+  }
+
+  /* ================================================================== *
+   * Ecrã 3
+   * ================================================================== */
+
+  function renderParametros() {
+    var obter = valorEfetivo;
+    var definir = definirParametro;
+    renderFormulario('#form-cenario', CAMPOS_CENARIO, obter, definir);
+    renderFormulario('#form-juros', CAMPOS_JUROS, obter, definir);
+    renderFormulario('#form-coimas', CAMPOS_COIMAS, obter, definir);
+    renderFormulario('#form-irs', CAMPOS_IRS, obter, definir);
+    renderFormulario('#form-recuperacao', CAMPOS_RECUPERACAO, obter, definir);
+    renderEscaloes();
+  }
+
+  function tabelaEscaloesAtual() {
+    var ano = F.numeroBruto(dados.sociedade.exercicio);
+    var p = Motor.mesclarParametros(dados.parametros);
+    return { ano: ano, tabela: Parametros.tabelaDoExercicio(p, ano) };
+  }
+
+  function renderEscaloes() {
+    var alvo = $('#tabela-escaloes');
+    if (!alvo) return;
+    var info = tabelaEscaloesAtual();
+    $('#rotulo-ano-escaloes').textContent = info.ano;
+    $('#fonte-escaloes').textContent = info.tabela.fonte +
+      (info.tabela.estado === 'provisorio' ? ' ⚠ Tabela provisória: confirme antes de emitir o relatório.' : '');
+
+    var corpo = $('tbody', alvo);
+    corpo.innerHTML = '';
+    info.tabela.escaloes.forEach(function (esc, i) {
+      var linha = el('tr', {}, [
+        el('td', { texto: (i + 1) + '.º' }),
+        el('td', {}, [el('input', {
+          type: 'number', step: '1', value: esc.limite === null ? '' : esc.limite, placeholder: 'sem limite',
+          onchange: function (ev) {
+            escalaoEditado(info.ano, i, 'limite', ev.target.value === '' ? null : parseFloat(ev.target.value));
+          }
+        })]),
+        el('td', {}, [el('input', {
+          type: 'number', step: '0.01', value: +(esc.taxa * 100).toFixed(4),
+          onchange: function (ev) { escalaoEditado(info.ano, i, 'taxa', parseFloat(ev.target.value) / 100); }
+        })]),
+        el('td', {}, [el('button', {
+          type: 'button', class: 'btn btn--fantasma btn--pequeno btn--perigo', texto: '×',
+          onclick: function () { removerEscalao(info.ano, i); }
+        })])
+      ]);
+      corpo.appendChild(linha);
+    });
+  }
+
+  function garantirTabelaEditavel(ano) {
+    if (!dados.parametros.escaloesIRS) dados.parametros.escaloesIRS = {};
+    if (!dados.parametros.escaloesIRS[ano]) {
+      var info = tabelaEscaloesAtual();
+      dados.parametros.escaloesIRS[ano] = {
+        estado: 'personalizado',
+        fonte: 'Tabela editada pelo utilizador. Origem: ' + info.tabela.fonte,
+        escaloes: JSON.parse(JSON.stringify(info.tabela.escaloes))
+      };
+    }
+    return dados.parametros.escaloesIRS[ano];
+  }
+
+  function escalaoEditado(ano, indice, chave, valor) {
+    var t = garantirTabelaEditavel(ano);
+    t.escaloes[indice][chave] = valor;
+    Estado.guardar(dados);
+    renderEscaloes();
+  }
+
+  function removerEscalao(ano, indice) {
+    var t = garantirTabelaEditavel(ano);
+    if (t.escaloes.length <= 1) return;
+    t.escaloes.splice(indice, 1);
+    Estado.guardar(dados);
+    renderEscaloes();
+  }
+
+  /* ================================================================== *
+   * Ecrã 4 - resultados
+   * ================================================================== */
+
+  function simular() {
+    try {
+      resultado = Motor.simular(dados);
+    } catch (erro) {
+      $('#avisos').innerHTML = '';
+      $('#avisos').appendChild(el('div', { class: 'aviso-caixa aviso-caixa--erro', texto: 'Não foi possível simular: ' + erro.message }));
+      return;
+    }
+    window.__resultado = resultado;
+    renderAvisos();
+    renderKPIs();
+    renderComparador();
+    renderTabelaSocios();
+    renderTimeline();
+    renderCenariosCoima();
+    renderCenariosIRC();
+    renderMatriz();
+    renderMemoria();
+  }
+
+  function renderAvisos() {
+    var alvo = $('#avisos');
+    alvo.innerHTML = '';
+    resultado.avisos.forEach(function (a) {
+      alvo.appendChild(el('div', { class: 'aviso-caixa aviso-caixa--' + a.nivel, texto: a.texto }));
+    });
+  }
+
+  function kpi(rotulo, valor, nota, modificador) {
+    return el('div', { class: 'kpi' + (modificador ? ' kpi--' + modificador : '') }, [
+      el('div', { class: 'kpi__rotulo', texto: rotulo }),
+      el('div', { class: 'kpi__valor', texto: F.euro(valor) }),
+      el('div', { class: 'kpi__nota', texto: nota })
+    ]);
+  }
+
+  function renderKPIs() {
+    var i = resultado.indicadores;
+    var alvo = $('#cartoes-financeiros');
+    alvo.innerHTML = '';
+    alvo.appendChild(kpi('Exposição fiscal líquida', i.exposicaoLiquida,
+      'IRS adicional + juros + coima − IRC recuperado', 'destaque'));
+    alvo.appendChild(kpi('IRS adicional', i.irsAdicional,
+      'Imputação de ' + F.euro(resultado.atual.irc.materiaColetavel) + ' a ' + resultado.socios.length + ' sócio(s)'));
+    alvo.appendChild(kpi('Juros compensatórios', i.juros,
+      resultado.juros.dias + ' dias à taxa de ' + F.percentagem(resultado.juros.taxaAnual, 2) + ' ao ano'));
+    alvo.appendChild(kpi('Coimas', i.coimas, resultado.coimas.provavel.rotulo));
+    alvo.appendChild(kpi('IRC recuperável', i.ircRecuperavel,
+      resultado.recuperacaoIRC.cenarios[resultado.recuperacaoIRC.cenarioSelecionado].rotulo, 'positivo'));
+  }
+
+  function renderComparador() {
+    var corpo = $('#tabela-comparador tbody');
+    corpo.innerHTML = '';
+    resultado.comparador.forEach(function (l, i) {
+      var ultima = i === resultado.comparador.length - 1;
+      corpo.appendChild(el('tr', { class: ultima ? 'destaque' : '' }, [
+        el('td', { texto: l.indicador }),
+        el('td', { texto: F.euro(l.atual) }),
+        el('td', { texto: F.euro(l.corrigido) }),
+        el('td', { class: l.variacao > 0 ? 'subiu' : (l.variacao < 0 ? 'desceu' : ''),
+          texto: (l.variacao > 0 ? '+' : '') + F.euro(l.variacao) })
+      ]));
+    });
+  }
+
+  function renderTabelaSocios() {
+    var corpo = $('#tabela-socios tbody');
+    corpo.innerHTML = '';
+    resultado.socios.forEach(function (s) {
+      corpo.appendChild(el('tr', {}, [
+        el('td', { texto: s.nome }),
+        el('td', { texto: F.percentagemDireta(s.participacao) }),
+        el('td', { texto: F.euro(s.imputacao) }),
+        el('td', { texto: F.euro(s.irsAtual) }),
+        el('td', { texto: F.euro(s.irsCorrigido) }),
+        el('td', { class: 'subiu', texto: F.euro(s.irsAdicional) }),
+        el('td', { texto: F.percentagem(s.taxaMarginalAtual, 2) + ' → ' + F.percentagem(s.taxaMarginalCorrigida, 2) })
+      ]));
+    });
+
+    var barras = $('#barras-socios');
+    barras.innerHTML = '';
+    var maximo = Math.max.apply(null, resultado.socios.map(function (s) { return s.irsAdicional; }).concat([1]));
+    resultado.socios.forEach(function (s) {
+      barras.appendChild(el('div', { class: 'barra' }, [
+        el('span', { texto: s.nome }),
+        el('div', { class: 'barra__trilho' }, [
+          el('div', { class: 'barra__preenchido', style: 'width:' + Math.max(2, (s.irsAdicional / maximo) * 100) + '%' })
+        ]),
+        el('span', { class: 'barra__valor', texto: F.euro(s.irsAdicional) })
+      ]));
+    });
+  }
+
+  function renderTimeline() {
+    var alvo = $('#timeline');
+    alvo.innerHTML = '';
+    resultado.timeline.forEach(function (e) {
+      alvo.appendChild(el('li', { class: (e.passado ? 'passado ' : '') + e.tipo }, [
+        el('div', { class: 'timeline__data', texto: F.data(e.data) }),
+        el('div', { class: 'timeline__titulo', texto: e.titulo }),
+        el('div', { class: 'timeline__texto', texto: e.descricao })
+      ]));
+    });
+  }
+
+  function renderCenariosCoima() {
+    var alvo = $('#cenarios-coima');
+    alvo.innerHTML = '';
+    ['minimo', 'provavel', 'maximo'].forEach(function (chave) {
+      var c = resultado.coimas[chave];
+      alvo.appendChild(el('div', { class: 'cenario' + (chave === 'provavel' ? ' selecionado' : '') }, [
+        el('div', {}, [
+          el('div', { class: 'cenario__rotulo', texto: rotuloCenario(chave) + ' · ' + c.rotulo }),
+          el('div', { class: 'cenario__fundamento', texto: c.fundamento })
+        ]),
+        el('div', { class: 'cenario__valor', texto: F.euro(c.valor) })
+      ]));
+    });
+  }
+
+  function rotuloCenario(chave) {
+    return { minimo: 'Mínimo', provavel: 'Provável', maximo: 'Máximo' }[chave] || chave;
+  }
+
+  function renderCenariosIRC() {
+    var alvo = $('#cenarios-irc');
+    alvo.innerHTML = '';
+    var r = resultado.recuperacaoIRC;
+    alvo.appendChild(el('p', { class: 'ajuda', texto: 'Base recuperável: ' + F.euro(r.base) +
+      ' (coleta de IRC e derramas efetivamente pagas). As tributações autónomas mantêm-se devidas pela sociedade transparente.' }));
+    ['integral', 'parcial', 'inexistente'].forEach(function (chave) {
+      var c = r.cenarios[chave];
+      alvo.appendChild(el('div', { class: 'cenario' + (chave === r.cenarioSelecionado ? ' selecionado' : '') }, [
+        el('div', {}, [
+          el('div', { class: 'cenario__rotulo', texto: c.rotulo }),
+          el('div', { class: 'cenario__fundamento', texto: fundamentoIRC(chave) })
+        ]),
+        el('div', { class: 'cenario__valor', texto: F.euro(c.valor) })
+      ]));
+    });
+  }
+
+  function fundamentoIRC(chave) {
+    return {
+      integral: 'Revisão oficiosa deferida dentro do prazo do artigo 78.º da LGT, com anulação total do IRC liquidado.',
+      parcial: 'Deferimento parcial, compensação apenas de parte do imposto, ou perda de exercícios já fora de prazo.',
+      inexistente: 'Prazo de revisão esgotado ou indeferimento. O IRC pago não é recuperado e acresce integralmente ao custo.'
+    }[chave];
+  }
+
+  function renderMatriz() {
+    var corpo = $('#tabela-matriz tbody');
+    corpo.innerHTML = '';
+    var todos = [];
+    resultado.matrizSensibilidade.forEach(function (l) { l.valores.forEach(function (v) { todos.push(v.valor); }); });
+    var pior = Math.max.apply(null, todos);
+    var melhor = Math.min.apply(null, todos);
+    resultado.matrizSensibilidade.forEach(function (linha) {
+      var celulas = [el('td', { texto: 'Coima ' + ({ minimo: 'mínima', provavel: 'provável', maximo: 'máxima' })[linha.coima] })];
+      linha.valores.forEach(function (v) {
+        celulas.push(el('td', {
+          class: v.valor === pior ? 'celula-pior' : (v.valor === melhor ? 'celula-melhor' : ''),
+          texto: F.euro(v.valor)
+        }));
+      });
+      corpo.appendChild(el('tr', {}, celulas));
+    });
+  }
+
+  function renderMemoria() {
+    var alvo = $('#memoria-calculo');
+    alvo.innerHTML = '';
+    var r = resultado;
+
+    alvo.appendChild(detalhe('Cenário atual — sociedade tributada em IRC', [
+      linhaMemoria('Matéria coletável', r.atual.irc.materiaColetavel),
+      linhaMemoria('IRC liquidado', r.atual.irc.coleta),
+      linhaMemoria('Derrama municipal', r.atual.irc.derramaMunicipal),
+      linhaMemoria('Derrama estadual', r.atual.irc.derramaEstadual),
+      linhaMemoria('Tributações autónomas', r.atual.irc.tributacoesAutonomas),
+      linhaMemoria('Total devido pela sociedade', r.atual.irc.totalDevido, true),
+      linhaMemoria('IRS dos sócios sem imputação', r.atual.irsTotal)
+    ]));
+
+    alvo.appendChild(detalhe('Cenário corrigido — imputação aos sócios', r.corrigido.socios.map(function (s) {
+      return linhaMemoria(s.nome + ' — imputação ' + F.percentagemDireta(s.participacao) +
+        ', rendimento coletável ' + F.euro(s.liquidacao.rendimentoColetavel) +
+        ', coleta ' + F.euro(s.liquidacao.coletaTotal) +
+        (s.liquidacao.taxaAdicionalSolidariedade > 0 ? ' (inclui solidariedade ' + F.euro(s.liquidacao.taxaAdicionalSolidariedade) + ')' : '') +
+        ', deduções ' + F.euro(s.liquidacao.deducoesColeta), s.irs);
+    }).concat([linhaMemoria('IRS total no cenário corrigido', r.corrigido.irsTotal, true)])));
+
+    alvo.appendChild(detalhe('Juros compensatórios', [
+      linhaMemoria('Base (IRS adicional)', r.juros.base),
+      linhaMemoria('Período: ' + F.data(r.juros.dataInicio) + ' a ' + F.data(r.juros.dataFim) +
+        ' (' + r.juros.dias + ' dias' + (r.juros.limiteAplicado ? ', teto aplicado' : '') + ')', null),
+      linhaMemoria('Cálculo: ' + F.euro(r.juros.base) + ' × ' + F.percentagem(r.juros.taxaAnual, 2) +
+        ' × ' + r.juros.dias + '/' + r.parametros.juros.baseDias, r.juros.montante, true)
+    ]));
+
+    alvo.appendChild(detalhe('Composição da exposição', [
+      linhaMemoria('IRS adicional bruto', r.indicadores.irsAdicionalBruto),
+      linhaMemoria('Crédito por IRS já pago sobre distribuições', -r.indicadores.creditoDistribuicoes),
+      linhaMemoria('Juros compensatórios', r.indicadores.juros),
+      linhaMemoria('Coima (cenário provável)', r.indicadores.coimas),
+      linhaMemoria('IRC recuperado', -r.indicadores.ircRecuperavel),
+      linhaMemoria('Exposição fiscal líquida', r.indicadores.exposicaoLiquida, true)
+    ]));
+  }
+
+  function detalhe(titulo, linhas) {
+    var tabela = el('table', { class: 'tabela' }, [el('tbody', {}, linhas)]);
+    return el('details', { class: 'memoria' }, [el('summary', { texto: titulo }), tabela]);
+  }
+
+  function linhaMemoria(rotulo, valor, forte) {
+    return el('tr', { class: forte ? 'destaque' : '' }, [
+      el('td', { texto: rotulo }),
+      el('td', { texto: valor === null || valor === undefined ? '' : F.euro(valor) })
+    ]);
+  }
+
+  /* ================================================================== *
+   * Navegação e ações
+   * ================================================================== */
+
+  function irPara(n) {
+    ecraAtual = n;
+    $$('.ecra').forEach(function (s) { s.hidden = s.id !== 'ecra-' + n; });
+    $$('.passo').forEach(function (b) { b.setAttribute('aria-current', b.dataset.ecra === String(n)); });
+    if (n === 2) renderSocios();
+    if (n === 3) renderParametros();
+    if (n === 4) simular();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function descarregar(nome, conteudo, tipo) {
+    var blob = new Blob([conteudo], { type: tipo });
+    var url = URL.createObjectURL(blob);
+    var a = el('a', { href: url, download: nome });
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
+
+  function nomeFicheiro(extensao) {
+    var base = (dados.sociedade.designacao || 'simulacao').toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    return 'transparencia-fiscal-' + base + '-' + dados.sociedade.exercicio + '.' + extensao;
+  }
+
+  var ACOES = {
+    exemplo: function () {
+      dados = Estado.exemplo();
+      Estado.guardar(dados);
+      renderTudo();
+      irPara(1);
+    },
+    limpar: function () {
+      if (!confirm('Limpar todos os dados introduzidos?')) return;
+      Estado.apagar();
+      dados = Estado.novo();
+      renderTudo();
+      irPara(1);
+    },
+    guardar: function () { descarregar(nomeFicheiro('json'), JSON.stringify(dados, null, 2), 'application/json'); },
+    'exportar-json': function () {
+      descarregar(nomeFicheiro('resultado.json'), JSON.stringify({ dados: dados, resultado: resultado }, null, 2), 'application/json');
+    },
+    'adicionar-socio': function () {
+      dados.socios.push(Estado.socioVazio(dados.socios.length + 1));
+      Estado.guardar(dados);
+      renderSocios();
+    },
+    'adicionar-escalao': function () {
+      var info = tabelaEscaloesAtual();
+      var t = garantirTabelaEditavel(info.ano);
+      t.escaloes.push({ limite: null, taxa: 0.48 });
+      Estado.guardar(dados);
+      renderEscaloes();
+    },
+    'repor-escaloes': function () {
+      var ano = F.numeroBruto(dados.sociedade.exercicio);
+      if (dados.parametros.escaloesIRS) delete dados.parametros.escaloesIRS[ano];
+      Estado.guardar(dados);
+      renderEscaloes();
+    },
+    relatorio: function () {
+      if (!resultado) simular();
+      window.Relatorio.abrir(dados, resultado);
+    }
+  };
+
+  function renderTudo() {
+    renderSociedade();
+    renderSocios();
+    renderParametros();
+  }
+
+  function iniciar() {
+    document.addEventListener('click', function (ev) {
+      var alvoAcao = ev.target.closest('[data-acao]');
+      if (alvoAcao && ACOES[alvoAcao.dataset.acao]) { ACOES[alvoAcao.dataset.acao](); return; }
+      var alvoIr = ev.target.closest('[data-ir]');
+      if (alvoIr) { irPara(Number(alvoIr.dataset.ir)); return; }
+      var passo = ev.target.closest('.passo');
+      if (passo) irPara(Number(passo.dataset.ecra));
+    });
+
+    $('#ficheiro').addEventListener('change', function (ev) {
+      var ficheiro = ev.target.files && ev.target.files[0];
+      if (!ficheiro) return;
+      var leitor = new FileReader();
+      leitor.onload = function () {
+        try {
+          var lido = JSON.parse(leitor.result);
+          dados = Estado.normalizar(lido.dados ? lido.dados : lido);
+          Estado.guardar(dados);
+          renderTudo();
+          irPara(1);
+        } catch (e) {
+          alert('Ficheiro inválido: ' + e.message);
+        }
+      };
+      leitor.readAsText(ficheiro);
+      ev.target.value = '';
+    });
+
+    renderTudo();
+    irPara(1);
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar);
+  else iniciar();
+})();
+
+</script>
+</body>
+</html>
