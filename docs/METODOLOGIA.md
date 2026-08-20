@@ -4,6 +4,8 @@ Documento de referência do motor (`assets/js/motor.js`). Descreve o que é calc
 
 **Pressuposto fundamental:** a elegibilidade para o regime de transparência fiscal do artigo 6.º do CIRC é dada como previamente determinada. O motor não a avalia.
 
+**O que este motor é:** uma estimativa de **impacto marginal** — a diferença de imposto entre dois cenários, antes das restantes deduções à coleta. Não é um simulador de Modelo 3 nem uma liquidação. Cada simulação declara o seu **grau de confiança** e a **versão das regras fiscais** aplicadas.
+
 ---
 
 ## 1. Cenário atual
@@ -47,8 +49,12 @@ Na tributação conjunta aplica-se o quociente conjugal (artigo 69.º do CIRS): 
 ```
 Coleta total = coleta das taxas gerais + taxa adicional de solidariedade
 IRS          = máx(0, coleta total − deduções à coleta)
-Deduções     = dependentes × dedução por dependente                     [600 € por omissão]
+Deduções     = dependentes × dedução por dependente + outras deduções introduzidas
 ```
+
+O artigo 69.º do CIRS tem por epígrafe «quociente familiar», mas o divisor é 2 e não integra dependentes nem ascendentes: o mecanismo em vigor é o quociente conjugal. O quociente familiar propriamente dito, que dividia também pelos dependentes, foi eliminado em 2018.
+
+**Deduções à coleta.** O motor modela a dedução por dependente e aceita, por sócio, o valor real das restantes deduções (saúde, educação, habitação, despesas gerais familiares) retirado da Modelo 3. Não as calcula nem lhes aplica limites por escalão. Se esse campo ficar a zero, o IRS de **ambos** os cenários fica sobreavaliado e a aplicação assinala-o: o resultado é impacto marginal, não IRS.
 
 ### 2.4 Sociedade no cenário corrigido
 
@@ -56,14 +62,13 @@ Artigo 12.º do CIRC: a sociedade transparente não é tributada em IRC, **salvo
 
 ---
 
-## 3. IRS adicional
+## 3. IRS adicional estimado
 
 ```
-IRS adicional bruto = máx(0, Σ IRS corrigido − Σ IRS atual)
-IRS adicional       = máx(0, IRS adicional bruto − IRS já pago sobre lucros distribuídos)
+IRS adicional estimado = máx(0, Σ IRS corrigido − Σ IRS atual)
 ```
 
-O crédito da segunda linha evita duplicar o imposto já suportado pelos sócios sobre dividendos (retenção de 28%) relativos ao mesmo lucro.
+**Lucros distribuídos.** O IRS suportado sobre dividendos **não** é abatido. A transparência fiscal implica imputação independentemente da distribuição (artigo 6.º do CIRC, artigo 20.º do CIRS), e o tratamento dos montantes já distribuídos depende da sua natureza e qualificação jurídica. O valor introduzido é assinalado no relatório como matéria a tratar autonomamente, fora do cálculo.
 
 ---
 
@@ -77,8 +82,17 @@ Juros = IRS adicional × taxa anual × (dias / base de dias)
 
 - **Taxa anual:** 4% (taxa dos juros legais, Portaria n.º 291/2003). Parametrizável.
 - **Início:** termo do prazo de entrega da Modelo 3 do ano seguinte ao exercício (30 de junho por omissão). Pode ser substituído por uma data explícita.
-- **Fim:** data de referência da simulação.
-- **Teto:** campo opcional; preencher com 180 dias para o limite do artigo 35.º, n.º 7 da LGT.
+
+**O período não é uma fórmula única.** O artigo 35.º, n.º 7 da LGT manda contar os juros dia a dia até ao suprimento, correção ou deteção da falta, mas são devidos apenas por **180 dias** no caso de erro do sujeito passivo evidenciado na declaração e, em caso de falta apurada em ação de fiscalização, até **90 dias** após a sua conclusão. O motor implementa isto como regra selecionável, não como parâmetro escondido:
+
+| Origem da correção | Período aplicado |
+|---|---|
+| Omissão não evidenciada na declaração *(omissão por omissão)* | Dia a dia até à data de referência. É o caso típico da transparência fiscal não declarada: a matéria coletável está na sociedade, não na Modelo 3 do sócio. |
+| Regularização voluntária pelo sujeito passivo | Dia a dia até à data da substituição. |
+| Erro evidenciado na própria declaração | Máximo de 180 dias. |
+| Falta apurada em ação de fiscalização | Até 90 dias após a conclusão da ação. Exige a data de conclusão; sem ela a aplicação avisa que o valor está sobreavaliado. |
+
+O campo «limite de dias» dos parâmetros continua a existir e sobrepõe-se ao regime, para casos que o utilizador queira forçar.
 
 ---
 
@@ -93,11 +107,13 @@ Máximo legal = mín(máx(IRS adicional × 50%, piso), teto)       [teto neglig�
 
 | Cenário | Fórmula | Fundamento |
 |---|---|---|
-| **Mínimo** | mínimo legal × 12,5% | Artigo 29.º, n.º 1, alínea a) do RGIT — regularização voluntária antes de qualquer procedimento inspetivo. |
-| **Provável** | mínimo legal × fator provável (1,0) | Artigo 114.º, n.º 2 do RGIT — correção oficiosa sem dolo, ancorada no limite mínimo. |
-| **Máximo** | máximo legal + coimas declarativas | Artigos 114.º, n.º 2 e 119.º do RGIT — uma coima declarativa por sócio, no limite máximo. |
+| **Baixo** | mínimo legal × 12,5% | Artigo 29.º, n.º 1, alínea a) do RGIT — regularização voluntária antes de qualquer procedimento inspetivo. |
+| **Referência** | mínimo legal × fator de referência (1,0) | Artigo 114.º, n.º 2 do RGIT — ancoragem no limite mínimo legal. |
+| **Alto** | máximo legal + coimas declarativas | Artigos 114.º, n.º 2 e 119.º do RGIT, com o teto do artigo 26.º. |
 
-Estes valores são **balizas de exposição**, não previsões: a graduação concreta da coima depende de valoração casuística da culpa, do benefício obtido e da situação económica do agente.
+**Nenhum destes cenários é uma previsão.** A graduação concreta da coima depende de valoração casuística da culpa, do benefício obtido e da situação económica do agente (artigo 27.º do RGIT). Por isso a aplicação não usa a palavra «provável» em nenhum ponto: são cenários de simulação, e o motor tem um teste automático que o garante.
+
+**Coima declarativa por sócio.** Não é assumida automaticamente. Uma coima por declaração inexata pressupõe que a infração é imputável a cada sujeito passivo, o que tem de ser determinado caso a caso; por omissão conta uma declaração, e multiplicar por sócio é uma escolha explícita do utilizador.
 
 ---
 
@@ -110,7 +126,9 @@ Parcial      = base × percentagem configurável       [50% por omissão]
 Inexistente  = 0
 ```
 
-A recuperabilidade depende do artigo 78.º da LGT (revisão do ato tributário a favor do contribuinte, quatro anos) ou da reclamação graciosa do artigo 70.º do CPPT (120 dias). Se a data de referência ultrapassar o prazo de revisão, a aplicação emite erro: o IRC pago dificilmente será recuperável e deve ser tratado como custo irreversível.
+Os cenários são apresentados como percentagens — «Recuperação 100% / 50% / 0%» — e não como «reembolso integral / parcial / inexistente»: a percentagem intermédia é uma hipótese de trabalho do utilizador e não tem significado jurídico.
+
+O artigo 78.º da LGT **não é um prazo único de quatro anos**. Prevê vias e fundamentos distintos — iniciativa do sujeito passivo, erro imputável aos serviços, injustiça grave ou notória, duplicação de coleta — com condições próprias, a que acresce a reclamação graciosa do artigo 70.º do CPPT (120 dias). O montante é por isso **potencialmente recuperável, sujeito à validação da via processual aplicável e dos respetivos prazos**.
 
 ---
 
@@ -127,18 +145,39 @@ A **matriz de sensibilidade** cruza os três cenários de coima com os três cen
 
 ## 8. Prazos e cronologia
 
+Cada evento da cronologia declara a **regra aplicável**, e os que resultam de estimativa são marcados como aproximados.
+
 | Marco | Base legal | Cálculo |
 |---|---|---|
 | Prazo da Modelo 22 | Artigo 120.º do CIRC | 31 de maio do ano seguinte |
 | Prazo da Modelo 3 | Artigo 60.º do CIRS | 30 de junho do ano seguinte |
-| Revisão a favor do contribuinte | Artigo 78.º, n.º 1 da LGT | 4 anos |
-| Caducidade do direito à liquidação | Artigo 45.º da LGT | 4 anos |
-
-Os prazos de quatro anos são apresentados a partir do fim do ano seguinte ao exercício — aproximação conservadora, suficiente para sinalizar a janela de atuação. Para casos em cima do prazo, confirme a data exata da liquidação em causa.
+| Liquidação e pagamento do IRC | Factos | Datas introduzidas pelo utilizador (opcionais) |
+| Conclusão da ação de fiscalização | Artigo 35.º, n.º 7 da LGT | Data introduzida; fixa o fim da contagem de juros |
+| Fim da contagem de juros | Artigo 35.º, n.º 7 da LGT | Depende do regime escolhido |
+| Prazo **potencial** de revisão | Artigo 78.º da LGT | 4 anos a contar da liquidação quando esta é conhecida; caso contrário, estimativa a partir do fim do ano seguinte ao exercício |
+| Prazo **potencial** de caducidade | Artigos 45.º e 46.º da LGT | 4 anos, sem modelação das causas de suspensão e interrupção |
 
 ---
 
-## 9. Validações automáticas
+## 9. Confiança da simulação
+
+Cada simulação produz um índice de confiança a partir do estado dos inputs, apresentado no ecrã de resultado e no relatório. Sete verificações, ponderadas (`ok` = 1, `aviso` = 0,5, `em falta` = 0):
+
+1. Participações somam 100%.
+2. Matéria coletável reconcilia com o resultado e as correções.
+3. Tabela de IRS confirmada para o exercício.
+4. Deduções à coleta reais introduzidas.
+5. Regime de juros escolhido explicitamente (e com data de conclusão, no regime de fiscalização).
+6. Cenário de recuperação do IRC — assinalado sempre como hipótese.
+7. Data de liquidação do IRC introduzida, para ancorar os prazos.
+
+O índice nunca chega a 100%: o cenário de recuperação é, por natureza, uma hipótese. É deliberado — a ferramenta não deve poder apresentar-se como certa.
+
+## 10. Versão das regras fiscais
+
+O conjunto de parâmetros tem versão e data (`Parametros.VERSAO`), apresentadas no rodapé da aplicação e no relatório. Um relatório emitido hoje tem de poder ser lido daqui a dois anos com a indicação de que regras usou.
+
+## 11. Validações automáticas
 
 - Soma das participações diferente de 100% → **erro** (imputação sub ou sobreavaliada).
 - `resultado contabilístico + correções ≠ matéria coletável` → **aviso** com a diferença quantificada (justificável por prejuízos fiscais reportados ou benefícios).
@@ -149,9 +188,9 @@ Os prazos de quatro anos são apresentados a partir do fim do ano seguinte ao ex
 
 ---
 
-## 10. Testes
+## 12. Testes
 
-`tests/motor.test.js` cobre a coleta progressiva contra valores calculados à mão, a taxa de solidariedade por faixas, o quociente conjugal, o piso zero do imposto, a imputação integral da matéria coletável, os juros e o respetivo teto, a ordenação dos três cenários de coima, a base de recuperação do IRC, a matriz de sensibilidade, o crédito por lucros distribuídos, a sobreposição de parâmetros do utilizador, a substituição de tabelas em falta e as validações.
+`tests/motor.test.js` (30 testes) cobre a coleta progressiva contra valores calculados à mão, a taxa de solidariedade por faixas, o quociente conjugal, o piso zero do imposto, a imputação integral da matéria coletável, **os quatro regimes de juros e os respetivos limites**, a ordenação dos cenários de coima e a **ausência da palavra «provável»**, a não multiplicação automática da coima declarativa, a base de recuperação do IRC e os seus rótulos, a matriz de sensibilidade, a **não compensação** dos lucros distribuídos, o efeito das deduções à coleta reais, o **índice de confiança**, a **regra aplicável em cada evento da cronologia**, a ancoragem dos prazos na data de liquidação, a versão das regras, a sobreposição de parâmetros do utilizador, a substituição de tabelas em falta e as validações.
 
 ```bash
 npm test

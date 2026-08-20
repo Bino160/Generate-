@@ -21,6 +21,7 @@
       tributacao: 'separada',
       rendimentosConjuge: 0,
       dependentes: 0,
+      outrasDeducoesColeta: 0,
       irsPagoDistribuicoes: 0
     };
   }
@@ -46,6 +47,10 @@
       parametros: {
         dataReferencia: new Date().toISOString().slice(0, 10),
         dataInicioJuros: '',
+        regimeJuros: 'omissaoDeclarativa',
+        dataConclusaoInspecao: '',
+        dataLiquidacaoIRC: '',
+        dataPagamentoIRC: '',
         cenarioIRC: 'parcial'
       }
     };
@@ -70,12 +75,12 @@
       {
         nome: 'Dra. Sócia maioritária', participacao: 70, rendimentosA: 42000, rendimentosB: 0,
         categoriaBJaLiquida: false, outrosRendimentos: 0, tributacao: 'conjunta',
-        rendimentosConjuge: 28000, dependentes: 2, irsPagoDistribuicoes: 0
+        rendimentosConjuge: 28000, dependentes: 2, outrasDeducoesColeta: 0, irsPagoDistribuicoes: 0
       },
       {
         nome: 'Dr. Sócio minoritário', participacao: 30, rendimentosA: 24000, rendimentosB: 6000,
         categoriaBJaLiquida: false, outrosRendimentos: 0, tributacao: 'separada',
-        rendimentosConjuge: 0, dependentes: 0, irsPagoDistribuicoes: 0
+        rendimentosConjuge: 0, dependentes: 0, outrasDeducoesColeta: 0, irsPagoDistribuicoes: 0
       }
     ];
     d.parametros.dataReferencia = new Date().toISOString().slice(0, 10);

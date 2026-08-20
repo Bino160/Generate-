@@ -260,6 +260,33 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
   h2 { font-size: 1.2rem; }
 }
 
+/* ------------------------- Confiança da simulação ------------------- */
+.cartao--confianca { border-left: 4px solid var(--linha-forte); }
+.cartao--confianca.nivel-alta { border-left-color: var(--positivo); }
+.cartao--confianca.nivel-media { border-left-color: var(--aviso); }
+.cartao--confianca.nivel-baixa { border-left-color: var(--alerta); }
+.confianca__topo { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+.confianca__titulo { font-weight: 650; font-size: .98rem; }
+.confianca__nota { font-size: .8rem; color: var(--tinta-tenue); }
+.confianca__indice { font-size: 1.4rem; font-weight: 680; font-variant-numeric: tabular-nums; }
+.confianca__barra { height: 6px; border-radius: 999px; background: var(--linha); margin: .6rem 0 .8rem; overflow: hidden; }
+.confianca__preenchido { height: 100%; border-radius: 999px; background: var(--marca); }
+.nivel-alta .confianca__preenchido { background: var(--positivo); }
+.nivel-media .confianca__preenchido { background: var(--aviso); }
+.nivel-baixa .confianca__preenchido { background: var(--alerta); }
+.confianca__itens { list-style: none; margin: 0; padding: 0; display: grid; gap: .4rem; }
+.confianca__itens li { display: grid; grid-template-columns: minmax(9rem, 14rem) 1fr; gap: .6rem; font-size: .84rem; align-items: baseline; }
+.confianca__itens li::before { display: none; }
+.confianca__rotulo { font-weight: 600; }
+.confianca__rotulo::before { content: "• "; }
+.estado-ok .confianca__rotulo::before { content: "✓ "; color: var(--positivo); }
+.estado-aviso .confianca__rotulo::before { content: "! "; color: var(--aviso); }
+.estado-falta .confianca__rotulo::before { content: "✕ "; color: var(--alerta); }
+.confianca__texto { color: var(--tinta-suave); }
+@media (max-width: 640px) {
+  .confianca__itens li { grid-template-columns: 1fr; gap: 0; }
+}
+
 </style>
 <text y='.9em' font-size='90'>⚖️</text></svg>">
 
@@ -382,6 +409,8 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
 
     <div id="avisos"></div>
 
+    <div class="cartao cartao--confianca" id="confianca"></div>
+
     <div class="cartoes" id="cartoes-financeiros"></div>
 
     <div class="cartao">
@@ -421,7 +450,7 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
       <p class="ajuda">Exposição líquida = IRS adicional + juros + coima − IRC recuperado. Cada célula cruza um cenário de coima com um cenário de recuperação do IRC.</p>
       <div class="tabela-scroll">
         <table class="tabela" id="tabela-matriz">
-          <thead><tr><th>Coima \ IRC</th><th>Reembolso integral</th><th>Reembolso parcial</th><th>Reembolso inexistente</th></tr></thead>
+          <thead><tr><th>Coima \ IRC</th><th data-irc="integral"></th><th data-irc="parcial"></th><th data-irc="inexistente"></th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
@@ -449,7 +478,7 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
 
 <footer class="rodape">
   <p><strong>Aviso.</strong> Ferramenta de apoio à decisão. Os valores apresentados são estimativas construídas sobre parâmetros configuráveis e não substituem a liquidação da Autoridade Tributária nem parecer jurídico-fiscal. Este simulador pressupõe que a elegibilidade para o artigo 6.º do CIRC já foi previamente determinada.</p>
-  <p class="rodape__meta">Cálculo local no navegador. Nenhum dado é enviado para servidores.</p>
+  <p class="rodape__meta">Cálculo local no navegador. Nenhum dado é enviado para servidores. <span id="versao-regras"></span></p>
 </footer>
 
 <script>
@@ -467,6 +496,17 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
   else raiz.Parametros = fabrica();
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
+
+  /* ------------------------------------------------------------------ *
+   * Versao do conjunto de regras fiscais.
+   * Aparece na interface e no relatorio: um relatorio sem versao de regras
+   * nao e defensavel meses depois.
+   * ------------------------------------------------------------------ */
+  var VERSAO = {
+    versao: '2026.08',
+    atualizadoEm: '2026-08-20',
+    nota: 'Regras e tabelas confirmadas a esta data. Confirme sempre a legislacao em vigor no exercicio analisado antes de emitir um relatorio.'
+  };
 
   /* ------------------------------------------------------------------ *
    * Escaloes de IRS - taxas gerais (artigo 68.º do CIRS)
@@ -550,10 +590,50 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
     fonte: 'Artigo 35.º da LGT. Taxa dos juros legais fixada em 4% ao ano (Portaria n.º 291/2003).',
     taxaAnual: 0.04,
     baseDias: 365,
-    limiteDias: null, // preencher para impor o tecto de 180 dias do artigo 35.º, n.º 7 da LGT
     // Termo do prazo de entrega da declaracao Modelo 3 do ano seguinte ao exercicio.
     diaLimiteIRS: 30,
-    mesLimiteIRS: 6
+    mesLimiteIRS: 6,
+    /* ---------------------------------------------------------------- *
+     * O periodo de juros NAO e uma formula unica: depende da origem da
+     * correccao. Artigo 35.º, n.º 7 da LGT: os juros contam-se dia a dia
+     * desde o termo do prazo de entrega ate ao suprimento, correccao ou
+     * deteccao da falta, mas sao devidos apenas por 180 dias no caso de
+     * erro do sujeito passivo evidenciado na declaracao e, em caso de
+     * falta apurada em accao de fiscalizacao, ate 90 dias apos a sua
+     * conclusao.
+     * ---------------------------------------------------------------- */
+    regimeOmissao: 'omissaoDeclarativa',
+    regimes: {
+      regularizacaoVoluntaria: {
+        rotulo: 'Regularização voluntária pelo sujeito passivo',
+        descricao: 'O sujeito passivo substitui a declaração por iniciativa própria. Os juros correm dia a dia até à data da substituição.',
+        regra: 'Artigo 35.º, n.º 7 da LGT: contagem dia a dia até ao suprimento da falta.',
+        limiteDias: null,
+        fim: 'referencia'
+      },
+      omissaoDeclarativa: {
+        rotulo: 'Omissão não evidenciada na declaração',
+        descricao: 'A imputação não consta da declaração e o erro não é detetável na própria declaração. É o caso típico da transparência fiscal não declarada: a matéria coletável está na sociedade, não na Modelo 3 do sócio.',
+        regra: 'Artigo 35.º, n.º 7 da LGT: contagem dia a dia até à correção ou deteção da falta. O teto de 180 dias não se aplica.',
+        limiteDias: null,
+        fim: 'referencia'
+      },
+      erroEvidenciado: {
+        rotulo: 'Erro evidenciado na própria declaração',
+        descricao: 'O erro é percetível na declaração entregue, pelo que a demora da liquidação não é integralmente imputável ao sujeito passivo.',
+        regra: 'Artigo 35.º, n.º 7 da LGT: juros devidos pelo prazo máximo de 180 dias.',
+        limiteDias: 180,
+        fim: 'referencia'
+      },
+      inspecao: {
+        rotulo: 'Falta apurada em ação de fiscalização',
+        descricao: 'A correção resulta de procedimento inspetivo. Exige a data de conclusão da ação.',
+        regra: 'Artigo 35.º, n.º 7 da LGT: juros devidos até 90 dias após a conclusão da ação de fiscalização.',
+        limiteDias: null,
+        fim: 'conclusaoInspecao',
+        diasAposConclusao: 90
+      }
+    }
   };
 
   /* ------------------------------------------------------------------ *
@@ -567,15 +647,19 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
     // Reducao por regularizacao voluntaria antes de qualquer procedimento inspectivo
     // (artigo 29.º, n.º 1, alinea a) do RGIT: 12,5% do montante minimo legal).
     reducaoVoluntaria: 0.125,
-    // Coima aplicada em pratica corrente quando ha correccao oficiosa sem dolo.
-    fatorProvavel: 1.0, // multiplicador do limite minimo legal
+    // Multiplicador do limite minimo legal usado no cenario de referencia.
+    // NAO representa a coima que a AT vira a aplicar: e apenas a ancoragem
+    // do cenario intermedio no limite minimo previsto na lei.
+    fatorReferencia: 1.0,
     // Pisos e tectos (pessoas singulares, negligencia).
     coimaMinimaAbsoluta: 375,
     tectoNegligencia: 22500,
     // Coima autonoma por declaracao inexacta ou omitida (artigo 119.º do RGIT).
     coimaDeclaracaoMinima: 375,
     coimaDeclaracaoMaxima: 22500,
-    aplicarCoimaDeclaracaoPorSocio: true
+    // Uma coima por declaracao inexacta e uma questao de imputacao da
+    // infraccao a cada sujeito passivo. Nao se assume automaticamente.
+    aplicarCoimaDeclaracaoPorSocio: false
   };
 
   /* ------------------------------------------------------------------ *
@@ -585,6 +669,10 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
     deducaoEspecificaCategoriaA: 4104,
     coeficienteCategoriaB: 0.75, // artigo 31.º do CIRS, regime simplificado, servicos do artigo 151.º
     deducaoPorDependente: 600,
+    // O motor nao modela despesas gerais familiares, saude, educacao,
+    // habitacao nem os respectivos limites. Quem tiver os valores reais
+    // da Modelo 3 introduz-os por socio no campo proprio.
+    modelaDeducoesDetalhadas: false,
     limiteDeducoesColeta: null, // null = sem limite global
     quocienteConjugal: 2
   };
@@ -593,8 +681,10 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
    * Prazos (LGT)
    * ------------------------------------------------------------------ */
   var PRAZOS = {
+    fonte: 'Artigos 45.º e 78.º da LGT; artigo 70.º do CPPT. Prazos indicativos: ' +
+      'o artigo 78.º prevê vias e prazos distintos consoante o fundamento invocado.',
     caducidadeAnos: 4,        // artigo 45.º da LGT
-    revisaoOficiosaAnos: 4,   // artigo 78.º, n.º 1 da LGT
+    revisaoOficiosaAnos: 4,   // artigo 78.º, n.º 1 da LGT, via de iniciativa do sujeito passivo
     reclamacaoGraciosaDias: 120, // artigo 70.º do CPPT
     prazoEntregaModelo22: { dia: 31, mes: 5 },
     prazoEntregaModelo3: { dia: 30, mes: 6 }
@@ -604,6 +694,8 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
    * Recuperacao do IRC
    * ------------------------------------------------------------------ */
   var RECUPERACAO = {
+    // Percentagem do cenario intermedio. E uma hipotese de trabalho
+    // escolhida pelo utilizador, sem qualquer significado juridico.
     percentagemParcial: 0.5,
     // As tributacoes autonomas mantem-se devidas pela sociedade transparente
     // (artigo 12.º do CIRC), logo nao entram na base recuperavel por omissao.
@@ -613,6 +705,7 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
 
   function porOmissao() {
     return JSON.parse(JSON.stringify({
+      versao: VERSAO,
       escaloesIRS: ESCALOES_IRS,
       solidariedade: SOLIDARIEDADE,
       juros: JUROS,
@@ -643,6 +736,7 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
   return {
     porOmissao: porOmissao,
     tabelaDoExercicio: tabelaDoExercicio,
+    VERSAO: VERSAO,
     ESCALOES_IRS: ESCALOES_IRS
   };
 });
@@ -754,7 +848,12 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
     var adicional = solidariedade(rc / divisor, p.solidariedade) * divisor;
     var coletaTotal = coletaBase + adicional;
 
-    var deducoes = num(opcoes.dependentes) * num(p.irs.deducaoPorDependente);
+    // O motor nao modela despesas gerais familiares, saude, educacao nem
+    // habitacao. Modela a deducao por dependente e aceita, por socio, o
+    // valor real das restantes deducoes a coleta retirado da Modelo 3.
+    var deducoesDependentes = num(opcoes.dependentes) * num(p.irs.deducaoPorDependente);
+    var deducoesOutras = num(opcoes.outrasDeducoesColeta);
+    var deducoes = deducoesDependentes + deducoesOutras;
     if (p.irs.limiteDeducoesColeta !== null && p.irs.limiteDeducoesColeta !== undefined) {
       deducoes = Math.min(deducoes, num(p.irs.limiteDeducoesColeta));
     }
@@ -767,6 +866,8 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
       taxaAdicionalSolidariedade: arred(adicional),
       coletaTotal: arred(coletaTotal),
       deducoesColeta: arred(deducoes),
+      deducoesDependentes: arred(deducoesDependentes),
+      deducoesOutras: arred(deducoesOutras),
       imposto: arred(Math.max(0, coletaTotal - deducoes)),
       taxaMarginal: taxaMarginal(rc / divisor, escaloes),
       taxaEfetiva: rc > 0 ? arred(Math.max(0, coletaTotal - deducoes) / rc, 6) : 0
@@ -812,7 +913,8 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
         parametros: p,
         escaloes: escaloes.escaloes,
         conjunta: socio.tributacao === 'conjunta',
-        dependentes: socio.dependentes
+        dependentes: socio.dependentes,
+        outrasDeducoesColeta: socio.outrasDeducoesColeta
       });
       return { nome: socio.nome, componentes: componentes, liquidacao: liq, irs: liq.imposto };
     });
@@ -853,7 +955,8 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
         parametros: p,
         escaloes: escaloes.escaloes,
         conjunta: socio.tributacao === 'conjunta',
-        dependentes: socio.dependentes
+        dependentes: socio.dependentes,
+        outrasDeducoesColeta: socio.outrasDeducoesColeta
       });
       return {
         nome: socio.nome,
@@ -894,29 +997,71 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
   function calcularJuros(impostoEmFalta, dados, p) {
     var base = Math.max(0, num(impostoEmFalta));
     var exercicio = num(dados.sociedade.exercicio);
-    var inicio = dados.parametros && dados.parametros.dataInicioJuros
-      ? data(dados.parametros.dataInicioJuros)
+    var par = dados.parametros || {};
+
+    var chave = par.regimeJuros || p.juros.regimeOmissao;
+    var regime = p.juros.regimes[chave] || p.juros.regimes[p.juros.regimeOmissao];
+
+    var inicio = par.dataInicioJuros
+      ? data(par.dataInicioJuros)
       : new Date(Date.UTC(exercicio + 1, num(p.juros.mesLimiteIRS) - 1, num(p.juros.diaLimiteIRS)));
-    var fim = data(dados.parametros && dados.parametros.dataReferencia);
+    var referencia = data(par.dataReferencia);
+    var fim = referencia;
+    var notas = [];
+
+    // Falta apurada em accao de fiscalizacao: os juros sao devidos ate 90 dias
+    // apos a conclusao da accao, e nao ate hoje.
+    if (regime.fim === 'conclusaoInspecao') {
+      if (par.dataConclusaoInspecao) {
+        var teto = new Date(data(par.dataConclusaoInspecao).getTime() +
+          num(regime.diasAposConclusao) * DIA_MS);
+        if (teto < fim) {
+          fim = teto;
+          notas.push('Contagem encerrada em ' + iso(teto) + ': ' + regime.diasAposConclusao +
+            ' dias após a conclusão da ação de fiscalização.');
+        }
+      } else {
+        notas.push('Regime de fiscalização selecionado sem data de conclusão da ação. ' +
+          'A contagem foi feita até à data de referência, o que sobreavalia os juros.');
+      }
+    }
 
     var nDias = dias(inicio, fim);
+    var brutos = nDias;
+
+    // O limite do regime pode ser sobreposto explicitamente nos parametros.
+    var limiteDias = p.juros.limiteDias !== undefined && p.juros.limiteDias !== null
+      ? num(p.juros.limiteDias)
+      : (regime.limiteDias === null || regime.limiteDias === undefined ? null : num(regime.limiteDias));
+
     var limitado = false;
-    if (p.juros.limiteDias !== null && p.juros.limiteDias !== undefined && nDias > num(p.juros.limiteDias)) {
-      nDias = num(p.juros.limiteDias);
+    if (limiteDias !== null && nDias > limiteDias) {
+      nDias = limiteDias;
       limitado = true;
+      notas.push('Contagem limitada a ' + limiteDias + ' dias. ' + regime.regra);
     }
+
     var baseDias = num(p.juros.baseDias) || 365;
     var montante = base * num(p.juros.taxaAnual) * (nDias / baseDias);
 
     return {
       base: arred(base),
       taxaAnual: num(p.juros.taxaAnual),
-      dataInicio: inicio.toISOString().slice(0, 10),
-      dataFim: fim.toISOString().slice(0, 10),
+      regime: chave,
+      regimeRotulo: regime.rotulo,
+      regra: regime.regra,
+      notas: notas,
+      dataInicio: iso(inicio),
+      dataFim: iso(fim),
+      diasDecorridos: brutos,
       dias: nDias,
       limiteAplicado: limitado,
       montante: arred(montante)
     };
+  }
+
+  function iso(d) {
+    return data(d).toISOString().slice(0, 10);
   }
 
   /* ================================================================== *
@@ -935,40 +1080,43 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
     );
     if (maximoLegal < minimoLegal) maximoLegal = minimoLegal;
 
-    var declaracao = c.aplicarCoimaDeclaracaoPorSocio ? nSocios : 1;
-    var coimaDeclMin = num(c.coimaDeclaracaoMinima) * declaracao;
-    var coimaDeclMax = num(c.coimaDeclaracaoMaxima) * declaracao;
-
-    var minimo = minimoLegal * num(c.reducaoVoluntaria);
-    var provavel = minimoLegal * num(c.fatorProvavel);
-    var maximo = maximoLegal + coimaDeclMax;
+    var declaracoes = c.aplicarCoimaDeclaracaoPorSocio ? nSocios : 1;
+    var coimaDeclMin = num(c.coimaDeclaracaoMinima) * declaracoes;
+    var coimaDeclMax = num(c.coimaDeclaracaoMaxima) * declaracoes;
 
     return {
       base: arred(base),
       minimoLegal: arred(minimoLegal),
       maximoLegal: arred(maximoLegal),
-      minimo: {
-        valor: arred(minimo),
-        rotulo: 'Regularização voluntária',
+      // Tres cenarios de simulacao. Nenhum deles e uma previsao da coima
+      // que a Autoridade Tributaria venha a aplicar: a graduacao concreta
+      // depende da culpa, do beneficio obtido e da situacao economica do
+      // agente (artigo 27.º do RGIT).
+      baixo: {
+        valor: arred(minimoLegal * num(c.reducaoVoluntaria)),
+        rotulo: 'Cenário baixo — regularização voluntária',
         fundamento: 'Artigo 29.º, n.º 1, alínea a) do RGIT: redução a ' +
           (num(c.reducaoVoluntaria) * 100) + '% do montante mínimo legal quando a regularização ' +
           'ocorre por iniciativa do sujeito passivo, antes de qualquer procedimento inspetivo.'
       },
-      provavel: {
-        valor: arred(provavel),
-        rotulo: 'Correção oficiosa sem dolo',
+      referencia: {
+        valor: arred(minimoLegal * num(c.fatorReferencia)),
+        rotulo: 'Cenário de referência — limite mínimo legal',
         fundamento: 'Artigo 114.º, n.º 2 do RGIT: coima de ' +
           (num(c.percentagemMinima) * 100) + '% a ' + (num(c.percentagemMaxima) * 100) +
-          '% do imposto em falta a título de negligência. Cenário ancorado no limite mínimo.'
+          '% do imposto em falta a título de negligência. Este cenário ancora-se no limite mínimo ' +
+          'e não constitui previsão da coima aplicável.'
       },
-      maximo: {
-        valor: arred(maximo),
-        rotulo: 'Limite máximo com coimas declarativas',
+      alto: {
+        valor: arred(maximoLegal + coimaDeclMax),
+        rotulo: 'Cenário alto — limite máximo com coimas declarativas',
         fundamento: 'Limite máximo do artigo 114.º, n.º 2 do RGIT, com o teto do artigo 26.º, ' +
           'acrescido das coimas do artigo 119.º do RGIT por declaração inexata (' +
-          declaracao + ' declaração(ões)).'
+          declaracoes + ' declaração(ões) considerada(s)).'
       },
-      coimasDeclarativas: { minimo: arred(coimaDeclMin), maximo: arred(coimaDeclMax), declaracoes: declaracao }
+      coimasDeclarativas: { minimo: arred(coimaDeclMin), maximo: arred(coimaDeclMax), declaracoes: declaracoes },
+      aviso: 'Os três valores são cenários de simulação. Não representam uma previsão da coima ' +
+        'que venha a ser aplicada pela Autoridade Tributária, que gradua a coima caso a caso.'
     };
   }
 
@@ -983,10 +1131,11 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
     if (p.recuperacao.incluirTributacoesAutonomas) base += irc.tributacoesAutonomas;
 
     var parcial = num(p.recuperacao.percentagemParcial);
+    var pct = function (x) { return 'Recuperação ' + arred(x * 100, 1) + '%'; };
     var cenarios = {
-      integral: { rotulo: 'Reembolso integral', percentagem: 1, valor: arred(base) },
-      parcial: { rotulo: 'Reembolso parcial', percentagem: parcial, valor: arred(base * parcial) },
-      inexistente: { rotulo: 'Reembolso inexistente', percentagem: 0, valor: 0 }
+      integral: { rotulo: pct(1), percentagem: 1, valor: arred(base) },
+      parcial: { rotulo: pct(parcial), percentagem: parcial, valor: arred(base * parcial) },
+      inexistente: { rotulo: pct(0), percentagem: 0, valor: 0 }
     };
     var escolhido = (dados.parametros && dados.parametros.cenarioIRC) || 'parcial';
     if (!cenarios[escolhido]) escolhido = 'parcial';
@@ -995,7 +1144,10 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
       base: arred(base),
       cenarios: cenarios,
       cenarioSelecionado: escolhido,
-      valorConsiderado: cenarios[escolhido].valor
+      valorConsiderado: cenarios[escolhido].valor,
+      aviso: 'As percentagens são hipóteses de trabalho escolhidas pelo utilizador e não têm ' +
+        'significado jurídico. O montante é potencialmente recuperável, sujeito à validação da ' +
+        'via processual aplicável (artigo 78.º da LGT ou artigo 70.º do CPPT) e dos respetivos prazos.'
     };
   }
 
@@ -1005,51 +1157,107 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
 
   function construirTimeline(dados, p, juros, recuperacao) {
     var exercicio = num(dados.sociedade.exercicio);
-    var ref = data(dados.parametros && dados.parametros.dataReferencia);
-    var iso = function (y, m, d) { return new Date(Date.UTC(y, m - 1, d)).toISOString().slice(0, 10); };
+    var par = dados.parametros || {};
+    var ref = data(par.dataReferencia);
+    var d = function (y, m, dia) { return new Date(Date.UTC(y, m - 1, dia)).toISOString().slice(0, 10); };
 
     var eventos = [
       {
-        data: iso(exercicio, 12, 31),
+        data: d(exercicio, 12, 31),
         titulo: 'Fecho do exercício de ' + exercicio,
         descricao: 'Apuramento do resultado contabilístico e da matéria coletável.',
+        regra: 'Facto apurado nas contas da sociedade.',
         tipo: 'facto'
       },
       {
-        data: iso(exercicio + 1, p.prazos.prazoEntregaModelo22.mes, p.prazos.prazoEntregaModelo22.dia),
+        data: d(exercicio + 1, p.prazos.prazoEntregaModelo22.mes, p.prazos.prazoEntregaModelo22.dia),
         titulo: 'Prazo de entrega da Modelo 22',
         descricao: 'Declaração de rendimentos de IRC do exercício de ' + exercicio + '.',
+        regra: 'Artigo 120.º do CIRC.',
         tipo: 'prazo'
       },
       {
-        data: iso(exercicio + 1, p.prazos.prazoEntregaModelo3.mes, p.prazos.prazoEntregaModelo3.dia),
+        data: d(exercicio + 1, p.prazos.prazoEntregaModelo3.mes, p.prazos.prazoEntregaModelo3.dia),
         titulo: 'Prazo de entrega da Modelo 3 de IRS',
         descricao: 'Termo do prazo em que a imputação deveria ter sido declarada pelos sócios. ' +
           'Início da contagem dos juros compensatórios.',
+        regra: 'Artigo 60.º do CIRS; início da contagem nos termos do artigo 35.º, n.º 7 da LGT.',
         tipo: 'prazo'
-      },
-      {
-        data: juros.dataFim,
-        titulo: 'Data de referência da simulação',
-        descricao: juros.dias + ' dias de juros compensatórios acumulados sobre ' +
-          formatarEuro(juros.base) + '.',
-        tipo: 'referencia'
-      },
-      {
-        data: iso(exercicio + 1 + num(p.prazos.revisaoOficiosaAnos), 12, 31),
-        titulo: 'Limite da revisão a favor do contribuinte',
-        descricao: 'Artigo 78.º, n.º 1 da LGT: ' + p.prazos.revisaoOficiosaAnos +
-          ' anos para pedir a revisão do IRC liquidado. Depois desta data o IRC deixa de ser recuperável.',
-        tipo: 'limite'
-      },
-      {
-        data: iso(exercicio + 1 + num(p.prazos.caducidadeAnos), 12, 31),
-        titulo: 'Caducidade do direito à liquidação',
-        descricao: 'Artigo 45.º da LGT: ' + p.prazos.caducidadeAnos +
-          ' anos. Depois desta data a Autoridade Tributária deixa de poder liquidar IRS adicional.',
-        tipo: 'limite'
       }
     ];
+
+    // Factos opcionais: so entram na cronologia se o utilizador os introduzir.
+    if (par.dataLiquidacaoIRC) {
+      eventos.push({
+        data: iso(par.dataLiquidacaoIRC),
+        titulo: 'Liquidação do IRC do exercício',
+        descricao: 'Ato tributário cuja revisão será pedida para recuperar ' +
+          formatarEuro(recuperacao.base) + '.',
+        regra: 'Data introduzida pelo utilizador. É a partir daqui que correm os prazos de reclamação e de revisão.',
+        tipo: 'facto'
+      });
+    }
+    if (par.dataPagamentoIRC) {
+      eventos.push({
+        data: iso(par.dataPagamentoIRC),
+        titulo: 'Pagamento do IRC',
+        descricao: 'Saída de caixa efetiva que se pretende recuperar.',
+        regra: 'Data introduzida pelo utilizador.',
+        tipo: 'facto'
+      });
+    }
+    if (par.dataConclusaoInspecao) {
+      eventos.push({
+        data: iso(par.dataConclusaoInspecao),
+        titulo: 'Conclusão da ação de fiscalização',
+        descricao: 'Os juros compensatórios são devidos até 90 dias após esta data.',
+        regra: 'Artigo 35.º, n.º 7 da LGT.',
+        tipo: 'facto'
+      });
+    }
+
+    eventos.push({
+      data: juros.dataFim,
+      titulo: 'Fim da contagem de juros',
+      descricao: juros.dias + ' dias de juros compensatórios sobre ' + formatarEuro(juros.base) +
+        ', no regime «' + juros.regimeRotulo + '».',
+      regra: juros.regra,
+      tipo: 'referencia'
+    });
+
+    // Prazos de quatro anos. Quando ha data de liquidacao, conta-se a partir
+    // dela; caso contrario e uma aproximacao a partir do fim do ano seguinte
+    // ao exercicio, e e assinalada como tal.
+    var aproximado = !par.dataLiquidacaoIRC;
+    var baseRevisao = par.dataLiquidacaoIRC
+      ? new Date(data(par.dataLiquidacaoIRC).getTime())
+      : new Date(Date.UTC(exercicio + 1, 11, 31));
+    var revisao = new Date(baseRevisao.getTime());
+    revisao.setUTCFullYear(revisao.getUTCFullYear() + num(p.prazos.revisaoOficiosaAnos));
+
+    eventos.push({
+      data: revisao.toISOString().slice(0, 10),
+      titulo: 'Prazo potencial de revisão do IRC',
+      descricao: 'Indicação aproximada do limite para pedir a revisão do ato tributário. ' +
+        'O artigo 78.º da LGT prevê vias e prazos distintos consoante o fundamento invocado ' +
+        '(iniciativa do sujeito passivo, erro imputável aos serviços, injustiça grave ou notória, ' +
+        'duplicação de coleta). A via aplicável tem de ser determinada caso a caso.' +
+        (aproximado ? ' Sem data de liquidação introduzida, esta data é uma estimativa.' : ''),
+      regra: 'Artigo 78.º da LGT. Ver também o prazo de reclamação graciosa do artigo 70.º do CPPT (' +
+        p.prazos.reclamacaoGraciosaDias + ' dias).',
+      aproximado: aproximado,
+      tipo: 'limite'
+    });
+
+    eventos.push({
+      data: d(exercicio + 1 + num(p.prazos.caducidadeAnos), 12, 31),
+      titulo: 'Prazo potencial de caducidade',
+      descricao: 'Indicação aproximada do limite para a Autoridade Tributária liquidar IRS adicional. ' +
+        'O prazo suspende-se ou interrompe-se em várias situações, designadamente durante a ação de inspeção.',
+      regra: 'Artigo 45.º da LGT, com as causas de suspensão e interrupção do artigo 46.º.',
+      aproximado: true,
+      tipo: 'limite'
+    });
 
     eventos.sort(function (a, b) { return a.data < b.data ? -1 : 1; });
     var refIso = ref.toISOString().slice(0, 10);
@@ -1057,13 +1265,113 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
     return eventos;
   }
 
-  /** Formatacao monetaria em pt-PT, sem depender de Intl no lado do motor. */
   function formatarEuro(v) {
     var x = num(v);
     var sinal = x < 0 ? '-' : '';
     var partes = Math.abs(x).toFixed(2).split('.');
     var inteiro = partes[0].replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0');
     return sinal + inteiro + ',' + partes[1] + '\u00a0\u20ac';
+  }
+
+  /* ================================================================== *
+   * 9. Qualidade dos dados e confianca da simulacao
+   * ================================================================== */
+
+  /**
+   * Traduz o estado dos inputs num grau de confianca explicito.
+   * Um numero com duas casas decimais nao pode ser apresentado com o mesmo
+   * peso quando assenta em pressupostos e quando assenta em dados reais.
+   */
+  function avaliarQualidade(dados, p, tabela, recuperacao) {
+    var s = dados.sociedade;
+    var socios = dados.socios || [];
+    var par = dados.parametros || {};
+    var itens = [];
+
+    var soma = socios.reduce(function (a, x) { return a + num(x.participacao); }, 0);
+    itens.push({
+      chave: 'participacoes',
+      rotulo: 'Participações dos sócios',
+      estado: socios.length && Math.abs(soma - 100) < 0.01 ? 'ok' : 'falta',
+      texto: socios.length && Math.abs(soma - 100) < 0.01
+        ? 'Somam 100%.'
+        : 'Não somam 100%. A imputação está distorcida.'
+    });
+
+    var teorica = num(s.resultadoContabilistico) + num(s.correcoesFiscais);
+    itens.push({
+      chave: 'materiaColetavel',
+      rotulo: 'Matéria coletável',
+      estado: num(s.materiaColetavel) <= 0 ? 'falta'
+        : (Math.abs(teorica - num(s.materiaColetavel)) > 1 ? 'aviso' : 'ok'),
+      texto: num(s.materiaColetavel) <= 0
+        ? 'Não introduzida. Sem ela não há imputação a calcular.'
+        : (Math.abs(teorica - num(s.materiaColetavel)) > 1
+          ? 'Não reconcilia com o resultado e as correções fiscais. Confirmar prejuízos ou benefícios.'
+          : 'Reconcilia com o resultado contabilístico e as correções fiscais.')
+    });
+
+    itens.push({
+      chave: 'tabelaIRS',
+      rotulo: 'Tabela de IRS do exercício',
+      estado: tabela.estado === 'confirmado' ? 'ok' : 'aviso',
+      texto: tabela.estado === 'confirmado'
+        ? 'Tabela confirmada para ' + s.exercicio + '.'
+        : 'Tabela ' + tabela.estado + '. ' + tabela.fonte
+    });
+
+    var temDeducoes = socios.some(function (x) { return num(x.outrasDeducoesColeta) > 0; });
+    itens.push({
+      chave: 'deducoes',
+      rotulo: 'Deduções à coleta',
+      estado: temDeducoes ? 'ok' : 'falta',
+      texto: temDeducoes
+        ? 'Introduzidas a partir dos valores reais dos sócios.'
+        : 'Só está modelada a dedução por dependente. Despesas de saúde, educação, habitação e ' +
+          'despesas gerais familiares não estão consideradas: o IRS de cada cenário está sobreavaliado.'
+    });
+
+    var regimeInspecaoSemData = par.regimeJuros === 'inspecao' && !par.dataConclusaoInspecao;
+    itens.push({
+      chave: 'juros',
+      rotulo: 'Regime de juros compensatórios',
+      estado: regimeInspecaoSemData ? 'falta' : (par.regimeJuros ? 'ok' : 'aviso'),
+      texto: regimeInspecaoSemData
+        ? 'Regime de fiscalização sem data de conclusão da ação. Os juros estão sobreavaliados.'
+        : (par.regimeJuros
+          ? 'Regime escolhido explicitamente.'
+          : 'A usar o regime por omissão. Confirme a origem da correção no ecrã de parâmetros.')
+    });
+
+    itens.push({
+      chave: 'recuperacaoIRC',
+      rotulo: 'Recuperação do IRC',
+      estado: 'aviso',
+      texto: 'A percentagem é uma hipótese de trabalho. A via processual e o respetivo prazo ' +
+        'têm de ser determinados caso a caso.'
+    });
+
+    itens.push({
+      chave: 'datasProcessuais',
+      rotulo: 'Data de liquidação do IRC',
+      estado: par.dataLiquidacaoIRC ? 'ok' : 'aviso',
+      texto: par.dataLiquidacaoIRC
+        ? 'Introduzida. Os prazos são contados a partir dela.'
+        : 'Não introduzida. Os prazos de revisão e caducidade são aproximações.'
+    });
+
+    var pesos = { ok: 1, aviso: 0.5, falta: 0 };
+    var pontos = itens.reduce(function (a, i) { return a + pesos[i.estado]; }, 0);
+    var indice = Math.round((pontos / itens.length) * 100);
+    var grau = indice >= 80 ? 'Alta' : (indice >= 55 ? 'Média' : 'Baixa');
+
+    return {
+      indice: indice,
+      grau: grau,
+      itens: itens,
+      resumo: 'Confiança ' + grau.toLowerCase() + ' (' + indice + '%). ' +
+        'Os valores são uma estimativa de impacto marginal, não uma liquidação.'
+    };
   }
 
   /* ================================================================== *
@@ -1108,6 +1416,25 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
       avisos.push({ nivel: 'aviso', texto: tabela.fonte });
     }
 
+    var distribuicoes = socios.reduce(function (a, x) { return a + num(x.irsPagoDistribuicoes); }, 0);
+    if (distribuicoes > 0) {
+      avisos.push({
+        nivel: 'info',
+        texto: 'Foram assinalados ' + formatarEuro(distribuicoes) + ' de IRS suportado sobre lucros ' +
+          'distribuídos. Este valor NÃO é abatido ao IRS adicional: a transparência fiscal implica ' +
+          'imputação independentemente da distribuição e o tratamento dos montantes já distribuídos ' +
+          'depende da sua natureza e qualificação jurídica.'
+      });
+    }
+
+    if (!socios.some(function (x) { return num(x.outrasDeducoesColeta) > 0; })) {
+      avisos.push({
+        nivel: 'aviso',
+        texto: 'Não foram introduzidas deduções à coleta para além dos dependentes. O resultado é uma ' +
+          'estimativa de impacto marginal antes das restantes deduções à coleta, não um cálculo de IRS.'
+      });
+    }
+
     var ref = data(dados.parametros && dados.parametros.dataReferencia);
     var limiteRevisao = new Date(Date.UTC(num(s.exercicio) + 1 + num(p.prazos.revisaoOficiosaAnos), 11, 31));
     if (ref > limiteRevisao) {
@@ -1139,12 +1466,17 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
     var actual = cenarioActual(dados, p);
     var corrigido = cenarioCorrigido(dados, p);
 
-    var creditoDistribuicoes = (dados.socios || []).reduce(function (a, s) {
+    // O IRS suportado sobre lucros distribuidos NAO e abatido automaticamente.
+    // A transparencia fiscal implica imputacao independentemente da distribuicao
+    // (artigo 6.º do CIRC, artigo 20.º do CIRS) e o tratamento dos montantes ja
+    // distribuidos depende da sua natureza e qualificacao. Fica assinalado como
+    // valor a tratar juridicamente, fora do calculo.
+    var distribuicoesAssinaladas = (dados.socios || []).reduce(function (a, s) {
       return a + num(s.irsPagoDistribuicoes);
     }, 0);
 
     var irsAdicionalBruto = Math.max(0, corrigido.irsTotal - actual.irsTotal);
-    var irsAdicional = Math.max(0, irsAdicionalBruto - creditoDistribuicoes);
+    var irsAdicional = irsAdicionalBruto;
 
     var juros = calcularJuros(irsAdicional, dados, p);
     var coimas = calcularCoimas(irsAdicional, dados, p);
@@ -1172,9 +1504,9 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
       return arred(irsAdicional + juros.montante + valorCoima - valorIRC);
     }
 
-    var exposicaoLiquida = exposicao(coimas.provavel.valor, recuperacao.valorConsiderado);
+    var exposicaoLiquida = exposicao(coimas.referencia.valor, recuperacao.valorConsiderado);
 
-    var matriz = ['minimo', 'provavel', 'maximo'].map(function (chaveCoima) {
+    var matriz = ['baixo', 'referencia', 'alto'].map(function (chaveCoima) {
       return {
         coima: chaveCoima,
         valores: ['integral', 'parcial', 'inexistente'].map(function (chaveIRC) {
@@ -1191,8 +1523,8 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
       { indicador: 'Tributações autónomas', atual: actual.irc.tributacoesAutonomas, corrigido: corrigido.irc.tributacoesAutonomas },
       { indicador: 'IRS dos sócios', atual: actual.irsTotal, corrigido: corrigido.irsTotal },
       { indicador: 'Juros compensatórios', atual: 0, corrigido: juros.montante },
-      { indicador: 'Coimas (cenário provável)', atual: 0, corrigido: coimas.provavel.valor },
-      { indicador: 'Carga fiscal total', atual: arred(actual.impostoTotal), corrigido: arred(corrigido.impostoTotal + juros.montante + coimas.provavel.valor) }
+      { indicador: 'Coimas (cenário de referência)', atual: 0, corrigido: coimas.referencia.valor },
+      { indicador: 'Carga fiscal total', atual: arred(actual.impostoTotal), corrigido: arred(corrigido.impostoTotal + juros.montante + coimas.referencia.valor) }
     ].map(function (l) {
       l.variacao = arred(l.corrigido - l.atual);
       return l;
@@ -1201,8 +1533,9 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
     return {
       meta: {
         exercicio: num(dados.sociedade.exercicio),
-        dataReferencia: juros.dataFim,
+        dataReferencia: iso(dados.parametros && dados.parametros.dataReferencia),
         tabelaIRS: { estado: tabela.estado, fonte: tabela.fonte },
+        regras: p.versao,
         geradoEm: new Date().toISOString()
       },
       parametros: p,
@@ -1214,17 +1547,18 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
       recuperacaoIRC: recuperacao,
       indicadores: {
         irsAdicionalBruto: arred(irsAdicionalBruto),
-        creditoDistribuicoes: arred(creditoDistribuicoes),
+        distribuicoesAssinaladas: arred(distribuicoesAssinaladas),
         irsAdicional: arred(irsAdicional),
         juros: juros.montante,
-        coimas: coimas.provavel.valor,
+        coimas: coimas.referencia.valor,
         ircRecuperavel: recuperacao.valorConsiderado,
-        exposicaoBruta: arred(irsAdicional + juros.montante + coimas.provavel.valor),
+        exposicaoBruta: arred(irsAdicional + juros.montante + coimas.referencia.valor),
         exposicaoLiquida: exposicaoLiquida
       },
       matrizSensibilidade: matriz,
       comparador: comparador,
       timeline: construirTimeline(dados, p, juros, recuperacao),
+      qualidade: avaliarQualidade(dados, p, tabela, recuperacao),
       avisos: validar(dados, p, tabela)
     };
   }
@@ -1248,6 +1582,7 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
 
   return {
     simular: simular,
+    avaliarQualidade: avaliarQualidade,
     liquidarIRS: liquidarIRS,
     coletaProgressiva: coletaProgressiva,
     solidariedade: solidariedade,
@@ -1333,6 +1668,7 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
       tributacao: 'separada',
       rendimentosConjuge: 0,
       dependentes: 0,
+      outrasDeducoesColeta: 0,
       irsPagoDistribuicoes: 0
     };
   }
@@ -1358,6 +1694,10 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
       parametros: {
         dataReferencia: new Date().toISOString().slice(0, 10),
         dataInicioJuros: '',
+        regimeJuros: 'omissaoDeclarativa',
+        dataConclusaoInspecao: '',
+        dataLiquidacaoIRC: '',
+        dataPagamentoIRC: '',
         cenarioIRC: 'parcial'
       }
     };
@@ -1382,12 +1722,12 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
       {
         nome: 'Dra. Sócia maioritária', participacao: 70, rendimentosA: 42000, rendimentosB: 0,
         categoriaBJaLiquida: false, outrosRendimentos: 0, tributacao: 'conjunta',
-        rendimentosConjuge: 28000, dependentes: 2, irsPagoDistribuicoes: 0
+        rendimentosConjuge: 28000, dependentes: 2, outrasDeducoesColeta: 0, irsPagoDistribuicoes: 0
       },
       {
         nome: 'Dr. Sócio minoritário', participacao: 30, rendimentosA: 24000, rendimentosB: 6000,
         categoriaBJaLiquida: false, outrosRendimentos: 0, tributacao: 'separada',
-        rendimentosConjuge: 0, dependentes: 0, irsPagoDistribuicoes: 0
+        rendimentosConjuge: 0, dependentes: 0, outrasDeducoesColeta: 0, irsPagoDistribuicoes: 0
       }
     ];
     d.parametros.dataReferencia = new Date().toISOString().slice(0, 10);
@@ -1505,26 +1845,41 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
       '<div class="destaque-caixa">',
       '<span class="numero-grande">' + esc(F.euro(i.exposicaoLiquida)) + '</span>',
       '<strong>Exposição fiscal líquida estimada</strong> para o exercício de ' + esc(r.meta.exercicio) +
-      ', no cenário de coima provável e ' + esc(r.recuperacaoIRC.cenarios[r.recuperacaoIRC.cenarioSelecionado].rotulo.toLowerCase()) + ' do IRC.',
+      ', no cenário de coima de referência e com ' +
+      esc(r.recuperacaoIRC.cenarios[r.recuperacaoIRC.cenarioSelecionado].rotulo.toLowerCase()) + ' do IRC.',
       '</div>',
       '<p>Caso a Autoridade Tributária conclua que ' + esc(nome) + ' preenchia os pressupostos do artigo 6.º do Código do IRC ' +
       'no exercício de ' + esc(r.meta.exercicio) + ', a matéria coletável de ' + esc(F.euro(r.atual.irc.materiaColetavel)) +
       ' deixa de ser tributada em sede de IRC e passa a ser imputada aos sócios, sendo englobada no respetivo IRS.</p>',
-      '<p>O efeito financeiro decompõe-se em quatro parcelas: o IRS adicional de ' + esc(F.euro(i.irsAdicional)) +
+      '<p>O efeito financeiro decompõe-se em quatro parcelas: o IRS adicional estimado de ' + esc(F.euro(i.irsAdicional)) +
       ', os juros compensatórios de ' + esc(F.euro(i.juros)) + ' correspondentes a ' + esc(r.juros.dias) + ' dias de mora, ' +
       'a coima estimada de ' + esc(F.euro(i.coimas)) + ' e o IRC potencialmente recuperável de ' + esc(F.euro(i.ircRecuperavel)) +
       ', este último a abater ao custo total.</p>',
       tabela(['Indicador', 'Montante'], [
-        ['IRS adicional dos sócios', F.euro(i.irsAdicional)],
+        ['IRS adicional estimado dos sócios', F.euro(i.irsAdicional)],
         ['Juros compensatórios', F.euro(i.juros)],
-        ['Coimas (cenário provável)', F.euro(i.coimas)],
+        ['Coimas (cenário de referência)', F.euro(i.coimas)],
         { celulas: ['Exposição bruta', F.euro(i.exposicaoBruta)], total: true },
         ['IRC potencialmente recuperável', '−' + F.euro(i.ircRecuperavel)],
         { celulas: ['Exposição fiscal líquida', F.euro(i.exposicaoLiquida)], total: true }
       ]),
+      confianca(r),
       r.avisos.filter(function (a) { return a.nivel === 'erro'; })
         .map(function (a) { return '<div class="aviso">' + esc(a.texto) + '</div>'; }).join('')
     ].join('\n');
+  }
+
+  function confianca(r) {
+    var q = r.qualidade;
+    var itens = q.itens.map(function (i) {
+      var marca = { ok: '&#10003;', aviso: '!', falta: '&#10007;' }[i.estado];
+      return '<li><strong>' + marca + ' ' + esc(i.rotulo) + '.</strong> ' + esc(i.texto) + '</li>';
+    }).join('');
+    return '<h3>Confiança da simulação: ' + esc(q.grau) + ' (' + esc(q.indice) + '%)</h3>' +
+      '<ul class="legal">' + itens + '</ul>' +
+      '<div class="aviso">Estimativa de impacto marginal. Não é uma liquidação de imposto nem uma ' +
+      'previsão da posição da Autoridade Tributária. Regras fiscais versão ' + esc(r.meta.regras.versao) +
+      ', de ' + esc(F.data(r.meta.regras.atualizadoEm)) + '.</div>';
   }
 
   function fundamentacao(r) {
@@ -1547,14 +1902,23 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
       '<dd>Tabela aplicada: ' + esc(r.meta.tabelaIRS.fonte) + '</dd>',
       '<dt>Artigo 35.º da LGT — Juros compensatórios</dt>',
       '<dd>São devidos quando, por facto imputável ao sujeito passivo, for retardada a liquidação de parte do imposto. ' +
-      'Taxa aplicada de ' + esc(F.percentagem(r.juros.taxaAnual, 2)) + ' ao ano, contada de ' + esc(F.data(r.juros.dataInicio)) +
+      'O período de contagem depende da origem da correção: os juros contam-se dia a dia até ao suprimento, ' +
+      'correção ou deteção da falta, mas são devidos apenas por 180 dias no caso de erro do sujeito passivo ' +
+      'evidenciado na declaração e, em caso de falta apurada em ação de fiscalização, até 90 dias após a sua conclusão. ' +
+      'Regime aplicado nesta simulação: <strong>' + esc(r.juros.regimeRotulo) + '</strong>. ' + esc(r.juros.regra) + ' ' +
+      'Taxa de ' + esc(F.percentagem(r.juros.taxaAnual, 2)) + ' ao ano, de ' + esc(F.data(r.juros.dataInicio)) +
       ' a ' + esc(F.data(r.juros.dataFim)) + '.</dd>',
       '<dt>Artigos 114.º e 119.º do RGIT — Coimas</dt>',
       '<dd>Falta de entrega da prestação tributária e inexatidão das declarações. ' +
-      'Redução por regularização voluntária nos termos dos artigos 29.º e 30.º do RGIT.</dd>',
+      'Redução por regularização voluntária nos termos dos artigos 29.º e 30.º do RGIT. ' +
+      'A graduação concreta da coima depende da culpa, do benefício obtido e da situação económica do agente ' +
+      '(artigo 27.º do RGIT), pelo que os valores apresentados são cenários de simulação e não previsões.</dd>',
       '<dt>Artigos 45.º e 78.º da LGT — Prazos</dt>',
-      '<dd>Caducidade do direito à liquidação e revisão do ato tributário a favor do contribuinte, ' +
-      'ambos de quatro anos. É este segundo prazo que condiciona a recuperabilidade do IRC pago.</dd>',
+      '<dd>Caducidade do direito à liquidação e revisão do ato tributário. O artigo 78.º prevê vias e prazos ' +
+      'distintos consoante o fundamento invocado — iniciativa do sujeito passivo, erro imputável aos serviços, ' +
+      'injustiça grave ou notória, duplicação de coleta — pelo que o IRC pago é <em>potencialmente</em> recuperável, ' +
+      'sujeito à validação da via processual aplicável e dos respetivos prazos. Ver ainda o prazo de reclamação ' +
+      'graciosa do artigo 70.º do CPPT.</dd>',
       '</dl>'
     ].join('\n');
   }
@@ -1568,7 +1932,7 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
         };
       }));
 
-    var socios = tabela(['Sócio', 'Participação', 'Imputação', 'IRS atual', 'IRS corrigido', 'IRS adicional'],
+    var socios = tabela(['Sócio', 'Participação', 'Imputação', 'IRS atual', 'IRS corrigido', 'IRS adicional estimado'],
       r.socios.map(function (s) {
         return [s.nome, F.percentagemDireta(s.participacao), F.euro(s.imputacao), F.euro(s.irsAtual), F.euro(s.irsCorrigido), F.euro(s.irsAdicional)];
       }).concat([{
@@ -1577,11 +1941,10 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
         total: true
       }]));
 
-    var coimas = tabela(['Cenário e fundamento', 'Montante'], ['minimo', 'provavel', 'maximo'].map(function (k) {
+    var coimas = tabela(['Cenário e fundamento', 'Montante'], ['baixo', 'referencia', 'alto'].map(function (k) {
       var c = r.coimas[k];
       return [
-        { html: '<strong>' + esc({ minimo: 'Mínimo', provavel: 'Provável', maximo: 'Máximo' }[k] + ' — ' + c.rotulo) +
-          '</strong><br><span class="nota">' + esc(c.fundamento) + '</span>' },
+        { html: '<strong>' + esc(c.rotulo) + '</strong><br><span class="nota">' + esc(c.fundamento) + '</span>' },
         F.euro(c.valor)
       ];
     }));
@@ -1592,14 +1955,18 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
         return [c.rotulo + (k === r.recuperacaoIRC.cenarioSelecionado ? ' (selecionado)' : ''), F.percentagem(c.percentagem, 0), F.euro(c.valor)];
       }));
 
-    var matriz = tabela(['Coima \\ IRC', 'Reembolso integral', 'Reembolso parcial', 'Reembolso inexistente'],
+    var matriz = tabela(['Coima \\ IRC'].concat(['integral', 'parcial', 'inexistente'].map(function (k) {
+      return r.recuperacaoIRC.cenarios[k].rotulo;
+    })),
       r.matrizSensibilidade.map(function (l) {
-        return ['Coima ' + { minimo: 'mínima', provavel: 'provável', maximo: 'máxima' }[l.coima]]
+        return ['Coima — cenário ' + { baixo: 'baixo', referencia: 'de referência', alto: 'alto' }[l.coima]]
           .concat(l.valores.map(function (v) { return F.euro(v.valor); }));
       }));
 
     var cronologia = '<ul>' + r.timeline.map(function (e) {
-      return '<li><strong>' + esc(F.data(e.data)) + '</strong> — ' + esc(e.titulo) + '. ' + esc(e.descricao) + '</li>';
+      return '<li><strong>' + esc(F.data(e.data)) + (e.aproximado ? ' (aproximada)' : '') + '</strong> — ' +
+        esc(e.titulo) + '. ' + esc(e.descricao) +
+        '<br><span class="nota">Regra aplicável: ' + esc(e.regra) + '</span></li>';
     }).join('') + '</ul>';
 
     return [
@@ -1607,13 +1974,18 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
       '<h3>3.1 Comparador entre a situação atual e a situação corrigida</h3>', comparador,
       '<h3>3.2 Impacto por sócio</h3>', socios,
       '<h3>3.3 Juros compensatórios</h3>',
+      '<p>Regime aplicado: <strong>' + esc(r.juros.regimeRotulo) + '</strong>. ' + esc(r.juros.regra) + '</p>',
       '<p>Base de cálculo de ' + esc(F.euro(r.juros.base)) + ', à taxa anual de ' + esc(F.percentagem(r.juros.taxaAnual, 2)) +
-      ', durante ' + esc(r.juros.dias) + ' dias (' + esc(F.data(r.juros.dataInicio)) + ' a ' + esc(F.data(r.juros.dataFim)) +
+      ', durante ' + esc(r.juros.dias) + ' dias' +
+      (r.juros.limiteAplicado ? ' (de ' + esc(r.juros.diasDecorridos) + ' dias decorridos, por aplicação do limite legal)' : '') +
+      ' (' + esc(F.data(r.juros.dataInicio)) + ' a ' + esc(F.data(r.juros.dataFim)) +
       '), num total de <strong>' + esc(F.euro(r.juros.montante)) + '</strong>.</p>',
+      (r.juros.notas || []).map(function (n) { return '<div class="aviso">' + esc(n) + '</div>'; }).join(''),
       '<h3>3.4 Cenários de coima</h3>', coimas,
       '<h3>3.5 Recuperação do IRC</h3>',
-      '<p>Base recuperável de ' + esc(F.euro(r.recuperacaoIRC.base)) + ', correspondente à coleta de IRC e derramas pagas. ' +
-      'As tributações autónomas mantêm-se devidas e não integram esta base.</p>', irc,
+      '<p>Base potencialmente recuperável de ' + esc(F.euro(r.recuperacaoIRC.base)) + ', correspondente à coleta de IRC ' +
+      'e derramas pagas. As tributações autónomas mantêm-se devidas e não integram esta base.</p>',
+      '<div class="aviso">' + esc(r.recuperacaoIRC.aviso) + '</div>', irc,
       '<h3>3.6 Matriz de exposição líquida</h3>', matriz,
       '<h3>3.7 Cronologia fiscal</h3>', cronologia
     ].join('\n');
@@ -1638,8 +2010,9 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
     if (i.irsAdicional > 0) {
       linhas.push('Ponderar a substituição das declarações Modelo 3 dos sócios do exercício de ' + r.meta.exercicio +
         '. A regularização voluntária, antes de qualquer procedimento inspetivo, reduz a coima de ' +
-        F.euro(r.coimas.provavel.valor) + ' para ' + F.euro(r.coimas.minimo.valor) +
-        ', uma poupança de ' + F.euro(r.coimas.provavel.valor - r.coimas.minimo.valor) + '.');
+        F.euro(r.coimas.referencia.valor) + ' para ' + F.euro(r.coimas.baixo.valor) +
+        ', uma diferença de ' + F.euro(r.coimas.referencia.valor - r.coimas.baixo.valor) +
+        ' entre cenários de simulação.');
       linhas.push('Os juros compensatórios continuam a correr até à regularização, a um custo aproximado de ' +
         F.euro(i.irsAdicional * r.juros.taxaAnual / 12) + ' por mês de atraso.');
     }
@@ -1660,7 +2033,7 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
         'Fixar por escrito a posição sobre o artigo 6.º do CIRC e quantificar o exercício ou exercícios afetados.'],
       ['Fase 2 — Decisão sobre a via de regularização (30 a 45 dias)',
         'Escolher entre a substituição declarativa voluntária e a espera por procedimento inspetivo. ' +
-        'A diferença estimada em coimas é de ' + F.euro(r.coimas.provavel.valor - r.coimas.minimo.valor) + '.'],
+        'A diferença entre os cenários de coima é de ' + F.euro(r.coimas.referencia.valor - r.coimas.baixo.valor) + '.'],
       ['Fase 3 — Substituição das declarações de IRS (45 a 60 dias)',
         'Entrega das Modelo 3 de substituição com a imputação de ' + F.euro(r.atual.irc.materiaColetavel) +
         ' repartida pelos sócios, gerando IRS adicional de ' + F.euro(r.indicadores.irsAdicionalBruto) + '.'],
@@ -1823,19 +2196,33 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
     { chave: 'tributacao', rotulo: 'Tributação', tipo: 'opcoes', opcoes: [['separada', 'Separada'], ['conjunta', 'Conjunta']] },
     { chave: 'rendimentosConjuge', rotulo: 'Rendimento coletável do cônjuge (€)', tipo: 'euro', ajuda: 'Apenas na tributação conjunta.', visivel: function (s) { return s.tributacao === 'conjunta'; } },
     { chave: 'dependentes', rotulo: 'Número de dependentes', tipo: 'inteiro', min: 0, max: 20 },
-    { chave: 'irsPagoDistribuicoes', rotulo: 'IRS já pago sobre lucros distribuídos (€)', tipo: 'euro', ajuda: 'Retenção de 28% sobre dividendos já suportada. É creditada no IRS adicional.' }
+    { chave: 'outrasDeducoesColeta', rotulo: 'Outras deduções à coleta (€)', tipo: 'euro', ajuda: 'Valor real da Modelo 3: saúde, educação, habitação, despesas gerais familiares. Sem este valor o IRS de ambos os cenários fica sobreavaliado.' },
+    { chave: 'irsPagoDistribuicoes', rotulo: 'IRS suportado sobre lucros distribuídos (€)', tipo: 'euro', ajuda: 'Apenas assinalado no relatório. NÃO é abatido ao IRS adicional: exige tratamento jurídico próprio.' }
   ];
 
   var CAMPOS_CENARIO = [
     { grupo: null, chave: 'dataReferencia', rotulo: 'Data de referência', tipo: 'data', ajuda: 'Data até à qual se contam os juros.' },
+    {
+      grupo: null, chave: 'regimeJuros', rotulo: 'Origem da correção', tipo: 'opcoes', largo: true,
+      opcoes: [
+        ['omissaoDeclarativa', 'Omissão não evidenciada na declaração'],
+        ['regularizacaoVoluntaria', 'Regularização voluntária pelo sujeito passivo'],
+        ['erroEvidenciado', 'Erro evidenciado na própria declaração (máx. 180 dias)'],
+        ['inspecao', 'Falta apurada em ação de fiscalização (até 90 dias após a conclusão)']
+      ],
+      ajuda: 'Determina o período de contagem dos juros compensatórios (artigo 35.º, n.º 7 da LGT). Não é uma formalidade: muda o valor.'
+    },
+    { grupo: null, chave: 'dataConclusaoInspecao', rotulo: 'Conclusão da ação de fiscalização', tipo: 'data', ajuda: 'Obrigatória no regime de fiscalização.', visivel: function () { return dados.parametros.regimeJuros === 'inspecao'; } },
     { grupo: null, chave: 'dataInicioJuros', rotulo: 'Início dos juros (opcional)', tipo: 'data', ajuda: 'Vazio = termo do prazo de entrega da Modelo 3.' },
-    { grupo: null, chave: 'cenarioIRC', rotulo: 'Cenário de recuperação do IRC', tipo: 'opcoes', opcoes: [['integral', 'Reembolso integral'], ['parcial', 'Reembolso parcial'], ['inexistente', 'Reembolso inexistente']] }
+    { grupo: null, chave: 'dataLiquidacaoIRC', rotulo: 'Data de liquidação do IRC (opcional)', tipo: 'data', ajuda: 'Ancora os prazos de revisão e caducidade. Sem ela, os prazos são aproximados.' },
+    { grupo: null, chave: 'dataPagamentoIRC', rotulo: 'Data de pagamento do IRC (opcional)', tipo: 'data' },
+    { grupo: null, chave: 'cenarioIRC', rotulo: 'Cenário de recuperação do IRC', tipo: 'opcoes', opcoes: [['integral', 'Recuperação 100%'], ['parcial', 'Recuperação parcial (percentagem abaixo)'], ['inexistente', 'Recuperação 0%']] }
   ];
 
   var CAMPOS_JUROS = [
     { grupo: 'juros', chave: 'taxaAnual', rotulo: 'Taxa anual (%)', tipo: 'percentagem', ajuda: 'Taxa dos juros legais. Por omissão 4%.' },
     { grupo: 'juros', chave: 'baseDias', rotulo: 'Base de dias do ano', tipo: 'inteiro' },
-    { grupo: 'juros', chave: 'limiteDias', rotulo: 'Limite de dias (opcional)', tipo: 'inteiro', ajuda: 'Preencher com 180 para o teto do artigo 35.º, n.º 7 da LGT.' },
+    { grupo: 'juros', chave: 'limiteDias', rotulo: 'Limite de dias (sobrepõe o regime)', tipo: 'inteiro', ajuda: 'Deixe vazio para usar o limite próprio do regime selecionado no cenário.' },
     { grupo: 'juros', chave: 'diaLimiteIRS', rotulo: 'Dia limite da Modelo 3', tipo: 'inteiro', min: 1, max: 31 },
     { grupo: 'juros', chave: 'mesLimiteIRS', rotulo: 'Mês limite da Modelo 3', tipo: 'inteiro', min: 1, max: 12 }
   ];
@@ -1844,23 +2231,24 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
     { grupo: 'coimas', chave: 'percentagemMinima', rotulo: 'Coima mínima (% do imposto)', tipo: 'percentagem', ajuda: 'Artigo 114.º, n.º 2 do RGIT.' },
     { grupo: 'coimas', chave: 'percentagemMaxima', rotulo: 'Coima máxima (% do imposto)', tipo: 'percentagem' },
     { grupo: 'coimas', chave: 'reducaoVoluntaria', rotulo: 'Redução por regularização voluntária (%)', tipo: 'percentagem', ajuda: 'Artigo 29.º, n.º 1, alínea a) do RGIT.' },
+    { grupo: 'coimas', chave: 'fatorReferencia', rotulo: 'Fator do cenário de referência', tipo: 'decimal', passo: 0.05, ajuda: 'Multiplicador do limite mínimo legal. 1,0 ancora o cenário no mínimo da lei.' },
     { grupo: 'coimas', chave: 'coimaMinimaAbsoluta', rotulo: 'Piso da coima (€)', tipo: 'euro' },
     { grupo: 'coimas', chave: 'tectoNegligencia', rotulo: 'Teto por negligência (€)', tipo: 'euro' },
     { grupo: 'coimas', chave: 'coimaDeclaracaoMinima', rotulo: 'Coima declarativa mínima (€)', tipo: 'euro', ajuda: 'Artigo 119.º do RGIT, por declaração.' },
     { grupo: 'coimas', chave: 'coimaDeclaracaoMaxima', rotulo: 'Coima declarativa máxima (€)', tipo: 'euro' },
-    { grupo: 'coimas', chave: 'aplicarCoimaDeclaracaoPorSocio', rotulo: 'Aplicar coima declarativa a cada sócio', tipo: 'booleano', largo: true }
+    { grupo: 'coimas', chave: 'aplicarCoimaDeclaracaoPorSocio', rotulo: 'Aplicar uma coima declarativa por cada sócio (só se a infração for imputável a cada sujeito passivo)', tipo: 'booleano', largo: true }
   ];
 
   var CAMPOS_IRS = [
     { grupo: 'irs', chave: 'deducaoEspecificaCategoriaA', rotulo: 'Dedução específica da categoria A (€)', tipo: 'euro' },
     { grupo: 'irs', chave: 'coeficienteCategoriaB', rotulo: 'Coeficiente da categoria B', tipo: 'decimal', passo: 0.01, ajuda: 'Artigo 31.º do CIRS. 0,75 para serviços do artigo 151.º.' },
-    { grupo: 'irs', chave: 'deducaoPorDependente', rotulo: 'Dedução por dependente (€)', tipo: 'euro' },
+    { grupo: 'irs', chave: 'deducaoPorDependente', rotulo: 'Dedução por dependente (€)', tipo: 'euro', ajuda: 'As restantes deduções à coleta introduzem-se por sócio, no ecrã 2.' },
     { grupo: 'irs', chave: 'quocienteConjugal', rotulo: 'Quociente conjugal', tipo: 'decimal', passo: 0.5 },
     { grupo: 'irs', chave: 'limiteDeducoesColeta', rotulo: 'Limite global de deduções (€, opcional)', tipo: 'euro' }
   ];
 
   var CAMPOS_RECUPERACAO = [
-    { grupo: 'recuperacao', chave: 'percentagemParcial', rotulo: 'Reembolso parcial (%)', tipo: 'percentagem' },
+    { grupo: 'recuperacao', chave: 'percentagemParcial', rotulo: 'Percentagem do cenário de recuperação parcial (%)', tipo: 'percentagem' },
     { grupo: 'recuperacao', chave: 'incluirDerramas', rotulo: 'Incluir derramas na base recuperável', tipo: 'booleano', largo: true },
     { grupo: 'recuperacao', chave: 'incluirTributacoesAutonomas', rotulo: 'Incluir tributações autónomas na base recuperável', tipo: 'booleano', largo: true }
   ];
@@ -1965,6 +2353,10 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
     Estado.guardar(dados);
     if (campo && campo.chave === 'tributacao') renderSocios();
     if (campo && (campo.chave === 'exercicio')) renderEscaloes();
+    // O regime de juros controla a visibilidade da data de conclusão da inspeção.
+    if (campo && campo.chave === 'regimeJuros') {
+      renderFormulario('#form-cenario', CAMPOS_CENARIO, valorEfetivo, definirParametro);
+    }
     if (campo && campo.chave === 'participacao') atualizarSomaParticipacoes();
     if (ecraAtual === 1) verificarCoerencia();
     if (ecraAtual === 4) simular();
@@ -2160,6 +2552,7 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
     }
     window.__resultado = resultado;
     renderAvisos();
+    renderConfianca();
     renderKPIs();
     renderComparador();
     renderTabelaSocios();
@@ -2178,6 +2571,36 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
     });
   }
 
+  function renderConfianca() {
+    var q = resultado.qualidade;
+    var alvo = $('#confianca');
+    alvo.innerHTML = '';
+    alvo.className = 'cartao cartao--confianca nivel-' +
+      q.grau.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+    var barra = el('div', { class: 'confianca__barra' }, [
+      el('div', { class: 'confianca__preenchido', style: 'width:' + q.indice + '%' })
+    ]);
+
+    alvo.appendChild(el('div', { class: 'confianca__topo' }, [
+      el('div', {}, [
+        el('div', { class: 'confianca__titulo', texto: 'Confiança da simulação: ' + q.grau }),
+        el('div', { class: 'confianca__nota', texto: 'Estimativa de impacto marginal. Não é uma liquidação de imposto.' })
+      ]),
+      el('div', { class: 'confianca__indice', texto: q.indice + '%' })
+    ]));
+    alvo.appendChild(barra);
+
+    var lista = el('ul', { class: 'confianca__itens' });
+    q.itens.forEach(function (i) {
+      lista.appendChild(el('li', { class: 'estado-' + i.estado }, [
+        el('span', { class: 'confianca__rotulo', texto: i.rotulo }),
+        el('span', { class: 'confianca__texto', texto: i.texto })
+      ]));
+    });
+    alvo.appendChild(lista);
+  }
+
   function kpi(rotulo, valor, nota, modificador) {
     return el('div', { class: 'kpi' + (modificador ? ' kpi--' + modificador : '') }, [
       el('div', { class: 'kpi__rotulo', texto: rotulo }),
@@ -2192,11 +2615,11 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
     alvo.innerHTML = '';
     alvo.appendChild(kpi('Exposição fiscal líquida', i.exposicaoLiquida,
       'IRS adicional + juros + coima − IRC recuperado', 'destaque'));
-    alvo.appendChild(kpi('IRS adicional', i.irsAdicional,
-      'Imputação de ' + F.euro(resultado.atual.irc.materiaColetavel) + ' a ' + resultado.socios.length + ' sócio(s)'));
+    alvo.appendChild(kpi('IRS adicional estimado', i.irsAdicional,
+      'Antes das restantes deduções à coleta. Imputação de ' + F.euro(resultado.atual.irc.materiaColetavel)));
     alvo.appendChild(kpi('Juros compensatórios', i.juros,
-      resultado.juros.dias + ' dias à taxa de ' + F.percentagem(resultado.juros.taxaAnual, 2) + ' ao ano'));
-    alvo.appendChild(kpi('Coimas', i.coimas, resultado.coimas.provavel.rotulo));
+      resultado.juros.dias + ' dias · ' + resultado.juros.regimeRotulo));
+    alvo.appendChild(kpi('Coimas', i.coimas, 'Cenário de referência, não é previsão'));
     alvo.appendChild(kpi('IRC recuperável', i.ircRecuperavel,
       resultado.recuperacaoIRC.cenarios[resultado.recuperacaoIRC.cenarioSelecionado].rotulo, 'positivo'));
   }
@@ -2260,11 +2683,12 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
   function renderCenariosCoima() {
     var alvo = $('#cenarios-coima');
     alvo.innerHTML = '';
-    ['minimo', 'provavel', 'maximo'].forEach(function (chave) {
+    alvo.appendChild(el('p', { class: 'ajuda', texto: resultado.coimas.aviso }));
+    ['baixo', 'referencia', 'alto'].forEach(function (chave) {
       var c = resultado.coimas[chave];
-      alvo.appendChild(el('div', { class: 'cenario' + (chave === 'provavel' ? ' selecionado' : '') }, [
+      alvo.appendChild(el('div', { class: 'cenario' + (chave === 'referencia' ? ' selecionado' : '') }, [
         el('div', {}, [
-          el('div', { class: 'cenario__rotulo', texto: rotuloCenario(chave) + ' · ' + c.rotulo }),
+          el('div', { class: 'cenario__rotulo', texto: c.rotulo }),
           el('div', { class: 'cenario__fundamento', texto: c.fundamento })
         ]),
         el('div', { class: 'cenario__valor', texto: F.euro(c.valor) })
@@ -2273,7 +2697,7 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
   }
 
   function rotuloCenario(chave) {
-    return { minimo: 'Mínimo', provavel: 'Provável', maximo: 'Máximo' }[chave] || chave;
+    return { baixo: 'Baixo', referencia: 'Referência', alto: 'Alto' }[chave] || chave;
   }
 
   function renderCenariosIRC() {
@@ -2296,13 +2720,16 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
 
   function fundamentoIRC(chave) {
     return {
-      integral: 'Revisão oficiosa deferida dentro do prazo do artigo 78.º da LGT, com anulação total do IRC liquidado.',
-      parcial: 'Deferimento parcial, compensação apenas de parte do imposto, ou perda de exercícios já fora de prazo.',
-      inexistente: 'Prazo de revisão esgotado ou indeferimento. O IRC pago não é recuperado e acresce integralmente ao custo.'
+      integral: 'Hipótese: anulação total do IRC liquidado, por via processual a determinar.',
+      parcial: 'Hipótese: recuperação apenas de parte, por deferimento parcial ou por exercícios já fora de prazo.',
+      inexistente: 'Hipótese: nenhuma recuperação. O IRC pago acresce integralmente ao custo.'
     }[chave];
   }
 
   function renderMatriz() {
+    $$('#tabela-matriz thead th[data-irc]').forEach(function (th) {
+      th.textContent = resultado.recuperacaoIRC.cenarios[th.dataset.irc].rotulo;
+    });
     var corpo = $('#tabela-matriz tbody');
     corpo.innerHTML = '';
     var todos = [];
@@ -2310,7 +2737,7 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
     var pior = Math.max.apply(null, todos);
     var melhor = Math.min.apply(null, todos);
     resultado.matrizSensibilidade.forEach(function (linha) {
-      var celulas = [el('td', { texto: 'Coima ' + ({ minimo: 'mínima', provavel: 'provável', maximo: 'máxima' })[linha.coima] })];
+      var celulas = [el('td', { texto: 'Coima — cenário ' + rotuloCenario(linha.coima).toLowerCase() })];
       linha.valores.forEach(function (v) {
         celulas.push(el('td', {
           class: v.valor === pior ? 'celula-pior' : (v.valor === melhor ? 'celula-melhor' : ''),
@@ -2346,17 +2773,19 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
 
     alvo.appendChild(detalhe('Juros compensatórios', [
       linhaMemoria('Base (IRS adicional)', r.juros.base),
+      linhaMemoria('Regime: ' + r.juros.regimeRotulo, null),
+      linhaMemoria(r.juros.regra, null),
       linhaMemoria('Período: ' + F.data(r.juros.dataInicio) + ' a ' + F.data(r.juros.dataFim) +
-        ' (' + r.juros.dias + ' dias' + (r.juros.limiteAplicado ? ', teto aplicado' : '') + ')', null),
+        ' (' + r.juros.dias + ' dias' +
+        (r.juros.limiteAplicado ? ' de ' + r.juros.diasDecorridos + ' decorridos, limite aplicado' : '') + ')', null),
       linhaMemoria('Cálculo: ' + F.euro(r.juros.base) + ' × ' + F.percentagem(r.juros.taxaAnual, 2) +
         ' × ' + r.juros.dias + '/' + r.parametros.juros.baseDias, r.juros.montante, true)
     ]));
 
     alvo.appendChild(detalhe('Composição da exposição', [
-      linhaMemoria('IRS adicional bruto', r.indicadores.irsAdicionalBruto),
-      linhaMemoria('Crédito por IRS já pago sobre distribuições', -r.indicadores.creditoDistribuicoes),
+      linhaMemoria('IRS adicional estimado (antes de outras deduções à coleta)', r.indicadores.irsAdicional),
       linhaMemoria('Juros compensatórios', r.indicadores.juros),
-      linhaMemoria('Coima (cenário provável)', r.indicadores.coimas),
+      linhaMemoria('Coima (cenário de referência)', r.indicadores.coimas),
       linhaMemoria('IRC recuperado', -r.indicadores.ircRecuperavel),
       linhaMemoria('Exposição fiscal líquida', r.indicadores.exposicaoLiquida, true)
     ]));
@@ -2480,6 +2909,9 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
       leitor.readAsText(ficheiro);
       ev.target.value = '';
     });
+
+    var v = Parametros.porOmissao().versao;
+    $('#versao-regras').textContent = 'Regras fiscais versão ' + v.versao + ' (' + F.data(v.atualizadoEm) + ').';
 
     renderTudo();
     irPara(1);

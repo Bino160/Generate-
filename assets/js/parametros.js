@@ -14,6 +14,17 @@
   'use strict';
 
   /* ------------------------------------------------------------------ *
+   * Versao do conjunto de regras fiscais.
+   * Aparece na interface e no relatorio: um relatorio sem versao de regras
+   * nao e defensavel meses depois.
+   * ------------------------------------------------------------------ */
+  var VERSAO = {
+    versao: '2026.08',
+    atualizadoEm: '2026-08-20',
+    nota: 'Regras e tabelas confirmadas a esta data. Confirme sempre a legislacao em vigor no exercicio analisado antes de emitir um relatorio.'
+  };
+
+  /* ------------------------------------------------------------------ *
    * Escaloes de IRS - taxas gerais (artigo 68.º do CIRS)
    * limite = limite superior do escalao (null = sem limite)
    * ------------------------------------------------------------------ */
@@ -95,10 +106,50 @@
     fonte: 'Artigo 35.º da LGT. Taxa dos juros legais fixada em 4% ao ano (Portaria n.º 291/2003).',
     taxaAnual: 0.04,
     baseDias: 365,
-    limiteDias: null, // preencher para impor o tecto de 180 dias do artigo 35.º, n.º 7 da LGT
     // Termo do prazo de entrega da declaracao Modelo 3 do ano seguinte ao exercicio.
     diaLimiteIRS: 30,
-    mesLimiteIRS: 6
+    mesLimiteIRS: 6,
+    /* ---------------------------------------------------------------- *
+     * O periodo de juros NAO e uma formula unica: depende da origem da
+     * correccao. Artigo 35.º, n.º 7 da LGT: os juros contam-se dia a dia
+     * desde o termo do prazo de entrega ate ao suprimento, correccao ou
+     * deteccao da falta, mas sao devidos apenas por 180 dias no caso de
+     * erro do sujeito passivo evidenciado na declaracao e, em caso de
+     * falta apurada em accao de fiscalizacao, ate 90 dias apos a sua
+     * conclusao.
+     * ---------------------------------------------------------------- */
+    regimeOmissao: 'omissaoDeclarativa',
+    regimes: {
+      regularizacaoVoluntaria: {
+        rotulo: 'Regularização voluntária pelo sujeito passivo',
+        descricao: 'O sujeito passivo substitui a declaração por iniciativa própria. Os juros correm dia a dia até à data da substituição.',
+        regra: 'Artigo 35.º, n.º 7 da LGT: contagem dia a dia até ao suprimento da falta.',
+        limiteDias: null,
+        fim: 'referencia'
+      },
+      omissaoDeclarativa: {
+        rotulo: 'Omissão não evidenciada na declaração',
+        descricao: 'A imputação não consta da declaração e o erro não é detetável na própria declaração. É o caso típico da transparência fiscal não declarada: a matéria coletável está na sociedade, não na Modelo 3 do sócio.',
+        regra: 'Artigo 35.º, n.º 7 da LGT: contagem dia a dia até à correção ou deteção da falta. O teto de 180 dias não se aplica.',
+        limiteDias: null,
+        fim: 'referencia'
+      },
+      erroEvidenciado: {
+        rotulo: 'Erro evidenciado na própria declaração',
+        descricao: 'O erro é percetível na declaração entregue, pelo que a demora da liquidação não é integralmente imputável ao sujeito passivo.',
+        regra: 'Artigo 35.º, n.º 7 da LGT: juros devidos pelo prazo máximo de 180 dias.',
+        limiteDias: 180,
+        fim: 'referencia'
+      },
+      inspecao: {
+        rotulo: 'Falta apurada em ação de fiscalização',
+        descricao: 'A correção resulta de procedimento inspetivo. Exige a data de conclusão da ação.',
+        regra: 'Artigo 35.º, n.º 7 da LGT: juros devidos até 90 dias após a conclusão da ação de fiscalização.',
+        limiteDias: null,
+        fim: 'conclusaoInspecao',
+        diasAposConclusao: 90
+      }
+    }
   };
 
   /* ------------------------------------------------------------------ *
@@ -112,15 +163,19 @@
     // Reducao por regularizacao voluntaria antes de qualquer procedimento inspectivo
     // (artigo 29.º, n.º 1, alinea a) do RGIT: 12,5% do montante minimo legal).
     reducaoVoluntaria: 0.125,
-    // Coima aplicada em pratica corrente quando ha correccao oficiosa sem dolo.
-    fatorProvavel: 1.0, // multiplicador do limite minimo legal
+    // Multiplicador do limite minimo legal usado no cenario de referencia.
+    // NAO representa a coima que a AT vira a aplicar: e apenas a ancoragem
+    // do cenario intermedio no limite minimo previsto na lei.
+    fatorReferencia: 1.0,
     // Pisos e tectos (pessoas singulares, negligencia).
     coimaMinimaAbsoluta: 375,
     tectoNegligencia: 22500,
     // Coima autonoma por declaracao inexacta ou omitida (artigo 119.º do RGIT).
     coimaDeclaracaoMinima: 375,
     coimaDeclaracaoMaxima: 22500,
-    aplicarCoimaDeclaracaoPorSocio: true
+    // Uma coima por declaracao inexacta e uma questao de imputacao da
+    // infraccao a cada sujeito passivo. Nao se assume automaticamente.
+    aplicarCoimaDeclaracaoPorSocio: false
   };
 
   /* ------------------------------------------------------------------ *
@@ -130,6 +185,10 @@
     deducaoEspecificaCategoriaA: 4104,
     coeficienteCategoriaB: 0.75, // artigo 31.º do CIRS, regime simplificado, servicos do artigo 151.º
     deducaoPorDependente: 600,
+    // O motor nao modela despesas gerais familiares, saude, educacao,
+    // habitacao nem os respectivos limites. Quem tiver os valores reais
+    // da Modelo 3 introduz-os por socio no campo proprio.
+    modelaDeducoesDetalhadas: false,
     limiteDeducoesColeta: null, // null = sem limite global
     quocienteConjugal: 2
   };
@@ -138,8 +197,10 @@
    * Prazos (LGT)
    * ------------------------------------------------------------------ */
   var PRAZOS = {
+    fonte: 'Artigos 45.º e 78.º da LGT; artigo 70.º do CPPT. Prazos indicativos: ' +
+      'o artigo 78.º prevê vias e prazos distintos consoante o fundamento invocado.',
     caducidadeAnos: 4,        // artigo 45.º da LGT
-    revisaoOficiosaAnos: 4,   // artigo 78.º, n.º 1 da LGT
+    revisaoOficiosaAnos: 4,   // artigo 78.º, n.º 1 da LGT, via de iniciativa do sujeito passivo
     reclamacaoGraciosaDias: 120, // artigo 70.º do CPPT
     prazoEntregaModelo22: { dia: 31, mes: 5 },
     prazoEntregaModelo3: { dia: 30, mes: 6 }
@@ -149,6 +210,8 @@
    * Recuperacao do IRC
    * ------------------------------------------------------------------ */
   var RECUPERACAO = {
+    // Percentagem do cenario intermedio. E uma hipotese de trabalho
+    // escolhida pelo utilizador, sem qualquer significado juridico.
     percentagemParcial: 0.5,
     // As tributacoes autonomas mantem-se devidas pela sociedade transparente
     // (artigo 12.º do CIRC), logo nao entram na base recuperavel por omissao.
@@ -158,6 +221,7 @@
 
   function porOmissao() {
     return JSON.parse(JSON.stringify({
+      versao: VERSAO,
       escaloesIRS: ESCALOES_IRS,
       solidariedade: SOLIDARIEDADE,
       juros: JUROS,
@@ -188,6 +252,7 @@
   return {
     porOmissao: porOmissao,
     tabelaDoExercicio: tabelaDoExercicio,
+    VERSAO: VERSAO,
     ESCALOES_IRS: ESCALOES_IRS
   };
 });

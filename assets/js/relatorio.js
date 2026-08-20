@@ -68,26 +68,41 @@
       '<div class="destaque-caixa">',
       '<span class="numero-grande">' + esc(F.euro(i.exposicaoLiquida)) + '</span>',
       '<strong>Exposição fiscal líquida estimada</strong> para o exercício de ' + esc(r.meta.exercicio) +
-      ', no cenário de coima provável e ' + esc(r.recuperacaoIRC.cenarios[r.recuperacaoIRC.cenarioSelecionado].rotulo.toLowerCase()) + ' do IRC.',
+      ', no cenário de coima de referência e com ' +
+      esc(r.recuperacaoIRC.cenarios[r.recuperacaoIRC.cenarioSelecionado].rotulo.toLowerCase()) + ' do IRC.',
       '</div>',
       '<p>Caso a Autoridade Tributária conclua que ' + esc(nome) + ' preenchia os pressupostos do artigo 6.º do Código do IRC ' +
       'no exercício de ' + esc(r.meta.exercicio) + ', a matéria coletável de ' + esc(F.euro(r.atual.irc.materiaColetavel)) +
       ' deixa de ser tributada em sede de IRC e passa a ser imputada aos sócios, sendo englobada no respetivo IRS.</p>',
-      '<p>O efeito financeiro decompõe-se em quatro parcelas: o IRS adicional de ' + esc(F.euro(i.irsAdicional)) +
+      '<p>O efeito financeiro decompõe-se em quatro parcelas: o IRS adicional estimado de ' + esc(F.euro(i.irsAdicional)) +
       ', os juros compensatórios de ' + esc(F.euro(i.juros)) + ' correspondentes a ' + esc(r.juros.dias) + ' dias de mora, ' +
       'a coima estimada de ' + esc(F.euro(i.coimas)) + ' e o IRC potencialmente recuperável de ' + esc(F.euro(i.ircRecuperavel)) +
       ', este último a abater ao custo total.</p>',
       tabela(['Indicador', 'Montante'], [
-        ['IRS adicional dos sócios', F.euro(i.irsAdicional)],
+        ['IRS adicional estimado dos sócios', F.euro(i.irsAdicional)],
         ['Juros compensatórios', F.euro(i.juros)],
-        ['Coimas (cenário provável)', F.euro(i.coimas)],
+        ['Coimas (cenário de referência)', F.euro(i.coimas)],
         { celulas: ['Exposição bruta', F.euro(i.exposicaoBruta)], total: true },
         ['IRC potencialmente recuperável', '−' + F.euro(i.ircRecuperavel)],
         { celulas: ['Exposição fiscal líquida', F.euro(i.exposicaoLiquida)], total: true }
       ]),
+      confianca(r),
       r.avisos.filter(function (a) { return a.nivel === 'erro'; })
         .map(function (a) { return '<div class="aviso">' + esc(a.texto) + '</div>'; }).join('')
     ].join('\n');
+  }
+
+  function confianca(r) {
+    var q = r.qualidade;
+    var itens = q.itens.map(function (i) {
+      var marca = { ok: '&#10003;', aviso: '!', falta: '&#10007;' }[i.estado];
+      return '<li><strong>' + marca + ' ' + esc(i.rotulo) + '.</strong> ' + esc(i.texto) + '</li>';
+    }).join('');
+    return '<h3>Confiança da simulação: ' + esc(q.grau) + ' (' + esc(q.indice) + '%)</h3>' +
+      '<ul class="legal">' + itens + '</ul>' +
+      '<div class="aviso">Estimativa de impacto marginal. Não é uma liquidação de imposto nem uma ' +
+      'previsão da posição da Autoridade Tributária. Regras fiscais versão ' + esc(r.meta.regras.versao) +
+      ', de ' + esc(F.data(r.meta.regras.atualizadoEm)) + '.</div>';
   }
 
   function fundamentacao(r) {
@@ -110,14 +125,23 @@
       '<dd>Tabela aplicada: ' + esc(r.meta.tabelaIRS.fonte) + '</dd>',
       '<dt>Artigo 35.º da LGT — Juros compensatórios</dt>',
       '<dd>São devidos quando, por facto imputável ao sujeito passivo, for retardada a liquidação de parte do imposto. ' +
-      'Taxa aplicada de ' + esc(F.percentagem(r.juros.taxaAnual, 2)) + ' ao ano, contada de ' + esc(F.data(r.juros.dataInicio)) +
+      'O período de contagem depende da origem da correção: os juros contam-se dia a dia até ao suprimento, ' +
+      'correção ou deteção da falta, mas são devidos apenas por 180 dias no caso de erro do sujeito passivo ' +
+      'evidenciado na declaração e, em caso de falta apurada em ação de fiscalização, até 90 dias após a sua conclusão. ' +
+      'Regime aplicado nesta simulação: <strong>' + esc(r.juros.regimeRotulo) + '</strong>. ' + esc(r.juros.regra) + ' ' +
+      'Taxa de ' + esc(F.percentagem(r.juros.taxaAnual, 2)) + ' ao ano, de ' + esc(F.data(r.juros.dataInicio)) +
       ' a ' + esc(F.data(r.juros.dataFim)) + '.</dd>',
       '<dt>Artigos 114.º e 119.º do RGIT — Coimas</dt>',
       '<dd>Falta de entrega da prestação tributária e inexatidão das declarações. ' +
-      'Redução por regularização voluntária nos termos dos artigos 29.º e 30.º do RGIT.</dd>',
+      'Redução por regularização voluntária nos termos dos artigos 29.º e 30.º do RGIT. ' +
+      'A graduação concreta da coima depende da culpa, do benefício obtido e da situação económica do agente ' +
+      '(artigo 27.º do RGIT), pelo que os valores apresentados são cenários de simulação e não previsões.</dd>',
       '<dt>Artigos 45.º e 78.º da LGT — Prazos</dt>',
-      '<dd>Caducidade do direito à liquidação e revisão do ato tributário a favor do contribuinte, ' +
-      'ambos de quatro anos. É este segundo prazo que condiciona a recuperabilidade do IRC pago.</dd>',
+      '<dd>Caducidade do direito à liquidação e revisão do ato tributário. O artigo 78.º prevê vias e prazos ' +
+      'distintos consoante o fundamento invocado — iniciativa do sujeito passivo, erro imputável aos serviços, ' +
+      'injustiça grave ou notória, duplicação de coleta — pelo que o IRC pago é <em>potencialmente</em> recuperável, ' +
+      'sujeito à validação da via processual aplicável e dos respetivos prazos. Ver ainda o prazo de reclamação ' +
+      'graciosa do artigo 70.º do CPPT.</dd>',
       '</dl>'
     ].join('\n');
   }
@@ -131,7 +155,7 @@
         };
       }));
 
-    var socios = tabela(['Sócio', 'Participação', 'Imputação', 'IRS atual', 'IRS corrigido', 'IRS adicional'],
+    var socios = tabela(['Sócio', 'Participação', 'Imputação', 'IRS atual', 'IRS corrigido', 'IRS adicional estimado'],
       r.socios.map(function (s) {
         return [s.nome, F.percentagemDireta(s.participacao), F.euro(s.imputacao), F.euro(s.irsAtual), F.euro(s.irsCorrigido), F.euro(s.irsAdicional)];
       }).concat([{
@@ -140,11 +164,10 @@
         total: true
       }]));
 
-    var coimas = tabela(['Cenário e fundamento', 'Montante'], ['minimo', 'provavel', 'maximo'].map(function (k) {
+    var coimas = tabela(['Cenário e fundamento', 'Montante'], ['baixo', 'referencia', 'alto'].map(function (k) {
       var c = r.coimas[k];
       return [
-        { html: '<strong>' + esc({ minimo: 'Mínimo', provavel: 'Provável', maximo: 'Máximo' }[k] + ' — ' + c.rotulo) +
-          '</strong><br><span class="nota">' + esc(c.fundamento) + '</span>' },
+        { html: '<strong>' + esc(c.rotulo) + '</strong><br><span class="nota">' + esc(c.fundamento) + '</span>' },
         F.euro(c.valor)
       ];
     }));
@@ -155,14 +178,18 @@
         return [c.rotulo + (k === r.recuperacaoIRC.cenarioSelecionado ? ' (selecionado)' : ''), F.percentagem(c.percentagem, 0), F.euro(c.valor)];
       }));
 
-    var matriz = tabela(['Coima \\ IRC', 'Reembolso integral', 'Reembolso parcial', 'Reembolso inexistente'],
+    var matriz = tabela(['Coima \\ IRC'].concat(['integral', 'parcial', 'inexistente'].map(function (k) {
+      return r.recuperacaoIRC.cenarios[k].rotulo;
+    })),
       r.matrizSensibilidade.map(function (l) {
-        return ['Coima ' + { minimo: 'mínima', provavel: 'provável', maximo: 'máxima' }[l.coima]]
+        return ['Coima — cenário ' + { baixo: 'baixo', referencia: 'de referência', alto: 'alto' }[l.coima]]
           .concat(l.valores.map(function (v) { return F.euro(v.valor); }));
       }));
 
     var cronologia = '<ul>' + r.timeline.map(function (e) {
-      return '<li><strong>' + esc(F.data(e.data)) + '</strong> — ' + esc(e.titulo) + '. ' + esc(e.descricao) + '</li>';
+      return '<li><strong>' + esc(F.data(e.data)) + (e.aproximado ? ' (aproximada)' : '') + '</strong> — ' +
+        esc(e.titulo) + '. ' + esc(e.descricao) +
+        '<br><span class="nota">Regra aplicável: ' + esc(e.regra) + '</span></li>';
     }).join('') + '</ul>';
 
     return [
@@ -170,13 +197,18 @@
       '<h3>3.1 Comparador entre a situação atual e a situação corrigida</h3>', comparador,
       '<h3>3.2 Impacto por sócio</h3>', socios,
       '<h3>3.3 Juros compensatórios</h3>',
+      '<p>Regime aplicado: <strong>' + esc(r.juros.regimeRotulo) + '</strong>. ' + esc(r.juros.regra) + '</p>',
       '<p>Base de cálculo de ' + esc(F.euro(r.juros.base)) + ', à taxa anual de ' + esc(F.percentagem(r.juros.taxaAnual, 2)) +
-      ', durante ' + esc(r.juros.dias) + ' dias (' + esc(F.data(r.juros.dataInicio)) + ' a ' + esc(F.data(r.juros.dataFim)) +
+      ', durante ' + esc(r.juros.dias) + ' dias' +
+      (r.juros.limiteAplicado ? ' (de ' + esc(r.juros.diasDecorridos) + ' dias decorridos, por aplicação do limite legal)' : '') +
+      ' (' + esc(F.data(r.juros.dataInicio)) + ' a ' + esc(F.data(r.juros.dataFim)) +
       '), num total de <strong>' + esc(F.euro(r.juros.montante)) + '</strong>.</p>',
+      (r.juros.notas || []).map(function (n) { return '<div class="aviso">' + esc(n) + '</div>'; }).join(''),
       '<h3>3.4 Cenários de coima</h3>', coimas,
       '<h3>3.5 Recuperação do IRC</h3>',
-      '<p>Base recuperável de ' + esc(F.euro(r.recuperacaoIRC.base)) + ', correspondente à coleta de IRC e derramas pagas. ' +
-      'As tributações autónomas mantêm-se devidas e não integram esta base.</p>', irc,
+      '<p>Base potencialmente recuperável de ' + esc(F.euro(r.recuperacaoIRC.base)) + ', correspondente à coleta de IRC ' +
+      'e derramas pagas. As tributações autónomas mantêm-se devidas e não integram esta base.</p>',
+      '<div class="aviso">' + esc(r.recuperacaoIRC.aviso) + '</div>', irc,
       '<h3>3.6 Matriz de exposição líquida</h3>', matriz,
       '<h3>3.7 Cronologia fiscal</h3>', cronologia
     ].join('\n');
@@ -201,8 +233,9 @@
     if (i.irsAdicional > 0) {
       linhas.push('Ponderar a substituição das declarações Modelo 3 dos sócios do exercício de ' + r.meta.exercicio +
         '. A regularização voluntária, antes de qualquer procedimento inspetivo, reduz a coima de ' +
-        F.euro(r.coimas.provavel.valor) + ' para ' + F.euro(r.coimas.minimo.valor) +
-        ', uma poupança de ' + F.euro(r.coimas.provavel.valor - r.coimas.minimo.valor) + '.');
+        F.euro(r.coimas.referencia.valor) + ' para ' + F.euro(r.coimas.baixo.valor) +
+        ', uma diferença de ' + F.euro(r.coimas.referencia.valor - r.coimas.baixo.valor) +
+        ' entre cenários de simulação.');
       linhas.push('Os juros compensatórios continuam a correr até à regularização, a um custo aproximado de ' +
         F.euro(i.irsAdicional * r.juros.taxaAnual / 12) + ' por mês de atraso.');
     }
@@ -223,7 +256,7 @@
         'Fixar por escrito a posição sobre o artigo 6.º do CIRC e quantificar o exercício ou exercícios afetados.'],
       ['Fase 2 — Decisão sobre a via de regularização (30 a 45 dias)',
         'Escolher entre a substituição declarativa voluntária e a espera por procedimento inspetivo. ' +
-        'A diferença estimada em coimas é de ' + F.euro(r.coimas.provavel.valor - r.coimas.minimo.valor) + '.'],
+        'A diferença entre os cenários de coima é de ' + F.euro(r.coimas.referencia.valor - r.coimas.baixo.valor) + '.'],
       ['Fase 3 — Substituição das declarações de IRS (45 a 60 dias)',
         'Entrega das Modelo 3 de substituição com a imputação de ' + F.euro(r.atual.irc.materiaColetavel) +
         ' repartida pelos sócios, gerando IRS adicional de ' + F.euro(r.indicadores.irsAdicionalBruto) + '.'],

@@ -56,8 +56,9 @@ A soma das participações é verificada em tempo real: se não totalizar 100%, 
 |---|---|
 | **Cenário atual** | Apura o imposto efetivamente pago: IRC, derramas, tributações autónomas, saldo após pagamentos por conta e retenções; e o IRS dos sócios sem imputação. |
 | **Cenário corrigido** | Imputa a matéria coletável a cada sócio na proporção da participação, engloba-a como rendimento líquido da categoria B e reliquida o IRS. A sociedade fica apenas com as tributações autónomas. |
-| **Juros compensatórios** | Cálculo dia a dia sobre o IRS adicional, com taxa, base de dias e data de início parametrizáveis. |
-| **Coimas** | Três cenários — mínimo, provável e máximo — cada um com o respetivo fundamento legal explícito. |
+| **Juros compensatórios** | Regra selecionável em função da **origem da correção**, e não uma fórmula única: omissão não evidenciada, regularização voluntária, erro evidenciado na declaração (máx. 180 dias) ou falta apurada em inspeção (até 90 dias após a conclusão). Artigo 35.º, n.º 7 da LGT. |
+| **Coimas** | Três **cenários de simulação** — baixo, de referência e alto — cada um com o fundamento legal explícito. Nenhum é apresentado como previsão da coima que a AT venha a aplicar. |
+| **Confiança** | Índice de confiança calculado a partir do estado dos inputs, apresentado no resultado e no relatório. |
 
 ### Módulo 4 · Recuperação do IRC
 
@@ -65,7 +66,7 @@ Três cenários: reembolso integral, parcial (percentagem configurável) e inexi
 
 ### Módulo 5 · Dashboard
 
-Cinco indicadores em cartões financeiros — IRS adicional, juros compensatórios, coimas, IRC potencialmente recuperável e exposição fiscal líquida — acompanhados de:
+Um painel de **confiança da simulação** abre o resultado, antes de qualquer número: índice, grau e a lista do que está validado, do que é hipótese e do que falta. Depois, cinco indicadores em cartões financeiros — IRS adicional, juros compensatórios, coimas, IRC potencialmente recuperável e exposição fiscal líquida — acompanhados de:
 
 - **Comparador** entre a situação atual e a situação corrigida, com variação por linha.
 - **Impacto por sócio**, com imputação, IRS antes e depois, e deslocação da taxa marginal.
@@ -138,13 +139,25 @@ console.log(r.indicadores.exposicaoLiquida);
 
 ---
 
+## O que esta ferramenta é — e o que não é
+
+**É** uma estimativa de **impacto marginal**: a diferença de imposto entre dois cenários, antes das restantes deduções à coleta. **Não é** um simulador de Modelo 3 nem uma liquidação, e o produto diz isso em todos os ecrãs onde apresenta um número.
+
+Três decisões deliberadas contra a ilusão de precisão:
+
+1. **Nenhum cenário é apresentado como provável.** As coimas são cenários baixo / de referência / alto; a recuperação do IRC é 100% / 50% / 0%. A percentagem intermédia é uma hipótese do utilizador, sem significado jurídico. Há um teste automático que falha se a palavra «provável» reaparecer nos cenários de coima.
+2. **Nada que dependa de uma via processual é dado como adquirido.** O artigo 78.º da LGT prevê vias e prazos distintos consoante o fundamento; o IRC é «potencialmente recuperável, sujeito à validação da via aplicável». Cada evento da cronologia declara a regra que o suporta e assinala-se como aproximado quando o é.
+3. **O resultado traz sempre o seu grau de confiança** e a versão das regras fiscais usadas. O índice nunca chega a 100%, porque o cenário de recuperação é sempre uma hipótese.
+
 ## Limitações conhecidas
 
 - Regime simplificado da categoria B modelado por coeficiente único, sem a majoração do artigo 31.º, n.º 13 do CIRS nem despesas do regime de contabilidade organizada.
-- Deduções à coleta modeladas por dependente, sem despesas gerais familiares, saúde, educação ou habitação, nem limites por escalão.
-- Tributação conjunta modelada por quociente conjugal com o rendimento coletável do cônjuge introduzido diretamente.
+- Deduções à coleta: modela-se a dedução por dependente e aceita-se o valor real das restantes por sócio, mas não são calculadas nem limitadas por escalão. Sem esse valor, o IRS de ambos os cenários fica sobreavaliado e a aplicação assinala-o.
+- Tributação conjunta modelada por quociente conjugal (divisor 2, artigo 69.º do CIRS), com o rendimento coletável do cônjuge introduzido diretamente.
+- Juros calculados sobre o IRS adicional agregado. Num produto profissional seriam calculados por sujeito passivo, com datas próprias.
+- O IRS suportado sobre lucros distribuídos é assinalado mas **não** compensado: exige tratamento jurídico próprio.
+- Prazos de caducidade sem modelação das causas de suspensão e interrupção do artigo 46.º da LGT.
 - Um exercício por simulação. Vários exercícios exigem uma simulação por ano (os ficheiros JSON permitem arquivá-las separadamente).
-- As coimas dependem de valoração casuística da culpa pela Autoridade Tributária: os três cenários são balizas, não previsões.
 
 ---
 
@@ -153,7 +166,7 @@ console.log(r.indicadores.exposicaoLiquida);
 | Versão | Âmbito |
 |---|---|
 | **MVP** ✅ | Introdução manual dos dados, simulação e relatório. |
-| **v2** | Importação do ficheiro SAF-T. |
+| **v2** | Multi-exercício; cenário «custo de esperar» (+1/+2/+3 anos); juros por sujeito passivo; importação do ficheiro SAF-T. |
 | **v3** | Integração com software de contabilidade. |
 | **v4** | Benchmark setorial. |
 

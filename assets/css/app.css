@@ -257,3 +257,30 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
   main { padding: 1rem; }
   h2 { font-size: 1.2rem; }
 }
+
+/* ------------------------- Confiança da simulação ------------------- */
+.cartao--confianca { border-left: 4px solid var(--linha-forte); }
+.cartao--confianca.nivel-alta { border-left-color: var(--positivo); }
+.cartao--confianca.nivel-media { border-left-color: var(--aviso); }
+.cartao--confianca.nivel-baixa { border-left-color: var(--alerta); }
+.confianca__topo { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+.confianca__titulo { font-weight: 650; font-size: .98rem; }
+.confianca__nota { font-size: .8rem; color: var(--tinta-tenue); }
+.confianca__indice { font-size: 1.4rem; font-weight: 680; font-variant-numeric: tabular-nums; }
+.confianca__barra { height: 6px; border-radius: 999px; background: var(--linha); margin: .6rem 0 .8rem; overflow: hidden; }
+.confianca__preenchido { height: 100%; border-radius: 999px; background: var(--marca); }
+.nivel-alta .confianca__preenchido { background: var(--positivo); }
+.nivel-media .confianca__preenchido { background: var(--aviso); }
+.nivel-baixa .confianca__preenchido { background: var(--alerta); }
+.confianca__itens { list-style: none; margin: 0; padding: 0; display: grid; gap: .4rem; }
+.confianca__itens li { display: grid; grid-template-columns: minmax(9rem, 14rem) 1fr; gap: .6rem; font-size: .84rem; align-items: baseline; }
+.confianca__itens li::before { display: none; }
+.confianca__rotulo { font-weight: 600; }
+.confianca__rotulo::before { content: "• "; }
+.estado-ok .confianca__rotulo::before { content: "✓ "; color: var(--positivo); }
+.estado-aviso .confianca__rotulo::before { content: "! "; color: var(--aviso); }
+.estado-falta .confianca__rotulo::before { content: "✕ "; color: var(--alerta); }
+.confianca__texto { color: var(--tinta-suave); }
+@media (max-width: 640px) {
+  .confianca__itens li { grid-template-columns: 1fr; gap: 0; }
+}
