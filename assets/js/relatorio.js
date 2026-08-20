@@ -12,39 +12,59 @@
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
+  /* Identidade VC Level aplicada ao documento formal: Lora, a "alternativa
+     executiva" do brandbook, com Deep Forest Green e Champagne Gold. */
   function estilo() {
     return [
+      '@import url("https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Montserrat:wght@500;600;700&display=swap");',
       '@page { size: A4; margin: 18mm 16mm; }',
-      'body { font: 11pt/1.5 Georgia, "Times New Roman", serif; color: #14181f; margin: 0; }',
-      'h1 { font-size: 19pt; margin: 0 0 .2em; }',
-      'h2 { font-size: 13pt; margin: 1.6em 0 .5em; padding-bottom: .2em; border-bottom: 1.5px solid #0f3d6e; color: #0f3d6e; page-break-after: avoid; }',
-      'h3 { font-size: 11.5pt; margin: 1.1em 0 .3em; page-break-after: avoid; }',
+      'body { font: 11pt/1.55 "Lora", Georgia, "Times New Roman", serif; color: #14201b; margin: 0; }',
+      'h1, h2, h3, .marca-nome, thead th { font-family: "Montserrat", "Segoe UI", sans-serif; }',
+      'h1 { font-size: 18pt; font-weight: 600; margin: 0 0 .2em; letter-spacing: -.01em; }',
+      'h2 { font-size: 12.5pt; font-weight: 600; margin: 1.6em 0 .5em; padding-bottom: .25em; border-bottom: 1.5px solid #9f8e6a; color: #0c271f; page-break-after: avoid; }',
+      'h3 { font-size: 11pt; font-weight: 600; margin: 1.1em 0 .3em; color: #0c271f; page-break-after: avoid; }',
       'p, li { margin: 0 0 .55em; text-align: justify; }',
-      '.capa { border-bottom: 3px solid #0f3d6e; padding-bottom: 1em; margin-bottom: 1.4em; }',
-      '.capa .sub { color: #4a5666; font-size: 10pt; }',
-      '.meta { font-size: 9pt; color: #67707f; margin-top: .6em; }',
-      '.destaque-caixa { background: #f2f6fb; border-left: 4px solid #0f3d6e; padding: .8em 1em; margin: 1em 0; page-break-inside: avoid; }',
-      '.numero-grande { font-size: 22pt; font-weight: bold; color: #b3261e; display: block; line-height: 1.1; }',
+      '.capa { border-bottom: 2px solid #0c271f; padding-bottom: 1em; margin-bottom: 1.4em; }',
+      '.capa .sub { color: #3f5349; font-size: 10pt; }',
+      '.marca { display: flex; align-items: center; gap: .7em; margin-bottom: 1.2em; }',
+      '.marca svg { width: 30px; height: 30px; color: #9f8e6a; }',
+      '.marca-nome { font-size: 8.5pt; font-weight: 600; letter-spacing: .3em; color: #9f8e6a; }',
+      '.meta { font-size: 9pt; color: #6e7c72; margin-top: .6em; }',
+      '.destaque-caixa { background: #f2f4f1; border-left: 4px solid #9f8e6a; padding: .8em 1em; margin: 1em 0; page-break-inside: avoid; }',
+      '.numero-grande { font-family: "Montserrat", sans-serif; font-size: 22pt; font-weight: 700; color: #8f3b22; display: block; line-height: 1.1; }',
       'table { width: 100%; border-collapse: collapse; margin: .6em 0 1em; font-size: 9.5pt; page-break-inside: avoid; }',
-      'th, td { border-bottom: 1px solid #d6dce6; padding: .38em .5em; text-align: right; }',
+      'th, td { border-bottom: 1px solid #dee3dd; padding: .38em .5em; text-align: right; }',
       'th:first-child, td:first-child { text-align: left; }',
-      'thead th { background: #eef2f8; border-bottom: 1.5px solid #0f3d6e; font-size: 8.5pt; text-transform: uppercase; letter-spacing: .04em; }',
-      'tr.total td { font-weight: bold; background: #f7f9fc; }',
+      'thead th { background: #f2f4f1; border-bottom: 1.5px solid #0c271f; font-size: 8pt; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: #0c271f; }',
+      'tr.total td { font-weight: bold; background: #f7f8f6; }',
       'td.celula-texto { text-align: left; }',
-      '.nota { font-size: 8.5pt; color: #4a5666; }',
-      '.legal { font-size: 9.5pt; color: #2c333d; }',
-      '.legal dt { font-weight: bold; margin-top: .5em; }',
+      '.nota { font-size: 8.5pt; color: #3f5349; }',
+      '.legal { font-size: 9.5pt; color: #24302a; }',
+      '.legal dt { font-weight: 700; margin-top: .5em; }',
       '.legal dd { margin: 0 0 .4em; }',
-      '.aviso { border: 1px solid #b3261e; background: #fdecea; color: #7d1912; padding: .6em .8em; margin: .5em 0; font-size: 9.5pt; }',
-      '.rodape-doc { margin-top: 2em; padding-top: .7em; border-top: 1px solid #d6dce6; font-size: 8.5pt; color: #67707f; }',
+      '.aviso { border-left: 3px solid #8f3b22; background: #f8ece6; color: #6d2c18; padding: .6em .8em; margin: .5em 0; font-size: 9.5pt; }',
+      '.rodape-doc { margin-top: 2em; padding-top: .7em; border-top: 1px solid #dee3dd; font-size: 8.5pt; color: #6e7c72; }',
+      '.assinatura { font-family: "Montserrat", sans-serif; font-size: 8pt; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: #9f8e6a; margin-top: .8em; }',
       'ol.plano li { margin-bottom: .5em; }',
       '.quebra { page-break-before: always; }',
       '@media print { .barra-imprimir { display: none !important; } }',
-      '.barra-imprimir { position: fixed; top: 0; left: 0; right: 0; background: #0f3d6e; color: #fff; padding: .6em 1em; font-family: system-ui, sans-serif; font-size: 10pt; display: flex; gap: 1em; align-items: center; justify-content: space-between; z-index: 9; }',
-      '.barra-imprimir button { font: inherit; padding: .35em .9em; border-radius: 6px; border: 0; cursor: pointer; }',
+      '.barra-imprimir { position: fixed; top: 0; left: 0; right: 0; background: #0c271f; color: #f2f2f2; padding: .6em 1em; font-family: "Montserrat", system-ui, sans-serif; font-size: 10pt; display: flex; gap: 1em; align-items: center; justify-content: space-between; z-index: 9; }',
+      '.barra-imprimir button { font: inherit; font-weight: 600; padding: .35em .9em; border-radius: 6px; border: 0; cursor: pointer; background: #9f8e6a; color: #0c271f; }',
       '.corpo { margin-top: 3.2em; }',
       '@media print { .corpo { margin-top: 0; } }'
     ].join('\n');
+  }
+
+  function marca() {
+    return '<div class="marca">' +
+      '<svg viewBox="0 0 100 100" role="img" aria-label="VC Level">' +
+      '<g fill="none" stroke="currentColor" stroke-width="3">' +
+      '<rect x="6" y="6" width="88" height="88"></rect>' +
+      '<path d="M6 94 A 88 88 0 0 1 94 6"></path>' +
+      '<path d="M50 94 A 44 44 0 0 0 94 50"></path>' +
+      '<path d="M50 94 L 50 50 L 94 50"></path>' +
+      '</g></svg>' +
+      '<span class="marca-nome">VC LEVEL</span></div>';
   }
 
   function tabela(cabecalhos, linhas) {
@@ -283,6 +303,7 @@
       '<span>Use “Guardar como PDF” na janela de impressão.</span>' +
       '<button onclick="window.print()">Imprimir / Guardar PDF</button></div>',
       '<div class="corpo">',
+      marca(),
       '<div class="capa">',
       '<h1>Impacto da reclassificação para o regime de transparência fiscal</h1>',
       '<div class="sub">' + esc(d.sociedade.designacao || 'Sociedade não identificada') + ' · Exercício de ' + esc(r.meta.exercicio) + '</div>',
@@ -299,6 +320,7 @@
       'Os valores apresentados são estimativas assentes em parâmetros configuráveis e nos dados introduzidos pelo utilizador. ',
       'Não constituem liquidação de imposto nem substituem parecer jurídico-fiscal. ',
       'A elegibilidade para o artigo 6.º do CIRC é pressuposto assumido e não objeto de apreciação neste documento.',
+      '<div class="assinatura">VC Level · Strategic Leadership. Fractional Impact.</div>',
       '</div></div></body></html>'
     ].join('\n');
   }

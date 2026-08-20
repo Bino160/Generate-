@@ -18,32 +18,36 @@
    * Esquemas de formulário
    * ================================================================== */
 
+  /* Triagem de campos. Essencial = altera a exposição apurada. Avançado =
+     refina, reconcilia ou documenta, mas não muda a ordem de grandeza. */
   var CAMPOS_SOCIEDADE = [
-    { chave: 'designacao', rotulo: 'Designação da sociedade', tipo: 'texto', largo: true, ajuda: 'Apenas para identificação no relatório.' },
-    { chave: 'exercicio', rotulo: 'Exercício fiscal', tipo: 'inteiro', min: 2000, max: 2100, ajuda: 'Ano a que respeita a matéria coletável.' },
-    { chave: 'resultadoContabilistico', rotulo: 'Resultado contabilístico (€)', tipo: 'euro', ajuda: 'Resultado líquido antes de correções fiscais.' },
-    { chave: 'correcoesFiscais', rotulo: 'Correções fiscais (€)', tipo: 'euro', ajuda: 'Acréscimos menos deduções do quadro 07 da Modelo 22.' },
-    { chave: 'materiaColetavel', rotulo: 'Matéria coletável (€)', tipo: 'euro', ajuda: 'Campo 311 da Modelo 22. É esta a base imputada aos sócios.' },
+    { chave: 'designacao', rotulo: 'Sociedade', tipo: 'texto', largo: true, ajuda: 'Identificação no relatório.' },
+    { chave: 'exercicio', rotulo: 'Exercício fiscal', tipo: 'inteiro', min: 2000, max: 2100 },
+    { chave: 'materiaColetavel', rotulo: 'Matéria coletável (€)', tipo: 'euro', ajuda: 'Campo 311 da Modelo 22. É a base imputada aos sócios.' },
     { chave: 'ircLiquidado', rotulo: 'IRC liquidado (€)', tipo: 'euro', ajuda: 'Coleta de IRC do exercício, antes de derramas.' },
-    { chave: 'derramaMunicipal', rotulo: 'Derrama municipal (€)', tipo: 'euro' },
-    { chave: 'derramaEstadual', rotulo: 'Derrama estadual (€)', tipo: 'euro' },
+    { chave: 'derramaMunicipal', rotulo: 'Derramas (€)', tipo: 'euro', ajuda: 'Municipal e estadual. Some as duas, ou separe-as nos dados avançados.' },
     { chave: 'tributacoesAutonomas', rotulo: 'Tributações autónomas (€)', tipo: 'euro', ajuda: 'Mantêm-se devidas mesmo em transparência fiscal (artigo 12.º do CIRC).' },
-    { chave: 'pagamentosPorConta', rotulo: 'Pagamentos por conta (€)', tipo: 'euro' },
-    { chave: 'retencoes', rotulo: 'Retenções na fonte (€)', tipo: 'euro' }
+
+    { chave: 'derramaEstadual', rotulo: 'Derrama estadual, em separado (€)', tipo: 'euro', avancado: true, ajuda: 'Só se quiser desdobrar o campo acima.' },
+    { chave: 'resultadoContabilistico', rotulo: 'Resultado contabilístico (€)', tipo: 'euro', avancado: true, ajuda: 'Serve para reconciliar com a matéria coletável.' },
+    { chave: 'correcoesFiscais', rotulo: 'Correções fiscais (€)', tipo: 'euro', avancado: true, ajuda: 'Quadro 07 da Modelo 22. Serve para reconciliar.' },
+    { chave: 'pagamentosPorConta', rotulo: 'Pagamentos por conta (€)', tipo: 'euro', avancado: true, ajuda: 'Não altera a exposição, apenas o saldo já pago.' },
+    { chave: 'retencoes', rotulo: 'Retenções na fonte (€)', tipo: 'euro', avancado: true, ajuda: 'Não altera a exposição, apenas o saldo já pago.' }
   ];
 
   var CAMPOS_SOCIO = [
     { chave: 'nome', rotulo: 'Nome', tipo: 'texto' },
     { chave: 'participacao', rotulo: 'Participação (%)', tipo: 'decimal', min: 0, max: 100, passo: 0.01 },
-    { chave: 'rendimentosA', rotulo: 'Rendimentos categoria A (€)', tipo: 'euro', ajuda: 'Rendimento bruto do trabalho dependente.' },
-    { chave: 'rendimentosB', rotulo: 'Rendimentos categoria B (€)', tipo: 'euro', ajuda: 'Rendimento bruto próprio, fora da sociedade.' },
-    { chave: 'categoriaBJaLiquida', rotulo: 'Categoria B já líquida (não aplicar coeficiente)', tipo: 'booleano', largo: true },
-    { chave: 'outrosRendimentos', rotulo: 'Outros rendimentos englobados (€)', tipo: 'euro' },
+    { chave: 'rendimentosA', rotulo: 'Trabalho dependente e pensões (€)', tipo: 'euro', ajuda: 'Categoria A, valor bruto anual.' },
+    { chave: 'rendimentosB', rotulo: 'Rendimentos empresariais próprios (€)', tipo: 'euro', ajuda: 'Categoria B, fora desta sociedade.' },
     { chave: 'tributacao', rotulo: 'Tributação', tipo: 'opcoes', opcoes: [['separada', 'Separada'], ['conjunta', 'Conjunta']] },
-    { chave: 'rendimentosConjuge', rotulo: 'Rendimento coletável do cônjuge (€)', tipo: 'euro', ajuda: 'Apenas na tributação conjunta.', visivel: function (s) { return s.tributacao === 'conjunta'; } },
-    { chave: 'dependentes', rotulo: 'Número de dependentes', tipo: 'inteiro', min: 0, max: 20 },
-    { chave: 'outrasDeducoesColeta', rotulo: 'Outras deduções à coleta (€)', tipo: 'euro', ajuda: 'Valor real da Modelo 3: saúde, educação, habitação, despesas gerais familiares. Sem este valor o IRS de ambos os cenários fica sobreavaliado.' },
-    { chave: 'irsPagoDistribuicoes', rotulo: 'IRS suportado sobre lucros distribuídos (€)', tipo: 'euro', ajuda: 'Apenas assinalado no relatório. NÃO é abatido ao IRS adicional: exige tratamento jurídico próprio.' }
+    { chave: 'rendimentosConjuge', rotulo: 'Rendimento coletável do cônjuge (€)', tipo: 'euro', ajuda: 'Necessário na tributação conjunta.', visivel: function (s) { return s.tributacao === 'conjunta'; } },
+    { chave: 'dependentes', rotulo: 'Dependentes', tipo: 'inteiro', min: 0, max: 20 },
+    { chave: 'outrasDeducoesColeta', rotulo: 'Deduções à coleta (€)', tipo: 'euro', ajuda: 'Saúde, educação, habitação e despesas gerais, da Modelo 3. Sem este valor o IRS fica sobreavaliado nos dois cenários.' },
+
+    { chave: 'outrosRendimentos', rotulo: 'Outros rendimentos englobados (€)', tipo: 'euro', avancado: true },
+    { chave: 'categoriaBJaLiquida', rotulo: 'Categoria B já líquida (não aplicar o coeficiente de 0,75)', tipo: 'booleano', largo: true, avancado: true },
+    { chave: 'irsPagoDistribuicoes', rotulo: 'IRS suportado sobre lucros distribuídos (€)', tipo: 'euro', avancado: true, ajuda: 'Apenas assinalado no relatório. NÃO é abatido: exige tratamento jurídico próprio.' }
   ];
 
   var CAMPOS_CENARIO = [
@@ -96,7 +100,8 @@
   var CAMPOS_RECUPERACAO = [
     { grupo: 'recuperacao', chave: 'percentagemParcial', rotulo: 'Percentagem do cenário de recuperação parcial (%)', tipo: 'percentagem' },
     { grupo: 'recuperacao', chave: 'incluirDerramas', rotulo: 'Incluir derramas na base recuperável', tipo: 'booleano', largo: true },
-    { grupo: 'recuperacao', chave: 'incluirTributacoesAutonomas', rotulo: 'Incluir tributações autónomas na base recuperável', tipo: 'booleano', largo: true }
+    { grupo: 'recuperacao', chave: 'incluirTributacoesAutonomas', rotulo: 'Incluir tributações autónomas na base recuperável', tipo: 'booleano', largo: true },
+    { grupo: 'recuperacao', chave: 'incluirRetencoes', rotulo: 'Incluir retenções na fonte na base recuperável', tipo: 'booleano', largo: true }
   ];
 
   /* ================================================================== *
@@ -184,15 +189,36 @@
     return el('div', { class: classe }, filhos);
   }
 
-  function renderFormulario(alvo, campos, obter, definir, contexto) {
-    var no = $(alvo);
+  /**
+   * Desenha um formulário separando o essencial do avançado.
+   * O caminho principal só mostra campos que alteram a exposição apurada.
+   */
+  function preencherFormulario(no, campos, obter, definir, contexto, rotuloAvancado) {
     no.innerHTML = '';
+    var essenciais = el('div', { class: 'grelha' });
+    var avancados = el('div', { class: 'grelha' });
+    var nAvancados = 0;
+
     campos.forEach(function (campo) {
       if (campo.visivel && !campo.visivel(contexto)) return;
-      no.appendChild(criarCampo(campo,
+      var noCampo = criarCampo(campo,
         function () { return obter(campo); },
-        function (v) { definir(campo, v); }));
+        function (v) { definir(campo, v); });
+      if (campo.avancado) { avancados.appendChild(noCampo); nAvancados++; }
+      else essenciais.appendChild(noCampo);
     });
+
+    no.appendChild(essenciais);
+    if (nAvancados) {
+      no.appendChild(el('details', { class: 'avancado' }, [
+        el('summary', { texto: rotuloAvancado || 'Dados avançados' }),
+        avancados
+      ]));
+    }
+  }
+
+  function renderFormulario(alvo, campos, obter, definir, contexto, rotuloAvancado) {
+    preencherFormulario($(alvo), campos, obter, definir, contexto, rotuloAvancado);
   }
 
   function aoAlterar(campo) {
@@ -216,7 +242,7 @@
     renderFormulario('#form-sociedade', CAMPOS_SOCIEDADE,
       function (c) { return dados.sociedade[c.chave]; },
       function (c, v) { dados.sociedade[c.chave] = v; },
-      dados.sociedade);
+      dados.sociedade, 'Reconciliação e valores já pagos');
     verificarCoerencia();
   }
 
@@ -275,19 +301,17 @@
           }
         })
       ]);
-      var grelha = el('div', { class: 'grelha' });
-      CAMPOS_SOCIO.forEach(function (campo) {
-        if (campo.visivel && !campo.visivel(socio)) return;
-        grelha.appendChild(criarCampo(campo,
-          function () { return socio[campo.chave]; },
-          function (v) {
-            socio[campo.chave] = v;
-            if (campo.chave === 'nome') $('.socio__titulo', cartao).textContent = v || ('Sócio ' + (indice + 1));
-            if (campo.chave === 'participacao') $('.socio__quota', cartao).textContent = F.percentagemDireta(v) + ' do capital';
-          }));
-      });
+      var corpo = el('div', {});
+      preencherFormulario(corpo, CAMPOS_SOCIO,
+        function (campo) { return socio[campo.chave]; },
+        function (campo, v) {
+          socio[campo.chave] = v;
+          if (campo.chave === 'nome') $('.socio__titulo', cartao).textContent = v || ('Sócio ' + (indice + 1));
+          if (campo.chave === 'participacao') $('.socio__quota', cartao).textContent = F.percentagemDireta(v) + ' do capital';
+        },
+        socio, 'Rendimentos e situações menos comuns');
       cartao.appendChild(cabeca);
-      cartao.appendChild(grelha);
+      cartao.appendChild(corpo);
       alvo.appendChild(cartao);
     });
     atualizarSomaParticipacoes();
@@ -550,8 +574,13 @@
     var alvo = $('#cenarios-irc');
     alvo.innerHTML = '';
     var r = resultado.recuperacaoIRC;
-    alvo.appendChild(el('p', { class: 'ajuda', texto: 'Base recuperável: ' + F.euro(r.base) +
-      ' (coleta de IRC e derramas efetivamente pagas). As tributações autónomas mantêm-se devidas pela sociedade transparente.' }));
+    var comp = r.componentes;
+    var partes = ['coleta de IRC ' + F.euro(comp.coleta)];
+    if (comp.derramas) partes.push('derramas ' + F.euro(comp.derramas));
+    if (comp.retencoes) partes.push('retenções ' + F.euro(comp.retencoes));
+    if (comp.tributacoesAutonomas) partes.push('tributações autónomas ' + F.euro(comp.tributacoesAutonomas));
+    alvo.appendChild(el('p', { class: 'ajuda', texto: 'Base recuperável ' + F.euro(r.base) +
+      ': ' + partes.join(', ') + '. As tributações autónomas mantêm-se devidas pela sociedade transparente.' }));
     ['integral', 'parcial', 'inexistente'].forEach(function (chave) {
       var c = r.cenarios[chave];
       alvo.appendChild(el('div', { class: 'cenario' + (chave === r.cenarioSelecionado ? ' selecionado' : '') }, [

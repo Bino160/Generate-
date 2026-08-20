@@ -216,7 +216,13 @@
     // As tributacoes autonomas mantem-se devidas pela sociedade transparente
     // (artigo 12.º do CIRC), logo nao entram na base recuperavel por omissao.
     incluirTributacoesAutonomas: false,
-    incluirDerramas: true
+    incluirDerramas: true,
+    // Retencoes na fonte suportadas pela sociedade. Numa sociedade
+    // transparente nao ha IRC contra o qual as deduzir: ou sao imputadas aos
+    // socios, ou sao restituidas a sociedade. Em qualquer das vias o montante
+    // nao se perde, pelo que integra a base recuperavel por omissao. A via
+    // concreta tem de ser determinada caso a caso.
+    incluirRetencoes: true
   };
 
   function porOmissao() {

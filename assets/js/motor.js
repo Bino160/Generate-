@@ -384,6 +384,7 @@
     var base = irc.coleta;
     if (p.recuperacao.incluirDerramas) base += irc.derramaMunicipal + irc.derramaEstadual;
     if (p.recuperacao.incluirTributacoesAutonomas) base += irc.tributacoesAutonomas;
+    if (p.recuperacao.incluirRetencoes) base += irc.retencoes;
 
     var parcial = num(p.recuperacao.percentagemParcial);
     var pct = function (x) { return 'Recuperação ' + arred(x * 100, 1) + '%'; };
@@ -400,6 +401,12 @@
       cenarios: cenarios,
       cenarioSelecionado: escolhido,
       valorConsiderado: cenarios[escolhido].valor,
+      componentes: {
+        coleta: irc.coleta,
+        derramas: p.recuperacao.incluirDerramas ? arred(irc.derramaMunicipal + irc.derramaEstadual) : 0,
+        tributacoesAutonomas: p.recuperacao.incluirTributacoesAutonomas ? irc.tributacoesAutonomas : 0,
+        retencoes: p.recuperacao.incluirRetencoes ? irc.retencoes : 0
+      },
       aviso: 'As percentagens são hipóteses de trabalho escolhidas pelo utilizador e não têm ' +
         'significado jurídico. O montante é potencialmente recuperável, sujeito à validação da ' +
         'via processual aplicável (artigo 78.º da LGT ou artigo 70.º do CPPT) e dos respetivos prazos.'

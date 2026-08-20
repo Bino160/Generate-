@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Simulador de Transparência Fiscal</title>
 <meta name="description" content="Quantifica o custo financeiro da reclassificação de uma sociedade para o regime de transparência fiscal do artigo 6.º do CIRC.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap">
 <link rel="stylesheet" href="assets/css/app.css">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚖️</text></svg>">
 </head>
@@ -12,10 +15,19 @@
 
 <header class="topo">
   <div class="topo__marca">
-    <span class="topo__sigla">TF</span>
+    <svg class="topo__marca-simbolo" viewBox="0 0 100 100" role="img" aria-label="VC Level">
+      <g fill="none" stroke="currentColor" stroke-width="3">
+        <rect x="6" y="6" width="88" height="88"></rect>
+        <path d="M6 94 A 88 88 0 0 1 94 6"></path>
+        <path d="M50 94 A 44 44 0 0 0 94 50"></path>
+        <path d="M50 94 L 50 50 L 94 50"></path>
+        <path d="M50 72 L 72 72 L 72 94"></path>
+      </g>
+    </svg>
     <div>
-      <h1>Simulador de Impacto da Reclassificação da Transparência Fiscal</h1>
-      <p class="topo__sub">Artigo 6.º do CIRC · artigo 20.º do CIRS · quantificação do custo de um enquadramento incorreto</p>
+      <div class="topo__marca-nome">VC&nbsp;LEVEL</div>
+      <h1>Simulador de Impacto da Transparência Fiscal</h1>
+      <p class="topo__sub">Artigo 6.º do CIRC · artigo 20.º do CIRS · quanto custa um enquadramento incorreto</p>
     </div>
   </div>
   <div class="topo__acoes">
@@ -29,7 +41,7 @@
 <nav class="passos" aria-label="Etapas da simulação">
   <button type="button" class="passo" data-ecra="1"><b>1</b> Dados da sociedade</button>
   <button type="button" class="passo" data-ecra="2"><b>2</b> Dados dos sócios</button>
-  <button type="button" class="passo" data-ecra="3"><b>3</b> Parâmetros</button>
+  <button type="button" class="passo" data-ecra="3"><b>3</b> Cenário</button>
   <button type="button" class="passo" data-ecra="4"><b>4</b> Resultado</button>
 </nav>
 
@@ -41,7 +53,7 @@
       <p>Valores efetivamente declarados no exercício em análise. Retire-os da Modelo 22 e da demonstração de resultados.</p>
     </div>
     <div class="cartao">
-      <div class="grelha" id="form-sociedade"></div>
+      <div id="form-sociedade"></div>
     </div>
     <div class="cartao cartao--nota">
       <h3>Verificação automática</h3>
@@ -66,21 +78,23 @@
     </div>
     <div class="rodape-ecra">
       <button type="button" class="btn btn--fantasma" data-ir="1">← Sociedade</button>
-      <button type="button" class="btn btn--primario" data-ir="3">Continuar para os parâmetros →</button>
+      <button type="button" class="btn btn--primario" data-ir="3">Continuar para o cenário →</button>
     </div>
   </section>
 
   <!-- ECRÃ 3 ------------------------------------------------------------ -->
   <section class="ecra" id="ecra-3" hidden>
     <div class="ecra__cabeca">
-      <h2>Ecrã 3 · Parâmetros da simulação</h2>
-      <p>Tudo o que segue é parametrizável. Confirme sempre as taxas em vigor antes de emitir um relatório.</p>
+      <h2>Ecrã 3 · Cenário</h2>
+      <p>Duas escolhas mudam materialmente o resultado: a origem da correção, que determina o período de juros, e quanto do IRC considera recuperável. O resto são parâmetros técnicos, com valores por omissão fundamentados.</p>
     </div>
 
     <div class="cartao">
-      <h3>Cenário</h3>
-      <div class="grelha" id="form-cenario"></div>
+      <div id="form-cenario"></div>
     </div>
+
+    <details class="tecnicos">
+      <summary>Parâmetros técnicos · taxas, coimas, deduções e escalões</summary>
 
     <div class="cartao">
       <h3>Juros compensatórios <small>artigo 35.º da LGT</small></h3>
@@ -112,6 +126,8 @@
       <button type="button" class="btn btn--secundario btn--pequeno" data-acao="adicionar-escalao">+ Adicionar escalão</button>
       <button type="button" class="btn btn--fantasma btn--pequeno" data-acao="repor-escaloes">Repor tabela oficial</button>
     </div>
+
+    </details>
 
     <div class="rodape-ecra">
       <button type="button" class="btn btn--fantasma" data-ir="2">← Sócios</button>
@@ -186,7 +202,7 @@
     </div>
 
     <div class="rodape-ecra">
-      <button type="button" class="btn btn--fantasma" data-ir="3">← Parâmetros</button>
+      <button type="button" class="btn btn--fantasma" data-ir="3">← Cenário</button>
       <div class="rodape-ecra__grupo">
         <button type="button" class="btn btn--secundario" data-acao="exportar-json">Exportar dados (JSON)</button>
         <button type="button" class="btn btn--primario" data-acao="relatorio">Gerar relatório PDF</button>
@@ -198,6 +214,7 @@
 <footer class="rodape">
   <p><strong>Aviso.</strong> Ferramenta de apoio à decisão. Os valores apresentados são estimativas construídas sobre parâmetros configuráveis e não substituem a liquidação da Autoridade Tributária nem parecer jurídico-fiscal. Este simulador pressupõe que a elegibilidade para o artigo 6.º do CIRC já foi previamente determinada.</p>
   <p class="rodape__meta">Cálculo local no navegador. Nenhum dado é enviado para servidores. <span id="versao-regras"></span></p>
+  <p class="rodape__assinatura">VC Level · Strategic Leadership. Fractional Impact.</p>
 </footer>
 
 <script src="assets/js/parametros.js"></script>

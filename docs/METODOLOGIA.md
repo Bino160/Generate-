@@ -120,11 +120,13 @@ Máximo legal = mín(máx(IRS adicional × 50%, piso), teto)       [teto neglig�
 ## 6. Recuperação do IRC
 
 ```
-Base recuperável = IRC liquidado + derramas          [tributações autónomas excluídas]
+Base recuperável = IRC liquidado + derramas + retenções na fonte   [tributações autónomas excluídas]
 Integral     = base × 100%
 Parcial      = base × percentagem configurável       [50% por omissão]
 Inexistente  = 0
 ```
+
+**Retenções na fonte suportadas pela sociedade.** Numa sociedade transparente não há coleta de IRC contra a qual as deduzir: ou são imputadas aos sócios, ou são restituídas à sociedade. Em qualquer das vias o montante não se perde, pelo que integra a base recuperável por omissão — com a via concreta a determinar caso a caso. Pode ser desligado nos parâmetros.
 
 Os cenários são apresentados como percentagens — «Recuperação 100% / 50% / 0%» — e não como «reembolso integral / parcial / inexistente»: a percentagem intermédia é uma hipótese de trabalho do utilizador e não tem significado jurídico.
 

@@ -15,12 +15,14 @@ const html = fs.readFileSync(path.join(raiz, 'index.html'), 'utf8');
 const ler = (rel) => fs.readFileSync(path.join(raiz, rel), 'utf8');
 
 let saida = html
-  .replace(/<link rel="stylesheet" href="([^"]+)">/g,
+  // Só as folhas locais são inlinadas; os tipos de letra da Google mantêm-se
+  // como referência externa e degradam para a pilha de recurso quando offline.
+  .replace(/<link rel="stylesheet" href="(assets\/[^"]+)">/g,
     (_, href) => '<style>\n' + ler(href) + '\n</style>')
   .replace(/<script src="([^"]+)"><\/script>/g,
     (_, src) => '<script>\n' + ler(src) + '\n</script>');
 
-if (/<(link|script)[^>]+(href|src)="assets/.test(saida)) {
+if (/<(link|script)[^>]+(href|src)="assets\//.test(saida)) {
   throw new Error('Sobraram referências externas por inlinar.');
 }
 

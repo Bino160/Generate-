@@ -38,7 +38,9 @@ Os dados são guardados apenas no `localStorage` do navegador. **Nada é enviado
 
 ### Módulo 1 · Dados da sociedade
 
-Exercício fiscal, resultado contabilístico, correções fiscais, matéria coletável, IRC liquidado, derrama municipal, derrama estadual, tributações autónomas, pagamentos por conta e retenções.
+**Caminho principal:** exercício, matéria coletável, IRC liquidado, derramas e tributações autónomas — os cinco valores que determinam a exposição.
+
+**Dados avançados:** resultado contabilístico e correções fiscais (servem para reconciliar), pagamentos por conta e retenções (não alteram a exposição, apenas o saldo já pago), desdobramento da derrama estadual.
 
 O ecrã valida automaticamente a coerência entre `resultado contabilístico + correções fiscais` e a matéria coletável introduzida, e apura a taxa efetiva de IRC.
 
@@ -62,7 +64,7 @@ A soma das participações é verificada em tempo real: se não totalizar 100%, 
 
 ### Módulo 4 · Recuperação do IRC
 
-Três cenários: reembolso integral, parcial (percentagem configurável) e inexistente. A base recuperável é a coleta de IRC e as derramas efetivamente pagas; as tributações autónomas mantêm-se devidas pela sociedade transparente (artigo 12.º do CIRC) e por isso não integram a base, salvo se o utilizador o determinar.
+Três cenários: reembolso integral, parcial (percentagem configurável) e inexistente. A base recuperável é a coleta de IRC, as derramas e as retenções na fonte efetivamente suportadas; as tributações autónomas mantêm-se devidas pela sociedade transparente (artigo 12.º do CIRC) e por isso não integram a base, salvo se o utilizador o determinar.
 
 ### Módulo 5 · Dashboard
 

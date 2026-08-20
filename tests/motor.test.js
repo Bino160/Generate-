@@ -170,13 +170,14 @@ test('recuperacao do IRC: rotulos sao percentagens, sem juizo juridico', () => {
   assert.ok(/potencialmente recuper[áa]vel/i.test(r.recuperacaoIRC.aviso));
 });
 
-test('recuperacao do IRC assenta na colecta e derramas, sem tributacoes autonomas', () => {
+test('recuperacao do IRC assenta na colecta, derramas e retencoes, sem tributacoes autonomas', () => {
   const r = Motor.simular(cenarioBase());
-  eq(r.recuperacaoIRC.base, 24450 + 1800);
-  eq(r.recuperacaoIRC.cenarios.integral.valor, 26250);
-  eq(r.recuperacaoIRC.cenarios.parcial.valor, 13125);
+  eq(r.recuperacaoIRC.base, 24450 + 1800 + 500);
+  eq(r.recuperacaoIRC.componentes.tributacoesAutonomas, 0);
+  eq(r.recuperacaoIRC.cenarios.integral.valor, 26750);
+  eq(r.recuperacaoIRC.cenarios.parcial.valor, 13375);
   eq(r.recuperacaoIRC.cenarios.inexistente.valor, 0);
-  eq(r.indicadores.ircRecuperavel, 13125);
+  eq(r.indicadores.ircRecuperavel, 13375);
 });
 
 test('matriz de sensibilidade cobre 3 coimas x 3 cenarios de IRC', () => {
@@ -299,4 +300,17 @@ test('a simulacao identifica a versao das regras fiscais usadas', () => {
   const r = Motor.simular(cenarioBase());
   assert.ok(r.meta.regras.versao);
   assert.ok(r.meta.regras.atualizadoEm);
+});
+
+test('retencoes da sociedade integram a base recuperavel', () => {
+  const r = Motor.simular(cenarioBase());
+  // 24450 de colecta + 1800 de derramas + 500 de retencoes
+  eq(r.recuperacaoIRC.base, 26750);
+  eq(r.recuperacaoIRC.componentes.retencoes, 500);
+
+  const dados = cenarioBase();
+  dados.parametros.recuperacao = { incluirRetencoes: false };
+  const sem = Motor.simular(dados);
+  eq(sem.recuperacaoIRC.base, 26250);
+  eq(sem.recuperacaoIRC.componentes.retencoes, 0);
 });

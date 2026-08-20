@@ -1,68 +1,99 @@
 /* =====================================================================
    Simulador de Impacto da Reclassificação da Transparência Fiscal
-   Folha de estilo única. Sem dependências externas.
+   Identidade VC Level. Folha de estilo única, sem dependências.
+
+   Duas famílias de cor, deliberadamente separadas:
+   1. CROMO DE MARCA - Deep Forest, Champagne Gold, Sage, Olive, Snow.
+      Cabeçalho, botões, filetes, marca. É aqui que a marca vive.
+   2. CORES DE ESTADO - derivadas, com contraste mínimo de 3:1 sobre a
+      superfície e sempre acompanhadas de rótulo ou símbolo. A paleta da
+      marca não é usada para codificar valores: gold, sage e olive têm
+      entre si uma separação insuficiente (ΔE 8,4 em visão normal) e
+      contraste de 2,0 a 2,9:1 sobre fundo claro.
    ===================================================================== */
 
 :root {
-  --tinta: #10151c;
-  --tinta-suave: #4a5666;
-  --tinta-tenue: #77839a;
-  --fundo: #f4f6f9;
+  /* --- cromo de marca --- */
+  --floresta: #0c271f;
+  --ouro: #9f8e6a;
+  --sage: #8cb979;
+  --oliva: #969c7d;
+  --neve: #f2f2f2;
+
+  /* --- superfícies e tinta --- */
+  --fundo: #f2f2f2;
   --superficie: #ffffff;
-  --linha: #dde3ec;
-  --linha-forte: #c3ccda;
-  --marca: #0f3d6e;
-  --marca-clara: #e8f0f9;
-  --alerta: #b3261e;
-  --alerta-claro: #fdecea;
-  --aviso: #8a5a00;
-  --aviso-claro: #fff5e0;
-  --positivo: #14664a;
-  --positivo-claro: #e6f4ef;
-  --raio: 12px;
-  --sombra: 0 1px 2px rgba(16, 21, 28, .06), 0 8px 24px rgba(16, 21, 28, .06);
+  --tinta: #0c271f;
+  --tinta-suave: #3f5349;
+  --tinta-tenue: #6e7c72;
+  --linha: #dee3dd;
+  --linha-forte: #c3ccc2;
+
+  /* --- ações --- */
+  --marca: #0c271f;
+  --marca-clara: #e8ede6;
+  --cta: #9f8e6a;
+  --cta-tinta: #0c271f;
+
+  /* --- estados (validados a >= 3:1 sobre a superfície) --- */
+  --alerta: #8f3b22;
+  --alerta-claro: #f8ece6;
+  --aviso: #8a6a1f;
+  --aviso-claro: #faf3e2;
+  --positivo: #3e7a4e;
+  --positivo-claro: #e8f0e5;
+
+  --raio: 10px;
+  --sombra: 0 1px 2px rgba(12, 39, 31, .05), 0 8px 24px rgba(12, 39, 31, .06);
   --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  --titulo: "Montserrat", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+  --corpo: "Montserrat", "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-/* Tema escuro. Três estados: escolha explícita (data-theme), preferência do
-   sistema (sem marcação) e escolha explícita de tema claro, que prevalece. */
+/* Tema escuro. Deep Forest é a cor de fundo principal da marca, por isso o
+   modo escuro é a expressão mais fiel do brandbook. Três estados: escolha
+   explícita, preferência do sistema e escolha explícita de tema claro. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --tinta: #e8edf4;
-    --tinta-suave: #aab6c8;
-    --tinta-tenue: #7d8a9e;
-    --fundo: #0d1117;
-    --superficie: #151b23;
-    --linha: #242c38;
-    --linha-forte: #333d4d;
-    --marca: #7fb2ec;
-    --marca-clara: #16283d;
-    --alerta: #ff8a80;
-    --alerta-claro: #2c1614;
-    --aviso: #e5b567;
-    --aviso-claro: #2b2313;
-    --positivo: #6fd3ac;
-    --positivo-claro: #12251f;
+    --fundo: #0c271f;
+    --superficie: #12312a;
+    --tinta: #f2f2f2;
+    --tinta-suave: #c2cfc4;
+    --tinta-tenue: #8fa093;
+    --linha: #1e3f35;
+    --linha-forte: #2c5347;
+    --marca: #9f8e6a;
+    --marca-clara: #14382f;
+    --cta: #9f8e6a;
+    --cta-tinta: #0c271f;
+    --alerta: #e08a66;
+    --alerta-claro: #2e1b14;
+    --aviso: #d8b45a;
+    --aviso-claro: #2c2413;
+    --positivo: #8cb979;
+    --positivo-claro: #13291d;
     --sombra: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .3);
   }
 }
 
 :root[data-theme="dark"] {
-  --tinta: #e8edf4;
-  --tinta-suave: #aab6c8;
-  --tinta-tenue: #7d8a9e;
-  --fundo: #0d1117;
-  --superficie: #151b23;
-  --linha: #242c38;
-  --linha-forte: #333d4d;
-  --marca: #7fb2ec;
-  --marca-clara: #16283d;
-  --alerta: #ff8a80;
-  --alerta-claro: #2c1614;
-  --aviso: #e5b567;
-  --aviso-claro: #2b2313;
-  --positivo: #6fd3ac;
-  --positivo-claro: #12251f;
+  --fundo: #0c271f;
+  --superficie: #12312a;
+  --tinta: #f2f2f2;
+  --tinta-suave: #c2cfc4;
+  --tinta-tenue: #8fa093;
+  --linha: #1e3f35;
+  --linha-forte: #2c5347;
+  --marca: #9f8e6a;
+  --marca-clara: #14382f;
+  --cta: #9f8e6a;
+  --cta-tinta: #0c271f;
+  --alerta: #e08a66;
+  --alerta-claro: #2e1b14;
+  --aviso: #d8b45a;
+  --aviso-claro: #2c2413;
+  --positivo: #8cb979;
+  --positivo-claro: #13291d;
   --sombra: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .3);
 }
 
@@ -70,7 +101,8 @@
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--corpo);
+  font-weight: 400;
   font-size: 15px;
   line-height: 1.55;
   color: var(--tinta);
@@ -78,7 +110,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-h1, h2, h3, h4 { margin: 0 0 .4em; line-height: 1.25; font-weight: 650; letter-spacing: -.01em; }
+h1, h2, h3, h4 { margin: 0 0 .4em; font-family: var(--titulo); line-height: 1.25; font-weight: 600; letter-spacing: -.01em; }
 h1 { font-size: 1.05rem; }
 h2 { font-size: 1.4rem; }
 h3 { font-size: 1rem; }
@@ -152,8 +184,8 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
   border: 1px solid var(--linha-forte); background: var(--superficie); color: var(--tinta);
 }
 .btn:hover { border-color: var(--marca); color: var(--marca); }
-.btn--primario { background: var(--marca); border-color: var(--marca); color: #fff; }
-.btn--primario:hover { filter: brightness(1.12); color: #fff; }
+.btn--primario { background: var(--cta); border-color: var(--cta); color: var(--cta-tinta); font-weight: 600; }
+.btn--primario:hover { filter: brightness(1.06); color: var(--cta-tinta); border-color: var(--cta); }
 .btn--secundario { background: var(--marca-clara); border-color: transparent; color: var(--marca); }
 .btn--fantasma { background: transparent; }
 .btn--pequeno { padding: .3rem .6rem; font-size: .8rem; }
@@ -284,3 +316,43 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
 @media (max-width: 640px) {
   .confianca__itens li { grid-template-columns: 1fr; gap: 0; }
 }
+
+/* ------------------------- Marca VC Level --------------------------- */
+.topo__marca-simbolo { width: 42px; height: 42px; flex: 0 0 42px; color: var(--ouro); }
+.topo__marca-nome {
+  font-family: var(--titulo); font-size: .68rem; font-weight: 600;
+  letter-spacing: .32em; color: var(--ouro); margin-bottom: .15rem;
+}
+.topo__sigla { display: none; }
+.rodape__assinatura {
+  margin: .5rem 0 0; font-family: var(--titulo); font-size: .7rem;
+  font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: var(--ouro);
+}
+.topo { border-bottom: 1px solid var(--linha); box-shadow: inset 0 -3px 0 -2px var(--ouro); }
+.passos { border-bottom: 1px solid var(--linha); }
+
+/* --------------------- Dados avançados / técnicos ------------------- */
+details.avancado { margin-top: .9rem; border-top: 1px dashed var(--linha-forte); padding-top: .6rem; }
+details.avancado > summary,
+details.tecnicos > summary {
+  cursor: pointer; list-style: none; font-family: var(--titulo);
+  font-size: .78rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--tinta-tenue); padding: .35rem 0; display: flex; align-items: center; gap: .45rem;
+}
+details.avancado > summary::-webkit-details-marker,
+details.tecnicos > summary::-webkit-details-marker { display: none; }
+details.avancado > summary::before,
+details.tecnicos > summary::before { content: "+"; font-size: .95rem; line-height: 1; color: var(--ouro); }
+details.avancado[open] > summary::before,
+details.tecnicos[open] > summary::before { content: "–"; }
+details.avancado > summary:hover,
+details.tecnicos > summary:hover { color: var(--tinta); }
+details.avancado > .grelha { margin-top: .7rem; }
+
+details.tecnicos {
+  border: 1px solid var(--linha); border-radius: var(--raio);
+  background: var(--superficie); padding: .8rem 1.1rem; margin-bottom: 1rem;
+}
+details.tecnicos[open] { padding-bottom: .2rem; }
+details.tecnicos > summary { font-size: .82rem; }
+details.tecnicos .cartao { box-shadow: none; border-color: var(--linha); margin-top: .9rem; }
