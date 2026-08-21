@@ -15,20 +15,9 @@
 
 <header class="topo">
   <div class="topo__marca">
-    <svg class="topo__marca-simbolo" viewBox="0 0 100 100" role="img" aria-label="VC Level">
-      <g fill="none" stroke="currentColor" stroke-width="3">
-        <rect x="6" y="6" width="88" height="88"></rect>
-        <path d="M6 94 A 88 88 0 0 1 94 6"></path>
-        <path d="M50 94 A 44 44 0 0 0 94 50"></path>
-        <path d="M50 94 L 50 50 L 94 50"></path>
-        <path d="M50 72 L 72 72 L 72 94"></path>
-      </g>
-    </svg>
-    <div>
-      <div class="topo__marca-nome">VC&nbsp;LEVEL</div>
-      <h1>Simulador de Impacto da Transparência Fiscal</h1>
-      <p class="topo__sub">Artigo 6.º do CIRC · artigo 20.º do CIRS · quanto custa um enquadramento incorreto</p>
-    </div>
+    <div class="topo__marca-nome">VC&nbsp;LEVEL</div>
+    <h1>Simulador de Impacto da Transparência Fiscal</h1>
+    <p class="topo__sub">Artigo 6.º do CIRC · artigo 20.º do CIRS · quanto custa um enquadramento incorreto</p>
   </div>
   <div class="topo__acoes">
     <button type="button" class="btn btn--fantasma" data-acao="exemplo">Carregar exemplo</button>
@@ -142,9 +131,13 @@
       <p id="pergunta-central">«Quanto me custará se a Autoridade Tributária concluir que a minha sociedade foi incorretamente enquadrada?»</p>
     </div>
 
-    <div id="avisos"></div>
+    <div id="vazio" class="vazio" hidden></div>
 
-    <div class="cartao cartao--confianca" id="confianca"></div>
+    <section class="heroi" id="heroi" aria-label="Exposição fiscal líquida"></section>
+
+    <div id="confianca" class="confianca"></div>
+
+    <div id="avisos"></div>
 
     <div class="cartoes" id="cartoes-financeiros"></div>
 

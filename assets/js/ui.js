@@ -23,31 +23,31 @@
   var CAMPOS_SOCIEDADE = [
     { chave: 'designacao', rotulo: 'Sociedade', tipo: 'texto', largo: true, ajuda: 'Identificação no relatório.' },
     { chave: 'exercicio', rotulo: 'Exercício fiscal', tipo: 'inteiro', min: 2000, max: 2100 },
-    { chave: 'materiaColetavel', rotulo: 'Matéria coletável (€)', tipo: 'euro', ajuda: 'Campo 311 da Modelo 22. É a base imputada aos sócios.' },
-    { chave: 'ircLiquidado', rotulo: 'IRC liquidado (€)', tipo: 'euro', ajuda: 'Coleta de IRC do exercício, antes de derramas.' },
-    { chave: 'derramaMunicipal', rotulo: 'Derramas (€)', tipo: 'euro', ajuda: 'Municipal e estadual. Some as duas, ou separe-as nos dados avançados.' },
-    { chave: 'tributacoesAutonomas', rotulo: 'Tributações autónomas (€)', tipo: 'euro', ajuda: 'Mantêm-se devidas mesmo em transparência fiscal (artigo 12.º do CIRC).' },
+    { chave: 'materiaColetavel', rotulo: 'Matéria coletável', tipo: 'euro', ajuda: 'Campo 311 da Modelo 22. É a base imputada aos sócios.' },
+    { chave: 'ircLiquidado', rotulo: 'IRC liquidado', tipo: 'euro', ajuda: 'Coleta de IRC do exercício, antes de derramas.' },
+    { chave: 'derramaMunicipal', rotulo: 'Derramas', tipo: 'euro', ajuda: 'Municipal e estadual. Some as duas, ou separe-as nos dados avançados.' },
+    { chave: 'tributacoesAutonomas', rotulo: 'Tributações autónomas', tipo: 'euro', ajuda: 'Mantêm-se devidas mesmo em transparência fiscal (artigo 12.º do CIRC).' },
 
-    { chave: 'derramaEstadual', rotulo: 'Derrama estadual, em separado (€)', tipo: 'euro', avancado: true, ajuda: 'Só se quiser desdobrar o campo acima.' },
-    { chave: 'resultadoContabilistico', rotulo: 'Resultado contabilístico (€)', tipo: 'euro', avancado: true, ajuda: 'Serve para reconciliar com a matéria coletável.' },
-    { chave: 'correcoesFiscais', rotulo: 'Correções fiscais (€)', tipo: 'euro', avancado: true, ajuda: 'Quadro 07 da Modelo 22. Serve para reconciliar.' },
-    { chave: 'pagamentosPorConta', rotulo: 'Pagamentos por conta (€)', tipo: 'euro', avancado: true, ajuda: 'Não altera a exposição, apenas o saldo já pago.' },
-    { chave: 'retencoes', rotulo: 'Retenções na fonte (€)', tipo: 'euro', avancado: true, ajuda: 'Não altera a exposição, apenas o saldo já pago.' }
+    { chave: 'derramaEstadual', rotulo: 'Derrama estadual, em separado', tipo: 'euro', avancado: true, ajuda: 'Só se quiser desdobrar o campo acima.' },
+    { chave: 'resultadoContabilistico', rotulo: 'Resultado contabilístico', tipo: 'euro', avancado: true, ajuda: 'Serve para reconciliar com a matéria coletável.' },
+    { chave: 'correcoesFiscais', rotulo: 'Correções fiscais', tipo: 'euro', avancado: true, ajuda: 'Quadro 07 da Modelo 22. Serve para reconciliar.' },
+    { chave: 'pagamentosPorConta', rotulo: 'Pagamentos por conta', tipo: 'euro', avancado: true, ajuda: 'Não altera a exposição, apenas o saldo já pago.' },
+    { chave: 'retencoes', rotulo: 'Retenções na fonte', tipo: 'euro', avancado: true, ajuda: 'Não altera a exposição, apenas o saldo já pago.' }
   ];
 
   var CAMPOS_SOCIO = [
     { chave: 'nome', rotulo: 'Nome', tipo: 'texto' },
     { chave: 'participacao', rotulo: 'Participação (%)', tipo: 'decimal', min: 0, max: 100, passo: 0.01 },
-    { chave: 'rendimentosA', rotulo: 'Trabalho dependente e pensões (€)', tipo: 'euro', ajuda: 'Categoria A, valor bruto anual.' },
-    { chave: 'rendimentosB', rotulo: 'Rendimentos empresariais próprios (€)', tipo: 'euro', ajuda: 'Categoria B, fora desta sociedade.' },
+    { chave: 'rendimentosA', rotulo: 'Trabalho dependente e pensões', tipo: 'euro', ajuda: 'Categoria A, valor bruto anual.' },
+    { chave: 'rendimentosB', rotulo: 'Rendimentos empresariais próprios', tipo: 'euro', ajuda: 'Categoria B, fora desta sociedade.' },
     { chave: 'tributacao', rotulo: 'Tributação', tipo: 'opcoes', opcoes: [['separada', 'Separada'], ['conjunta', 'Conjunta']] },
-    { chave: 'rendimentosConjuge', rotulo: 'Rendimento coletável do cônjuge (€)', tipo: 'euro', ajuda: 'Necessário na tributação conjunta.', visivel: function (s) { return s.tributacao === 'conjunta'; } },
+    { chave: 'rendimentosConjuge', rotulo: 'Rendimento coletável do cônjuge', tipo: 'euro', ajuda: 'Necessário na tributação conjunta.', visivel: function (s) { return s.tributacao === 'conjunta'; } },
     { chave: 'dependentes', rotulo: 'Dependentes', tipo: 'inteiro', min: 0, max: 20 },
-    { chave: 'outrasDeducoesColeta', rotulo: 'Deduções à coleta (€)', tipo: 'euro', ajuda: 'Saúde, educação, habitação e despesas gerais, da Modelo 3. Sem este valor o IRS fica sobreavaliado nos dois cenários.' },
+    { chave: 'outrasDeducoesColeta', rotulo: 'Deduções à coleta', tipo: 'euro', ajuda: 'Saúde, educação, habitação e despesas gerais, da Modelo 3. Sem este valor o IRS fica sobreavaliado nos dois cenários.' },
 
-    { chave: 'outrosRendimentos', rotulo: 'Outros rendimentos englobados (€)', tipo: 'euro', avancado: true },
+    { chave: 'outrosRendimentos', rotulo: 'Outros rendimentos englobados', tipo: 'euro', avancado: true },
     { chave: 'categoriaBJaLiquida', rotulo: 'Categoria B já líquida (não aplicar o coeficiente de 0,75)', tipo: 'booleano', largo: true, avancado: true },
-    { chave: 'irsPagoDistribuicoes', rotulo: 'IRS suportado sobre lucros distribuídos (€)', tipo: 'euro', avancado: true, ajuda: 'Apenas assinalado no relatório. NÃO é abatido: exige tratamento jurídico próprio.' }
+    { chave: 'irsPagoDistribuicoes', rotulo: 'IRS suportado sobre lucros distribuídos', tipo: 'euro', avancado: true, ajuda: 'Apenas assinalado no relatório. NÃO é abatido: exige tratamento jurídico próprio.' }
   ];
 
   var CAMPOS_CENARIO = [
@@ -82,19 +82,19 @@
     { grupo: 'coimas', chave: 'percentagemMaxima', rotulo: 'Coima máxima (% do imposto)', tipo: 'percentagem' },
     { grupo: 'coimas', chave: 'reducaoVoluntaria', rotulo: 'Redução por regularização voluntária (%)', tipo: 'percentagem', ajuda: 'Artigo 29.º, n.º 1, alínea a) do RGIT.' },
     { grupo: 'coimas', chave: 'fatorReferencia', rotulo: 'Fator do cenário de referência', tipo: 'decimal', passo: 0.05, ajuda: 'Multiplicador do limite mínimo legal. 1,0 ancora o cenário no mínimo da lei.' },
-    { grupo: 'coimas', chave: 'coimaMinimaAbsoluta', rotulo: 'Piso da coima (€)', tipo: 'euro' },
-    { grupo: 'coimas', chave: 'tectoNegligencia', rotulo: 'Teto por negligência (€)', tipo: 'euro' },
-    { grupo: 'coimas', chave: 'coimaDeclaracaoMinima', rotulo: 'Coima declarativa mínima (€)', tipo: 'euro', ajuda: 'Artigo 119.º do RGIT, por declaração.' },
-    { grupo: 'coimas', chave: 'coimaDeclaracaoMaxima', rotulo: 'Coima declarativa máxima (€)', tipo: 'euro' },
+    { grupo: 'coimas', chave: 'coimaMinimaAbsoluta', rotulo: 'Piso da coima', tipo: 'euro' },
+    { grupo: 'coimas', chave: 'tectoNegligencia', rotulo: 'Teto por negligência', tipo: 'euro' },
+    { grupo: 'coimas', chave: 'coimaDeclaracaoMinima', rotulo: 'Coima declarativa mínima', tipo: 'euro', ajuda: 'Artigo 119.º do RGIT, por declaração.' },
+    { grupo: 'coimas', chave: 'coimaDeclaracaoMaxima', rotulo: 'Coima declarativa máxima', tipo: 'euro' },
     { grupo: 'coimas', chave: 'aplicarCoimaDeclaracaoPorSocio', rotulo: 'Aplicar uma coima declarativa por cada sócio (só se a infração for imputável a cada sujeito passivo)', tipo: 'booleano', largo: true }
   ];
 
   var CAMPOS_IRS = [
-    { grupo: 'irs', chave: 'deducaoEspecificaCategoriaA', rotulo: 'Dedução específica da categoria A (€)', tipo: 'euro' },
+    { grupo: 'irs', chave: 'deducaoEspecificaCategoriaA', rotulo: 'Dedução específica da categoria A', tipo: 'euro' },
     { grupo: 'irs', chave: 'coeficienteCategoriaB', rotulo: 'Coeficiente da categoria B', tipo: 'decimal', passo: 0.01, ajuda: 'Artigo 31.º do CIRS. 0,75 para serviços do artigo 151.º.' },
-    { grupo: 'irs', chave: 'deducaoPorDependente', rotulo: 'Dedução por dependente (€)', tipo: 'euro', ajuda: 'As restantes deduções à coleta introduzem-se por sócio, no ecrã 2.' },
+    { grupo: 'irs', chave: 'deducaoPorDependente', rotulo: 'Dedução por dependente', tipo: 'euro', ajuda: 'As restantes deduções à coleta introduzem-se por sócio, no ecrã 2.' },
     { grupo: 'irs', chave: 'quocienteConjugal', rotulo: 'Quociente conjugal', tipo: 'decimal', passo: 0.5 },
-    { grupo: 'irs', chave: 'limiteDeducoesColeta', rotulo: 'Limite global de deduções (€, opcional)', tipo: 'euro' }
+    { grupo: 'irs', chave: 'limiteDeducoesColeta', rotulo: 'Limite global de deduções (opcional)', tipo: 'euro' }
   ];
 
   var CAMPOS_RECUPERACAO = [
@@ -166,6 +166,8 @@
         min: campo.min, max: campo.max, inputmode: 'decimal'
       });
     }
+    // O símbolo da unidade vive dentro do campo, não no rótulo.
+    var unidade = campo.tipo === 'euro' ? '€' : (campo.tipo === 'percentagem' ? '%' : null);
 
     entrada.addEventListener('change', function () {
       var v;
@@ -184,7 +186,10 @@
 
     var classe = 'campo' + (campo.largo ? ' campo--largo' : '') + (campo.tipo === 'booleano' ? ' campo--interruptor' : '');
     var etiqueta = el('label', { for: id, texto: campo.rotulo });
-    var filhos = campo.tipo === 'booleano' ? [entrada, etiqueta] : [etiqueta, entrada];
+    var controlo = unidade
+      ? el('div', { class: 'campo__unidade' }, [entrada, el('span', { texto: unidade, 'aria-hidden': 'true' })])
+      : entrada;
+    var filhos = campo.tipo === 'booleano' ? [entrada, etiqueta] : [etiqueta, controlo];
     if (campo.ajuda) filhos.push(el('p', { class: 'ajuda', texto: campo.ajuda }));
     return el('div', { class: classe }, filhos);
   }
@@ -221,8 +226,20 @@
     preencherFormulario($(alvo), campos, obter, definir, contexto, rotuloAvancado);
   }
 
+  /** Marca cada passo como completo quando tem o que precisa para calcular. */
+  function atualizarProgresso() {
+    var mc = F.numeroBruto(dados.sociedade.materiaColetavel) > 0;
+    var soma = dados.socios.reduce(function (a, x) { return a + F.numeroBruto(x.participacao); }, 0);
+    var estados = { 1: mc, 2: Math.abs(soma - 100) < 0.01, 3: true, 4: mc };
+    $$('.passo').forEach(function (b) {
+      var n = Number(b.dataset.ecra);
+      b.classList.toggle('passo--completo', !!estados[n]);
+    });
+  }
+
   function aoAlterar(campo) {
     Estado.guardar(dados);
+    atualizarProgresso();
     if (campo && campo.chave === 'tributacao') renderSocios();
     if (campo && (campo.chave === 'exercicio')) renderEscaloes();
     // O regime de juros controla a visibilidade da data de conclusão da inspeção.
@@ -285,12 +302,23 @@
   function renderSocios() {
     var alvo = $('#lista-socios');
     alvo.innerHTML = '';
+
+    // Consequência de cada sócio, para o cartão não ser só um formulário.
+    var previa = null;
+    try { previa = Motor.simular(dados).socios; } catch (e) { previa = null; }
+
     dados.socios.forEach(function (socio, indice) {
       var cartao = el('div', { class: 'cartao socio' });
+      var p = previa && previa[indice];
       var cabeca = el('div', { class: 'socio__cabeca' }, [
         el('div', {}, [
           el('div', { class: 'socio__titulo', texto: socio.nome || ('Sócio ' + (indice + 1)) }),
-          el('div', { class: 'socio__quota', texto: F.percentagemDireta(socio.participacao) + ' do capital' })
+          el('div', { class: 'socio__quota', texto: F.percentagemDireta(socio.participacao) + ' do capital' + 
+            (p && p.imputacao > 0 ? ' · imputação de ' + F.euro(p.imputacao) : '') }),
+          p && p.irsAdicional > 0
+            ? el('div', { class: 'socio__impacto', texto: 'IRS adicional estimado: ' + F.euro(p.irsAdicional) +
+                ' · taxa marginal ' + F.percentagem(p.taxaMarginalAtual, 0) + ' → ' + F.percentagem(p.taxaMarginalCorrigida, 0) })
+            : null
         ]),
         el('button', {
           type: 'button', class: 'btn btn--fantasma btn--pequeno btn--perigo', texto: 'Remover',
@@ -413,6 +441,19 @@
    * ================================================================== */
 
   function simular() {
+    var vazio = F.numeroBruto(dados.sociedade.materiaColetavel) <= 0;
+    $('#ecra-4').classList.toggle('resultado--vazio', vazio);
+    $('#vazio').hidden = !vazio;
+    if (vazio) {
+      $('#vazio').innerHTML = '';
+      $('#vazio').appendChild(el('p', { class: 'vazio__titulo', texto: 'Ainda não há nada para simular.' }));
+      $('#vazio').appendChild(el('p', { texto: 'A matéria coletável é o valor que a lei manda imputar aos sócios. Sem ela não há exposição a calcular.' }));
+      $('#vazio').appendChild(el('div', { class: 'vazio__acoes' }, [
+        el('button', { type: 'button', class: 'btn btn--primario', texto: 'Introduzir os dados da sociedade', 'data-ir': '1' }),
+        el('button', { type: 'button', class: 'btn btn--secundario', texto: 'Ver um caso de exemplo', 'data-acao': 'exemplo' })
+      ]));
+      return;
+    }
     try {
       resultado = Motor.simular(dados);
     } catch (erro) {
@@ -421,6 +462,7 @@
       return;
     }
     window.__resultado = resultado;
+    renderHeroi();
     renderAvisos();
     renderConfianca();
     renderKPIs();
@@ -436,30 +478,70 @@
   function renderAvisos() {
     var alvo = $('#avisos');
     alvo.innerHTML = '';
-    resultado.avisos.forEach(function (a) {
-      alvo.appendChild(el('div', { class: 'aviso-caixa aviso-caixa--' + a.nivel, texto: a.texto }));
+    resultado.avisos
+      .filter(function (a) { return a.nivel === 'erro'; })
+      .forEach(function (a) {
+        alvo.appendChild(el('div', { class: 'aviso-caixa aviso-caixa--erro', texto: a.texto }));
+      });
+  }
+
+  /**
+   * O ecrã de resultado responde a uma pergunta. A resposta vem primeiro,
+   * com a sua composição imediatamente abaixo; tudo o resto é sustentação.
+   */
+  function renderHeroi() {
+    var i = resultado.indicadores;
+    var r = resultado.recuperacaoIRC;
+    var alvo = $('#heroi');
+    alvo.innerHTML = '';
+
+    var favoravel = i.exposicaoLiquida < 0;
+    alvo.className = 'heroi' + (favoravel ? ' heroi--favoravel' : '');
+
+    alvo.appendChild(el('div', { class: 'heroi__rotulo',
+      texto: favoravel ? 'Recuperação líquida estimada' : 'Exposição fiscal líquida estimada' }));
+    alvo.appendChild(el('div', { class: 'heroi__valor', texto: F.euro(Math.abs(i.exposicaoLiquida)) }));
+    alvo.appendChild(el('p', { class: 'heroi__contexto',
+      texto: 'Exercício de ' + resultado.meta.exercicio + ' · coima no cenário de referência · ' +
+        r.cenarios[r.cenarioSelecionado].rotulo.toLowerCase() + ' do IRC · ' +
+        'confiança ' + resultado.qualidade.grau.toLowerCase() }));
+
+    var parcelas = [
+      { rotulo: 'IRS adicional', valor: i.irsAdicional, sinal: '+' },
+      { rotulo: 'Juros', valor: i.juros, sinal: '+' },
+      { rotulo: 'Coima', valor: i.coimas, sinal: '+' },
+      { rotulo: 'IRC recuperável', valor: i.ircRecuperavel, sinal: '−' }
+    ];
+    var lista = el('ol', { class: 'composicao' });
+    parcelas.forEach(function (p) {
+      lista.appendChild(el('li', { class: 'composicao__item' }, [
+        el('span', { class: 'composicao__rotulo', texto: p.rotulo }),
+        el('span', { class: 'composicao__valor', texto: p.sinal + ' ' + F.euro(p.valor) })
+      ]));
     });
+    lista.appendChild(el('li', { class: 'composicao__item composicao__item--total' }, [
+      el('span', { class: 'composicao__rotulo', texto: favoravel ? 'Recuperação líquida' : 'Exposição líquida' }),
+      el('span', { class: 'composicao__valor', texto: F.euro(Math.abs(i.exposicaoLiquida)) })
+    ]));
+    alvo.appendChild(lista);
   }
 
   function renderConfianca() {
     var q = resultado.qualidade;
     var alvo = $('#confianca');
     alvo.innerHTML = '';
-    alvo.className = 'cartao cartao--confianca nivel-' +
+    alvo.className = 'confianca nivel-' +
       q.grau.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
-    var barra = el('div', { class: 'confianca__barra' }, [
-      el('div', { class: 'confianca__preenchido', style: 'width:' + q.indice + '%' })
-    ]);
-
-    alvo.appendChild(el('div', { class: 'confianca__topo' }, [
-      el('div', {}, [
-        el('div', { class: 'confianca__titulo', texto: 'Confiança da simulação: ' + q.grau }),
-        el('div', { class: 'confianca__nota', texto: 'Estimativa de impacto marginal. Não é uma liquidação de imposto.' })
+    var problemas = q.itens.filter(function (i) { return i.estado !== 'ok'; }).length;
+    var resumo = el('summary', { class: 'confianca__resumo' }, [
+      el('span', { class: 'confianca__selo', texto: 'Confiança ' + q.grau }),
+      el('span', { class: 'confianca__barra' }, [
+        el('span', { class: 'confianca__preenchido', style: 'width:' + q.indice + '%' })
       ]),
-      el('div', { class: 'confianca__indice', texto: q.indice + '%' })
-    ]));
-    alvo.appendChild(barra);
+      el('span', { class: 'confianca__contagem',
+        texto: problemas ? problemas + ' ponto(s) a confirmar' : 'tudo validado' })
+    ]);
 
     var lista = el('ul', { class: 'confianca__itens' });
     q.itens.forEach(function (i) {
@@ -468,7 +550,18 @@
         el('span', { class: 'confianca__texto', texto: i.texto })
       ]));
     });
-    alvo.appendChild(lista);
+
+    var bloco = el('details', { class: 'confianca__bloco' }, [resumo, lista]);
+
+    // Avisos e notas informativas acompanham o detalhe, em vez de
+    // competirem com o resultado no topo do ecrã.
+    var ressalvas = resultado.avisos.filter(function (a) { return a.nivel !== 'erro'; });
+    if (ressalvas.length) {
+      var notas = el('ul', { class: 'confianca__ressalvas' });
+      ressalvas.forEach(function (a) { notas.appendChild(el('li', { texto: a.texto })); });
+      bloco.appendChild(notas);
+    }
+    alvo.appendChild(bloco);
   }
 
   function kpi(rotulo, valor, nota, modificador) {
@@ -483,13 +576,11 @@
     var i = resultado.indicadores;
     var alvo = $('#cartoes-financeiros');
     alvo.innerHTML = '';
-    alvo.appendChild(kpi('Exposição fiscal líquida', i.exposicaoLiquida,
-      'IRS adicional + juros + coima − IRC recuperado', 'destaque'));
     alvo.appendChild(kpi('IRS adicional estimado', i.irsAdicional,
-      'Antes das restantes deduções à coleta. Imputação de ' + F.euro(resultado.atual.irc.materiaColetavel)));
+      'Imputação de ' + F.euro(resultado.atual.irc.materiaColetavel) + ', antes das restantes deduções à coleta'));
     alvo.appendChild(kpi('Juros compensatórios', i.juros,
       resultado.juros.dias + ' dias · ' + resultado.juros.regimeRotulo));
-    alvo.appendChild(kpi('Coimas', i.coimas, 'Cenário de referência, não é previsão'));
+    alvo.appendChild(kpi('Coimas', i.coimas, 'Cenário de referência. Não é uma previsão'));
     alvo.appendChild(kpi('IRC recuperável', i.ircRecuperavel,
       resultado.recuperacaoIRC.cenarios[resultado.recuperacaoIRC.cenarioSelecionado].rotulo, 'positivo'));
   }
@@ -689,6 +780,7 @@
     if (n === 2) renderSocios();
     if (n === 3) renderParametros();
     if (n === 4) simular();
+    atualizarProgresso();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -789,6 +881,7 @@
     $('#versao-regras').textContent = 'Regras fiscais versão ' + v.versao + ' (' + F.data(v.atualizadoEm) + ').';
 
     renderTudo();
+    atualizarProgresso();
     irPara(1);
   }
 

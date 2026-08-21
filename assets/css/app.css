@@ -122,7 +122,7 @@ p { margin: 0 0 .8em; }
   display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between;
   padding: .9rem 1.5rem; background: var(--superficie); border-bottom: 1px solid var(--linha);
 }
-.topo__marca { display: flex; gap: .85rem; align-items: center; }
+.topo__marca { display: flex; flex-direction: column; align-items: flex-start; gap: .1rem; }
 .topo__sigla {
   display: grid; place-items: center; width: 40px; height: 40px; flex: 0 0 40px;
   border-radius: 10px; background: var(--marca); color: #fff; font-weight: 700; letter-spacing: .02em;
@@ -290,33 +290,6 @@ main { max-width: 1160px; margin: 0 auto; padding: 1.5rem; }
   h2 { font-size: 1.2rem; }
 }
 
-/* ------------------------- Confiança da simulação ------------------- */
-.cartao--confianca { border-left: 4px solid var(--linha-forte); }
-.cartao--confianca.nivel-alta { border-left-color: var(--positivo); }
-.cartao--confianca.nivel-media { border-left-color: var(--aviso); }
-.cartao--confianca.nivel-baixa { border-left-color: var(--alerta); }
-.confianca__topo { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
-.confianca__titulo { font-weight: 650; font-size: .98rem; }
-.confianca__nota { font-size: .8rem; color: var(--tinta-tenue); }
-.confianca__indice { font-size: 1.4rem; font-weight: 680; font-variant-numeric: tabular-nums; }
-.confianca__barra { height: 6px; border-radius: 999px; background: var(--linha); margin: .6rem 0 .8rem; overflow: hidden; }
-.confianca__preenchido { height: 100%; border-radius: 999px; background: var(--marca); }
-.nivel-alta .confianca__preenchido { background: var(--positivo); }
-.nivel-media .confianca__preenchido { background: var(--aviso); }
-.nivel-baixa .confianca__preenchido { background: var(--alerta); }
-.confianca__itens { list-style: none; margin: 0; padding: 0; display: grid; gap: .4rem; }
-.confianca__itens li { display: grid; grid-template-columns: minmax(9rem, 14rem) 1fr; gap: .6rem; font-size: .84rem; align-items: baseline; }
-.confianca__itens li::before { display: none; }
-.confianca__rotulo { font-weight: 600; }
-.confianca__rotulo::before { content: "• "; }
-.estado-ok .confianca__rotulo::before { content: "✓ "; color: var(--positivo); }
-.estado-aviso .confianca__rotulo::before { content: "! "; color: var(--aviso); }
-.estado-falta .confianca__rotulo::before { content: "✕ "; color: var(--alerta); }
-.confianca__texto { color: var(--tinta-suave); }
-@media (max-width: 640px) {
-  .confianca__itens li { grid-template-columns: 1fr; gap: 0; }
-}
-
 /* ------------------------- Marca VC Level --------------------------- */
 .topo__marca-simbolo { width: 42px; height: 42px; flex: 0 0 42px; color: var(--ouro); }
 .topo__marca-nome {
@@ -356,3 +329,175 @@ details.tecnicos {
 details.tecnicos[open] { padding-bottom: .2rem; }
 details.tecnicos > summary { font-size: .82rem; }
 details.tecnicos .cartao { box-shadow: none; border-color: var(--linha); margin-top: .9rem; }
+
+/* ===================================================================== *
+ * Ecrã de resultado: a resposta primeiro, a sustentação depois.
+ * ===================================================================== */
+
+.heroi {
+  background: var(--superficie);
+  border: 1px solid var(--linha);
+  border-top: 3px solid var(--alerta);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra);
+  padding: 1.6rem 1.5rem 1.2rem;
+  margin-bottom: .8rem;
+}
+.heroi--favoravel { border-top-color: var(--positivo); }
+
+.heroi__rotulo {
+  font-family: var(--titulo);
+  font-size: .74rem; font-weight: 600;
+  letter-spacing: .14em; text-transform: uppercase;
+  color: var(--tinta-tenue);
+}
+.heroi__valor {
+  font-family: var(--titulo);
+  font-size: clamp(2.4rem, 9vw, 3.6rem);
+  font-weight: 700; line-height: 1.02; letter-spacing: -.03em;
+  font-variant-numeric: tabular-nums;
+  color: var(--alerta); margin: .25rem 0 .35rem;
+}
+.heroi--favoravel .heroi__valor { color: var(--positivo); }
+.heroi__contexto { font-size: .85rem; color: var(--tinta-suave); margin: 0 0 1.1rem; }
+
+.composicao {
+  list-style: none; margin: 0; padding: .9rem 0 0;
+  border-top: 1px solid var(--linha);
+  display: grid; gap: .1rem;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+}
+.composicao__item {
+  display: flex; flex-direction: column; gap: .1rem;
+  padding: .5rem .8rem .5rem 0;
+  border-right: 1px solid var(--linha);
+}
+.composicao__item:last-child { border-right: none; }
+.composicao__rotulo { font-size: .74rem; color: var(--tinta-tenue); }
+.composicao__valor {
+  font-family: var(--titulo); font-weight: 600; font-size: 1rem;
+  font-variant-numeric: tabular-nums; color: var(--tinta);
+}
+.composicao__item--total .composicao__rotulo { color: var(--tinta-suave); font-weight: 600; }
+.composicao__item--total .composicao__valor { color: var(--alerta); }
+.heroi--favoravel .composicao__item--total .composicao__valor { color: var(--positivo); }
+@media (max-width: 640px) {
+  .composicao { grid-template-columns: 1fr; }
+  .composicao__item {
+    flex-direction: row; justify-content: space-between; align-items: baseline;
+    border-right: none; border-bottom: 1px solid var(--linha); padding-right: 0;
+  }
+  .composicao__item:last-child { border-bottom: none; }
+}
+
+/* ---------------------- Confiança, em tira ------------------------- */
+.confianca { margin-bottom: .8rem; }
+.confianca__bloco {
+  background: var(--superficie); border: 1px solid var(--linha);
+  border-left: 3px solid var(--linha-forte); border-radius: var(--raio);
+  padding: .55rem .9rem;
+}
+.nivel-alta .confianca__bloco { border-left-color: var(--positivo); }
+.nivel-media .confianca__bloco { border-left-color: var(--aviso); }
+.nivel-baixa .confianca__bloco { border-left-color: var(--alerta); }
+
+.confianca__resumo {
+  cursor: pointer; list-style: none; display: flex; align-items: center;
+  gap: .8rem; flex-wrap: wrap; min-height: 2.2rem;
+}
+.confianca__resumo::-webkit-details-marker { display: none; }
+.confianca__resumo::after {
+  content: "ver detalhe"; margin-left: auto;
+  font-size: .74rem; color: var(--tinta-tenue); text-decoration: underline;
+}
+.confianca__bloco[open] .confianca__resumo::after { content: "ocultar"; }
+.confianca__selo {
+  font-family: var(--titulo); font-size: .76rem; font-weight: 600;
+  letter-spacing: .04em; color: var(--tinta); white-space: nowrap;
+}
+.confianca__barra {
+  flex: 1 1 6rem; max-width: 12rem; height: 5px; border-radius: 999px;
+  background: var(--linha); overflow: hidden;
+}
+.confianca__preenchido { display: block; height: 100%; border-radius: 999px; background: var(--linha-forte); }
+.nivel-alta .confianca__preenchido { background: var(--positivo); }
+.nivel-media .confianca__preenchido { background: var(--aviso); }
+.nivel-baixa .confianca__preenchido { background: var(--alerta); }
+.confianca__contagem { font-size: .78rem; color: var(--tinta-tenue); }
+
+.confianca__itens {
+  list-style: none; margin: .8rem 0 .3rem; padding: .8rem 0 0;
+  border-top: 1px solid var(--linha); display: grid; gap: .45rem;
+}
+.confianca__itens li {
+  display: grid; grid-template-columns: minmax(9rem, 13rem) 1fr;
+  gap: .7rem; font-size: .84rem; align-items: baseline;
+}
+.confianca__rotulo { font-weight: 600; }
+.confianca__rotulo::before { content: "• "; }
+.estado-ok .confianca__rotulo::before { content: "✓ "; color: var(--positivo); }
+.estado-aviso .confianca__rotulo::before { content: "! "; color: var(--aviso); }
+.estado-falta .confianca__rotulo::before { content: "✕ "; color: var(--alerta); }
+.confianca__texto { color: var(--tinta-suave); }
+@media (max-width: 640px) {
+  .confianca__itens li { grid-template-columns: 1fr; gap: 0; }
+}
+
+/* ------------------------- Estado vazio ---------------------------- */
+.vazio[hidden] { display: none; }
+.vazio {
+  background: var(--superficie); border: 1px dashed var(--linha-forte);
+  border-radius: var(--raio); padding: 2rem 1.5rem; text-align: center;
+  display: flex; flex-direction: column; gap: .5rem; align-items: center;
+}
+.vazio__titulo { font-family: var(--titulo); font-weight: 600; font-size: 1.1rem; margin: 0; }
+.vazio p { max-width: 42ch; color: var(--tinta-suave); margin: 0; }
+.vazio__acoes { display: flex; gap: .6rem; flex-wrap: wrap; justify-content: center; margin-top: .6rem; }
+.resultado--vazio > *:not(.ecra__cabeca):not(.vazio) { display: none; }
+
+/* --------------------- Progresso nos passos ------------------------ */
+.passo--completo b { background: var(--positivo); color: var(--superficie); }
+.passo--completo b::after { content: "✓"; font-size: .7rem; }
+.passo--completo b { font-size: 0; }
+.passo[aria-current="true"] b { font-size: .72rem; }
+.passo[aria-current="true"] b::after { content: none; }
+
+/* ----------------- Unidade dentro do campo ------------------------- */
+.campo__unidade { position: relative; display: flex; align-items: center; }
+.campo__unidade input { padding-right: 2rem; }
+.campo__unidade > span {
+  position: absolute; right: .65rem; font-size: .85rem;
+  color: var(--tinta-tenue); pointer-events: none;
+}
+
+/* --------------------- Consequência por sócio ---------------------- */
+.socio__impacto {
+  margin-top: .25rem; font-size: .8rem; color: var(--alerta); font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------- Polimento ----------------------------- */
+.btn, .passo, summary { min-height: 2.4rem; }
+.btn:focus-visible, .passo:focus-visible, summary:focus-visible,
+input:focus-visible, select:focus-visible {
+  outline: 2px solid var(--ouro); outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
+.confianca__ressalvas {
+  list-style: none; margin: .7rem 0 .2rem; padding: .7rem 0 0;
+  border-top: 1px dashed var(--linha-forte); display: grid; gap: .4rem;
+}
+.confianca__ressalvas li { font-size: .82rem; color: var(--tinta-suave); padding-left: 1.1rem; position: relative; }
+.confianca__ressalvas li::before { content: "!"; position: absolute; left: 0; color: var(--aviso); font-weight: 700; }
+
+/* No telemóvel o cabeçalho não pode consumir meio ecrã antes do conteúdo. */
+@media (max-width: 640px) {
+  .topo { padding: .7rem 1rem .6rem; gap: .6rem; }
+  .topo__sub { display: none; }
+  .topo h1 { font-size: .95rem; }
+  .topo__acoes { width: 100%; gap: .35rem; }
+  .topo__acoes .btn { padding: .4rem .6rem; font-size: .8rem; flex: 1 1 auto; justify-content: center; }
+  .passos { padding: .5rem 1rem; }
+  .heroi { padding: 1.2rem 1.1rem 1rem; }
+}

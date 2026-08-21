@@ -27,7 +27,6 @@
       '.capa { border-bottom: 2px solid #0c271f; padding-bottom: 1em; margin-bottom: 1.4em; }',
       '.capa .sub { color: #3f5349; font-size: 10pt; }',
       '.marca { display: flex; align-items: center; gap: .7em; margin-bottom: 1.2em; }',
-      '.marca svg { width: 30px; height: 30px; color: #9f8e6a; }',
       '.marca-nome { font-size: 8.5pt; font-weight: 600; letter-spacing: .3em; color: #9f8e6a; }',
       '.meta { font-size: 9pt; color: #6e7c72; margin-top: .6em; }',
       '.destaque-caixa { background: #f2f4f1; border-left: 4px solid #9f8e6a; padding: .8em 1em; margin: 1em 0; page-break-inside: avoid; }',
@@ -56,15 +55,7 @@
   }
 
   function marca() {
-    return '<div class="marca">' +
-      '<svg viewBox="0 0 100 100" role="img" aria-label="VC Level">' +
-      '<g fill="none" stroke="currentColor" stroke-width="3">' +
-      '<rect x="6" y="6" width="88" height="88"></rect>' +
-      '<path d="M6 94 A 88 88 0 0 1 94 6"></path>' +
-      '<path d="M50 94 A 44 44 0 0 0 94 50"></path>' +
-      '<path d="M50 94 L 50 50 L 94 50"></path>' +
-      '</g></svg>' +
-      '<span class="marca-nome">VC LEVEL</span></div>';
+    return '<div class="marca"><span class="marca-nome">VC LEVEL</span></div>';
   }
 
   function tabela(cabecalhos, linhas) {
