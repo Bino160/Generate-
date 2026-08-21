@@ -157,7 +157,7 @@ Cada evento da cronologia declara a **regra aplicável**, e os que resultam de e
 | Conclusão da ação de fiscalização | Artigo 35.º, n.º 7 da LGT | Data introduzida; fixa o fim da contagem de juros |
 | Fim da contagem de juros | Artigo 35.º, n.º 7 da LGT | Depende do regime escolhido |
 | Prazo **potencial** de revisão | Artigo 78.º da LGT | 4 anos a contar da liquidação quando esta é conhecida; caso contrário, estimativa a partir do fim do ano seguinte ao exercício |
-| Prazo **potencial** de caducidade | Artigos 45.º e 46.º da LGT | 4 anos, sem modelação das causas de suspensão e interrupção |
+| Prazo **potencial** de caducidade | Artigo 45.º, n.os 1 e 4 da LGT | 4 anos contados do **termo do ano do facto tributário** — para o exercício de 2022 corre de 01/01/2023 a 31/12/2026. Sem modelação das causas de suspensão e interrupção do artigo 46.º |
 
 ---
 

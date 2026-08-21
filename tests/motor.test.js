@@ -314,3 +314,17 @@ test('retencoes da sociedade integram a base recuperavel', () => {
   eq(sem.recuperacaoIRC.base, 26250);
   eq(sem.recuperacaoIRC.componentes.retencoes, 0);
 });
+
+test('caducidade conta-se do termo do ano do facto tributario, nao do ano seguinte', () => {
+  // Artigo 45.º, n.os 1 e 4 da LGT: para o exercicio de 2022 o prazo corre
+  // de 01/01/2023 a 31/12/2026.
+  const dados = cenarioBase();
+  dados.sociedade.exercicio = 2022;
+  dados.parametros.dataReferencia = '2026-08-20';
+  const r = Motor.simular(dados);
+  const caducidade = r.timeline.find((e) => /caducidade/i.test(e.titulo));
+  assert.strictEqual(caducidade.data, '2026-12-31');
+
+  const r2024 = Motor.simular(cenarioBase());
+  assert.strictEqual(r2024.timeline.find((e) => /caducidade/i.test(e.titulo)).data, '2028-12-31');
+});

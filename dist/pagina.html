@@ -1490,11 +1490,13 @@ input:focus-visible, select:focus-visible {
     });
 
     eventos.push({
-      data: d(exercicio + 1 + num(p.prazos.caducidadeAnos), 12, 31),
+      data: d(exercicio + num(p.prazos.caducidadeAnos), 12, 31),
       titulo: 'Prazo potencial de caducidade',
-      descricao: 'Indicação aproximada do limite para a Autoridade Tributária liquidar IRS adicional. ' +
-        'O prazo suspende-se ou interrompe-se em várias situações, designadamente durante a ação de inspeção.',
-      regra: 'Artigo 45.º da LGT, com as causas de suspensão e interrupção do artigo 46.º.',
+      descricao: 'Limite para a Autoridade Tributária liquidar IRS adicional do exercício de ' + exercicio +
+        '. Nos impostos periódicos o prazo conta-se do termo do ano em que ocorreu o facto tributário, ' +
+        'pelo que corre de 01/01/' + (exercicio + 1) + ' a esta data. Suspende-se ou interrompe-se em ' +
+        'várias situações, designadamente durante a ação de inspeção.',
+      regra: 'Artigo 45.º, n.os 1 e 4 da LGT, com as causas de suspensão e interrupção do artigo 46.º.',
       aproximado: true,
       tipo: 'limite'
     });
@@ -1684,7 +1686,7 @@ input:focus-visible, select:focus-visible {
           limiteRevisao.toISOString().slice(0, 10) + '). O IRC pago dificilmente será recuperável.'
       });
     }
-    var limiteCaducidade = new Date(Date.UTC(num(s.exercicio) + 1 + num(p.prazos.caducidadeAnos), 11, 31));
+    var limiteCaducidade = new Date(Date.UTC(num(s.exercicio) + num(p.prazos.caducidadeAnos), 11, 31));
     if (ref > limiteCaducidade) {
       avisos.push({
         nivel: 'info',
