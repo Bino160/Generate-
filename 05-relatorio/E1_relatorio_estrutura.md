@@ -4,7 +4,11 @@
 **Formato de entrega:** PDF único, template Gerir Saúde, 15 a 20 páginas, com o anexo E2 integrado
 **Data:** 22/08/2026
 
-**Regra de redação (do brief, e é vinculativa):** cada afirmação com efeito fiscal remete para norma — artigo e código — ou para pressuposto identificado em R1. Sem números sem fonte.
+**Regras de redação — vinculativas:**
+
+1. Cada afirmação com efeito fiscal remete para norma — artigo e código — ou para pressuposto identificado em R1. Sem números sem fonte.
+2. **Não afirmar limiares que o modelo não produziu.** Um número inventado com ar de precisão é pior do que nenhum número (D2).
+3. **A destinatária tem zero experiência empresarial.** Cada conclusão termina em unidades que ela controla: doentes por dia, euros por mês. Nunca só em faturação anual ou em percentagens.
 
 **Estado global:** 1 capítulo redigido, 1 com a lógica fechada à espera de números, 5 em esqueleto. O que falta não é redação: são os inputs da cliente e a validação normativa da Fiscalidade.
 
@@ -78,7 +82,21 @@ Acresce um segundo mecanismo, frequentemente esquecido: o art. 31.º n.º 13 CIR
 
 As vias 1 e 2 mantêm a atividade em nome individual; as vias 3 e 4 implicam a constituição de sociedade, com separação entre o património pessoal e o património afeto à atividade. Essa separação tem alcance real mas limitado: é efetiva sobretudo quanto a dívidas comerciais, relações com fornecedores e contratos celebrados com prestadores de serviços.
 
-### 2.5 Pressupostos assumidos
+### 2.5 Como ler este relatório
+
+*[A REDIGIR — meia página, linguagem corrente, sem uma única sigla. Obrigatória, não opcional.]*
+
+A Dra. Júlia está a montar a primeira estrutura empresarial da vida dela. O relatório usa cinco expressões que vai encontrar repetidas e que têm significado técnico preciso. Explicá-las aqui, uma frase cada, com um exemplo dos números dela:
+
+- **Margem de contribuição** — do que entra por cada consulta, quanto sobra depois de pagar o que essa consulta em concreto custou.
+- **Custos fixos** — o que se paga todos os meses haja ou não doentes. É isto que a renda é.
+- **Break-even** — quantos doentes por mês são precisos para as contas darem zero. Abaixo disto, está a pagar para trabalhar.
+- **Taxa de utilização** — que percentagem do tempo os gabinetes estão realmente ocupados.
+- **Regime fiscal** — a forma como o Estado calcula o que ela paga. Não muda o dinheiro que entra; muda a fatia que sai.
+
+**Regra de redação desta secção:** se uma frase precisar de ser lida duas vezes, está mal escrita. Testar em voz alta.
+
+### 2.6 Pressupostos assumidos
 
 *[Bloco a preencher a partir de R1, secções A e B, apenas as linhas de magnitude ALTA e MÉDIA. Formato: uma linha por pressuposto, com o valor assumido e a origem. As de magnitude BAIXA ficam apenas em R1.]*
 
@@ -190,6 +208,19 @@ Depende de **uma** variável, e é a única pergunta que a cliente tem de respon
 **Passo 4 — Se via 4: como afastar o regime?**
 Comparar a entrada do cônjuge com mais de 25% do capital contra a via dos rendimentos não profissionais. A segunda não cede capital nem controlo, mas tem risco de qualificação próprio. Ver a tabela comparativa em N1, secção 5.
 
+### O que tem de acontecer para os números funcionarem
+
+*[Secção obrigatória, imediatamente a seguir à recomendação. Fonte: folhas `Operacao`, `BreakEven` e `Espaco`.]*
+
+O valor da nossa entrega está em dizer à cliente o que tem de acontecer, não em perguntar-lhe o que acha que vai acontecer. Esta secção traduz a recomendação em condições verificáveis, todas em unidades que ela controla:
+
+- **quantos doentes por dia** são precisos para cobrir os custos fixos;
+- **quantos doentes por dia** são precisos para atingir o rendimento que ela pretende;
+- **quantos doentes por dia** justificam o terceiro gabinete;
+- **a que taxa de ocupação dos gabinetes** cada um destes pontos corresponde.
+
+Se algum destes números exigir uma ocupação superior a 100%, é impossível — e é preciso dizê-lo com essa palavra, antes de qualquer conclusão fiscal.
+
 ### Como redigir
 
 - A recomendação é **uma** via, não um leque. Se as condições forem tais que a recomendação dependa de uma decisão pessoal da cliente, o relatório apresenta a decisão pessoal e o que cada resposta implica — mas não devolve a análise sob a forma de opções.
@@ -223,6 +254,33 @@ Três blocos, por esta ordem:
 **7.2 Condicionantes da análise.** Os pressupostos de magnitude ALTA de R1, secções A e B, em linguagem de cliente. O que foi assumido, porquê, e o que mudaria se fosse diferente.
 
 **7.3 Riscos a gerir.** De R1, secção D, os que são da esfera da cliente: requalificação laboral (R1-19), licenciamento ERS (R1-20), RGPD (R1-27), substância económica do desenho societário (R1-26).
+
+**7.4 O cenário de baixa, em dinheiro.** *[Secção obrigatória.]*
+
+Não basta apresentar a recomendação no cenário base. A cliente tem de ver, em euros, o que acontece se a procura ficar em metade do previsto e o terceiro gabinete ficar vazio. Fonte: folha `Espaco`, custo do degrau, e folha `BreakEven`, margem de segurança.
+
+A frase a construir tem esta forma: *«se atender X doentes por dia em vez dos Y previstos, o resultado anual passa de A para B, e o investimento demora C anos a recuperar em vez de D.»*
+
+**7.5 O passivo contingente da requalificação laboral.** *[Secção obrigatória.]*
+
+O risco identificado na ata tem preço, e é da ordem de grandeza de **dois a três anos de resultado líquido**. Fonte: folha `RiscoLaboral`.
+
+Dizer também o que a folha mostra e não é intuitivo: dois dos cinco indícios do art. 12.º n.º 1 do Código do Trabalho — o espaço ser da clínica e o equipamento ser da clínica — verificam-se por natureza numa clínica e não são evitáveis. A margem de manobra está no horário e na forma de remuneração. E a presunção, sendo ilidível, inverte o ónus da prova.
+
+**7.6 Pontos de não retorno.** *[Secção obrigatória.]*
+
+O que fica irreversível, e quando:
+
+| Compromisso | Vinculação | Quando deixa de ser reversível |
+|---|---|---|
+| Contrato de arrendamento | Duração contratada | À assinatura |
+| Obras de adaptação | Investimento perdido se sair | Ao início da empreitada |
+| Opção por contabilidade organizada | 3 anos (art. 28.º n.º 5 CIRS) | À submissão, até 31 de março |
+| Constituição de sociedade | Custo de dissolução | Ao ato notarial |
+| Participação do cônjuge no capital | Cedência definitiva de direitos | À transmissão da quota |
+| Integração de fisioterapeutas | Exposição contributiva retroativa de 5 anos | Ao primeiro pagamento |
+
+Esta tabela não existe em nenhuma outra peça e é, provavelmente, a página mais útil do relatório para quem nunca montou uma estrutura empresarial.
 
 **O que fica de fora do capítulo 7:** os parâmetros normativos por confirmar (R1, secção C). Se ainda estiverem abertos, o relatório não sai. Não se transferem para a cliente sob a forma de ressalva.
 

@@ -19,6 +19,7 @@
 | E1 — estrutura do relatório | `05-relatorio/E1_relatorio_estrutura.md` | Cap. 2 redigido, cap. 5 com a regra de decisão fechada, restantes em esqueleto |
 | E3 — estrutura do deck e guião da sessão | `06-reuniao/E3_estrutura_deck.md` | 14 slides e guião de 90 min fechados |
 | D1 — avaliação da spec de evolução VCLevel | `07-decisoes/D1_avaliacao_spec_vclevel.md` | Decisão proposta: implementar P0 e núcleo do P1, rejeitar o scoring, diferir P2/P3 |
+| D2 — avaliação da análise em quatro pilares | `07-decisoes/D2_avaliacao_analise_quatro_pilares.md` | Implementado o risco laboral e o custo do cônjuge; três imprecisões registadas para não transitarem |
 
 **Nada disto sai para a cliente.** Os entregáveis são o relatório E1, o anexo E2 e a reunião E3. A entrega do ficheiro do modelo está expressamente fora de âmbito.
 
@@ -43,6 +44,33 @@ Dois bloqueios, e nenhum deles é falta de trabalho nosso.
 **3. A Segurança Social, ausente da ata, é provavelmente o maior diferencial entre as vias.** No simplificado a base de incidência é uma percentagem da faturação bruta; com contabilidade organizada é o lucro tributável; em sociedade incide apenas sobre a remuneração de gerência. O efeito excede com frequência o diferencial de IRS.
 
 **4. A via alternativa do ponto 2 é mais exigente do que aparentava.** Depois de a modelar: falhar o teste dos 75% obriga a que a cedência de espaço renda **um terço da faturação profissional**. Com os valores de trabalho, a cedência de sala a 30% da faturação dos colaboradores dá 87,8% de rendimentos profissionais e **não** afasta a transparência. A via existe, mas só com renda substancial — está quantificada na linha `REC_SALA_MIN` do M1 e registada como R1-32.
+
+---
+
+## Para quem é este trabalho
+
+A Dra. Júlia tem zero experiência empresarial e está a montar a primeira estrutura da vida dela: arrendamento plurianual, obras, equipamento e integração de outras pessoas. Se a matemática não funcionar, a consequência não é um relatório desatualizado — é dívida pessoal.
+
+Isto não muda o motor de cálculo. Muda o dever de cuidado da entrega, e está registado como R1-39:
+
+- toda a conclusão acaba em unidades que ela controla — **doentes por dia**, euros por mês — e nunca só em faturação anual ou percentagens;
+- o **cenário de baixa** apresenta-se em dinheiro, não só a recomendação;
+- os **pontos de não retorno** dizem-se antes de ela assinar seja o que for.
+
+O risco maior deste projeto não é escolher a estrutura fiscal errada. É ela comprometer-se com uma estrutura de custos que a procura não sustenta, e só perceber isso depois das obras.
+
+---
+
+## O que pode correr mal, e quanto custa
+
+| Risco | Ordem de grandeza |
+|---|---|
+| Requalificação dos fisioterapeutas como trabalhadores | **77.065 €** — 2,4 anos de resultado líquido |
+| Terceiro gabinete que não enche | **3.524 €/ano** líquidos, mais 23.370 € de investimento adicional |
+| IVA irrecuperável no investimento | **10.810 €**, custo definitivo |
+| Ficar no regime simplificado com esta estrutura de custos | Taxa de esforço de ~79% sobre a caixa gerada |
+
+Ordens de grandeza sobre placeholders, para calibrar prioridades — não valores do caso.
 
 ---
 

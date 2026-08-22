@@ -107,6 +107,14 @@ ROWS = [
      "Art. 63.º e 168.º Cód. Contributivo", "CONFIRMAR (ver R1-12)"),
     ("P", "SS_MOE_MIN", "MOE — base de incidência mínima (múltiplo do IAS)", 1, NUM,
      "Art. 166.º Cód. Contributivo", "Confirmar"),
+    ("P", "TSU_ENT", "Trabalhador por conta de outrem — taxa a cargo da entidade empregadora", 0.2375, PCT2,
+     "Art. 53.º Cód. Contributivo", "Confirmar"),
+    ("P", "TSU_TRAB", "Trabalhador por conta de outrem — taxa a cargo do trabalhador", 0.11, PCT2,
+     "Art. 53.º Cód. Contributivo", "Confirmar"),
+    ("P", "PRESCR", "Prazo de prescrição das contribuições (anos)", 5, NUM,
+     "Art. 187.º Cód. Contributivo", "CONFIRMAR (ver R1-37)"),
+    ("P", "JUROS_MORA", "Taxa anual de juros de mora aplicada às contribuições em falta", 0.05, PCT2,
+     "Regime dos juros de mora de dívidas ao Estado", "CONFIRMAR taxa em vigor"),
 
     ("SEC", "IRS — categoria B e regras de determinação"),
     ("P", "COEF", "Coeficiente do regime simplificado (atividades do art. 151.º)", 0.75, PCT,
@@ -1458,6 +1466,57 @@ for k2, (col, nome) in enumerate([(16, "Via 1 — ENI simplificado"), (17, "Via 
     c.number_format, c.font, c.fill, c.border = EUR, F_RESULT, FILL_RES, BOX
     r += 1
 r += 1
+r += 2
+section(wb_, r, "Como o break-even se move com o peso dos colaboradores", span=6); r += 1
+wb_.cell(row=r, column=1,
+         value="Quando a faturação vem da própria Dra. Júlia, quase toda ela é margem. Quando vem de um "
+               "colaborador pago a uma percentagem da sessão, sobra a diferença. Esta tabela mostra o que "
+               "acontece ao break-even à medida que o peso dos colaboradores sobe, mantendo a receita "
+               "total constante. A subida não é proporcional: o break-even é os custos fixos a dividir "
+               "pela margem, e quando a margem se aproxima de zero o break-even dispara para o "
+               "infinito.").font = F_SUB
+wb_.merge_cells(start_row=r, start_column=1, end_row=r, end_column=6)
+wb_["A%d" % r].alignment = Alignment(wrap_text=True, vertical="top")
+wb_.row_dimensions[r].height = 46
+r += 1
+hdr(wb_, r, ["Peso dos colaboradores na receita", "Margem de contribuição (%)",
+             "Break-even anual", "Break-even mensal", "Utilização necessária", "Nota"])
+r += 1
+MT = r
+for i in range(9):
+    sh = 0.10 * i
+    a = wb_.cell(row=r, column=1, value=sh); a.number_format, a.font, a.border = PCT, F_INPUT, BOX
+    b = wb_.cell(row=r, column=2, value="=1-{pc}-A{r}*{ph}".format(
+        pc=inp("PCT_CONSUM", "D"), r=r, ph=inp("PCT_HONOR", "D")))
+    b.number_format, b.font, b.border = PCT, F_CALC, BOX
+    c = wb_.cell(row=r, column=3, value='=IF(B{r}<=0,"não atinge",{cf}/B{r})'.format(r=r, cf=CFB))
+    c.number_format, c.font, c.border = EUR, F_RESULT, BOX
+    d = wb_.cell(row=r, column=4, value='=IF(B{r}<=0,"não atinge",C{r}/12)'.format(r=r))
+    d.number_format, d.font, d.border = EUR, F_RESULT, BOX
+    e = wb_.cell(row=r, column=5, value='=IF(B{r}<=0,"n/a",C{r}/({p}*{cap}))'.format(
+        r=r, p="BreakEven!$D$%d" % B["PRECO_M"], cap=oref("CAP_ANO", "D")))
+    e.number_format, e.font, e.border = PCT, F_CALC, BOX
+    r += 1
+MB = r - 1
+r += 1
+wb_.cell(row=r, column=1,
+         value="A ata regista, no ponto 6, que «se uma parte relevante da faturação corresponder a "
+               "honorários de prestadores, a margem efetiva pode não justificar a alteração de "
+               "estrutura». Esta tabela é essa frase em números — e mostra que o problema aparece muito "
+               "antes de a margem chegar a zero.").font = F_SUB
+wb_.merge_cells(start_row=r, start_column=1, end_row=r, end_column=6)
+wb_["A%d" % r].alignment = Alignment(wrap_text=True, vertical="top")
+wb_.row_dimensions[r].height = 32
+
+_l3 = LineChart()
+_l3.title = "Break-even anual por peso dos colaboradores na receita"
+_l3.y_axis.title, _l3.x_axis.title = "euros", "peso dos colaboradores"
+_l3.height, _l3.width = 8, 17
+_l3.append(Series(Reference(wb_, min_col=3, min_row=MT - 1, max_row=MB), title_from_data=True))
+_l3.set_categories(Reference(wb_, min_col=1, min_row=MT, max_row=MB))
+wb_.add_chart(_l3, "T4")
+
+r += 2
 wb_.cell(row=r, column=1,
          value="A via 4 não consta desta tabela: o líquido depende da política de distribuição e da opção "
                "de englobamento, que são decisões e não funções da faturação. Para a via 4, fixar essas "
@@ -1565,7 +1624,32 @@ erow("BE_UTIL", "Utilização necessária para o break-even operacional",
      fmt=PCT, style="result",
      note="Acima de 100%, o espaço não cobre os próprios custos fixos a lotação máxima.")
 
-# ---- varrimento de utilizacao
+# ---- o custo do degrau
+r += 1
+section(we, r, "O custo do degrau — se o terceiro gabinete não encher", span=5); r += 1
+for lbl, f, fmt2, nota in [
+    ("Custo fixo adicional anual da opção B", "={a}-{b}".format(a=ec("CF", "D"), b=ec("CF", "C")), EUR,
+     "Renda e condomínio a mais, todos os anos, independentemente de haver doentes para os ocupar."),
+    ("Custo do degrau, líquido de impostos", "=({a}-{b})*(1-{t})".format(
+        a=ec("CF", "D"), b=ec("CF", "C"), t=ec("TX_ESF", "C")), EUR,
+     "É este o valor que a Dra. Júlia perde por ano se escolher três gabinetes e a procura não passar "
+     "do que dois comportavam."),
+    ("Investimento adicional da opção B", "={a}-{b}".format(a=ec("INV", "D"), b=ec("INV", "C")), EUR,
+     "Obras, equipamento e IVA irrecuperável a mais, de uma só vez."),
+    ("Consultas anuais adicionais necessárias para o degrau se pagar",
+     "=IF({p}*(1-{v})<=0,0,({cfd}-{cfc})/({p}*(1-{v})))".format(
+         p=ec("PRECO_M", "C"), v=ec("PCT_VAR", "C"), cfd=ec("CF", "D"), cfc=ec("CF", "C")), NUM,
+     "Traduzido para a única unidade que a cliente controla: doentes."),
+]:
+    we.cell(row=r, column=1, value=lbl).font = F_RESULT
+    c = we.cell(row=r, column=3, value=f)
+    c.number_format, c.font, c.fill, c.border = fmt2, F_RESULT, FILL_RES, BOX
+    n = we.cell(row=r, column=5, value=nota); n.font = F_NOTE
+    n.alignment = Alignment(wrap_text=True, vertical="top")
+    we.row_dimensions[r].height = 26
+    r += 1
+
+# ---- varrimento de procura
 r += 1
 section(we, r, "A partir de que procura compensa o terceiro gabinete", span=5); r += 1
 we.cell(row=r, column=1,
@@ -1828,6 +1912,151 @@ wval.row_dimensions[r].height = 46
 wval.freeze_panes = "A5"
 
 
+# ================================================================ RISCO LABORAL
+wr = wb.create_sheet("RiscoLaboral")
+title(wr, "M1 — Requalificação laboral: passivo contingente",
+      "A ata identificou o risco e ninguém lhe pôs um número. Este é o número. Se a relação com os "
+      "fisioterapeutas for requalificada como contrato de trabalho, a clínica passa a dever contribuições "
+      "retroativas sobre tudo o que lhes pagou, com juros e coima. É o único risco deste projeto capaz de "
+      "destruir o plano inteiro de uma vez.")
+widths(wr, {"A": 62, "B": 13, "C": 15, "D": 15, "E": 15, "F": 54})
+wr.merge_cells("A2:F2"); wr["A2"].alignment = Alignment(wrap_text=True, vertical="top")
+wr.row_dimensions[2].height = 52
+r = 4
+hdr(wr, r, ["Rubrica", "Ref.", "Baixo", "Base", "Alto", "Nota / norma"]); r += 1
+RL = {}
+
+
+def rrow(key, label, fn, fmt=EUR, style="calc", note=""):
+    global r
+    wr.cell(row=r, column=1, value=label).font = F_RESULT if style == "result" else F_BODY
+    wr.cell(row=r, column=2, value=key).font = F_NOTE
+    for j, (col, _n) in enumerate(SCEN):
+        c = wr.cell(row=r, column=3 + j, value=fn(col) if callable(fn) else fn)
+        c.number_format, c.border = fmt, BOX
+        c.font = {"calc": F_CALC, "link": F_LINK, "result": F_RESULT, "input": F_INPUT}[style]
+        if style == "result":
+            c.fill = FILL_RES
+        if style == "input":
+            c.fill = FILL_FILL
+    n = wr.cell(row=r, column=6, value=note)
+    n.font, n.alignment = F_NOTE, Alignment(wrap_text=True, vertical="top")
+    RL[key] = r
+    r += 1
+
+
+def rc_(key, col):
+    return "$%s$%d" % (col, RL[key])
+
+
+section(wr, r, "Exposição", span=6); r += 1
+rrow("HONOR", "Honorários anuais pagos aos colaboradores",
+     lambda c: "=" + inp("CUSTO_COLAB", c), style="link",
+     note="Só existe exposição no modelo de prestação de serviços. Na cedência de sala o fluxo é o "
+          "inverso e o risco é outro — o de a cedência ser requalificada como prestação de serviços.")
+rrow("ANOS", "Anos de exposição retroativa", lambda c: "=" + P["PRESCR"], fmt=NUM, style="link",
+     note="Prazo de prescrição das contribuições. A inspeção não olha só para o ano corrente.")
+rrow("BASE", "Base de incidência retroativa",
+     lambda c: "={h}*{a}".format(h=rc_("HONOR", c), a=rc_("ANOS", c)), style="result",
+     note="Assume honorários constantes ao longo do período. Se crescerem, a exposição cresce com eles.")
+
+section(wr, r, "Contribuições devidas em caso de requalificação", span=6); r += 1
+rrow("TSU_E", "Contribuições a cargo da entidade",
+     lambda c: "={b}*{t}".format(b=rc_("BASE", c), t=P["TSU_ENT"]),
+     note="Art. 53.º Cód. Contributivo. É a parcela que a clínica nunca pagou e passa a dever.")
+rrow("TSU_T", "Contribuições a cargo do trabalhador, não retidas",
+     lambda c: "={b}*{t}".format(b=rc_("BASE", c), t=P["TSU_TRAB"]),
+     note="A entidade é responsável pela entrega. Na prática, é dívida da clínica.")
+rrow("JUROS", "Juros de mora estimados",
+     lambda c: "=({a}+{b})*{j}*{n}/2".format(a=rc_("TSU_E", c), b=rc_("TSU_T", c),
+                                             j=P["JUROS_MORA"], n=rc_("ANOS", c)),
+     note="Aproximação: metade do período médio de mora sobre o total em dívida. Ordem de grandeza, "
+          "não liquidação.")
+rrow("COIMA", "Coima estimada", lambda c: "={a}*0.5".format(a=rc_("TSU_E", c)),
+     note="ESTIMATIVA GROSSEIRA, a 50% das contribuições da entidade. A moldura das contraordenações "
+          "por falta de comunicação de admissão e de pagamento de contribuições tem de ser confirmada "
+          "pela Fiscalidade ou por advogado. Ver R1-38.")
+rrow("PASSIVO", "PASSIVO CONTINGENTE TOTAL",
+     lambda c: "={a}+{b}+{d}+{e}".format(a=rc_("TSU_E", c), b=rc_("TSU_T", c),
+                                         d=rc_("JUROS", c), e=rc_("COIMA", c)), style="result")
+
+section(wr, r, "Dimensão do risco", span=6); r += 1
+rrow("LIQ_REF", "Resultado líquido anual da via de referência (via 2)",
+     lambda c: "=" + v2.ref("LIQ_SOC", c), style="link")
+rrow("ANOS_RES", "ANOS DE RESULTADO LÍQUIDO QUE O PASSIVO CONSOME",
+     lambda c: '=IF({l}<=0,"n/a",{p}/{l})'.format(l=rc_("LIQ_REF", c), p=rc_("PASSIVO", c)),
+     fmt='#,##0.0', style="result",
+     note="É esta a frase a dizer à cliente, e não a percentagem: quantos anos de trabalho pago desaparecem "
+          "se isto correr mal.")
+rrow("VS_INV", "Passivo em % do investimento inicial",
+     lambda c: "=IF(({o}+{e}+{d}+{f})<=0,0,{p}/({o}+{e}+{d}+{f}))".format(
+         o=inp("INV_OBRAS", c), e=inp("INV_EQUIP", c), d=inp("INV_EQUIP_R", c), f=inp("INV_SOFT", c),
+         p=rc_("PASSIVO", c)), fmt=PCT, style="calc")
+
+# ---- indicios do art. 12.º CT
+r += 1
+section(wr, r, "Indícios de laboralidade — art. 12.º n.º 1 do Código do Trabalho", span=6); r += 1
+wr.cell(row=r, column=1,
+        value="A presunção de contrato de trabalho opera quando se verifiquem ALGUMAS destas "
+              "características. Não é preciso que se verifiquem todas. Marcar 1 onde se aplica.").font = F_SUB
+wr.merge_cells(start_row=r, start_column=1, end_row=r, end_column=6)
+wr["A%d" % r].alignment = Alignment(wrap_text=True, vertical="top")
+r += 1
+IND_TOP = r
+INDICIOS = [
+    ("a) O local de trabalho pertence ao beneficiário da atividade ou é por ele determinado", 1,
+     "ESTRUTURALMENTE PRESENTE numa clínica. O fisioterapeuta trabalha no espaço da Dra. Júlia. "
+     "Não é evitável."),
+    ("b) Os equipamentos e instrumentos de trabalho pertencem ao beneficiário da atividade", 1,
+     "ESTRUTURALMENTE PRESENTE se o equipamento clínico for da clínica. Evitável apenas se o "
+     "profissional usar material próprio, o que raramente acontece."),
+    ("c) O prestador observa horas de início e de termo determinadas pelo beneficiário", 0,
+     "EVITÁVEL, e é a decisão mais importante. Se a marcação de consultas for feita pela clínica com "
+     "horário imposto, este indício verifica-se."),
+    ("d) É paga, com certa periodicidade, uma quantia certa ao prestador", 0,
+     "EVITÁVEL. Honorários variáveis em função das sessões efetivamente realizadas afastam-no; "
+     "um valor fixo mensal verifica-o."),
+    ("e) O prestador desempenha funções de direção ou chefia na estrutura da empresa", 0,
+     "Improvável nesta fase."),
+]
+for label, val, nota in INDICIOS:
+    wr.cell(row=r, column=1, value=label).font = F_BODY
+    c = wr.cell(row=r, column=3, value=val)
+    c.number_format, c.font, c.fill, c.border = NUM, F_INPUT, FILL_FILL, BOX
+    n = wr.cell(row=r, column=6, value=nota)
+    n.font, n.alignment = F_NOTE, Alignment(wrap_text=True, vertical="top")
+    wr.row_dimensions[r].height = 26
+    r += 1
+IND_BOT = r - 1
+r += 1
+wr.cell(row=r, column=1, value="N.º de indícios verificados (de 5)").font = F_RESULT
+c = wr.cell(row=r, column=3, value="=SUM($C$%d:$C$%d)" % (IND_TOP, IND_BOT))
+c.number_format, c.font, c.fill, c.border = NUM, F_RESULT, FILL_RES, BOX
+IND_SUM = r
+r += 1
+wr.cell(row=r, column=1, value="LEITURA").font = F_RESULT
+c = wr.cell(row=r, column=3,
+            value='=IF($C${s}>=3,"RISCO ELEVADO — presunção provável",'
+                  'IF($C${s}=2,"RISCO ESTRUTURAL — os dois indícios inevitáveis já se verificam",'
+                  '"RISCO CONTIDO"))'.format(s=IND_SUM))
+c.font, c.fill, c.border = F_RESULT, FILL_WARN, BOX
+wr.merge_cells(start_row=r, start_column=3, end_row=r, end_column=5)
+r += 2
+wr.cell(row=r, column=1,
+        value="O que este quadro mostra, e é o essencial: numa clínica, os indícios a) e b) verificam-se "
+              "desde o primeiro dia e não são evitáveis — o profissional trabalha no espaço e com o "
+              "equipamento da clínica. A margem de manobra está inteiramente em c) e d), ou seja, no "
+              "horário e na forma de remuneração. É aí que a blindagem contratual e, sobretudo, a prática "
+              "diária têm de trabalhar. Um contrato bem redigido que seja desmentido pelo funcionamento "
+              "real não protege ninguém.\n\nA presunção é ilidível, mas inverte o ónus da prova: passa a "
+              "caber à clínica demonstrar que não há contrato de trabalho. A redação dos contratos e o "
+              "parecer laboral estão fora do nosso âmbito; identificar e quantificar o risco, não.").font = F_SUB
+wr.merge_cells(start_row=r, start_column=1, end_row=r, end_column=6)
+wr["A%d" % r].alignment = Alignment(wrap_text=True, vertical="top")
+wr.row_dimensions[r].height = 92
+wr.freeze_panes = "C5"
+
+
 # ================================================================ ALERTAS
 wa = wb.create_sheet("Alertas")
 title(wa, "M1 — Alertas",
@@ -1944,6 +2173,114 @@ wa.row_dimensions[r].height = 32
 wa.freeze_panes = "A5"
 
 
+# ================================================================ CONJUGE
+wcj = wb.create_sheet("Conjuge")
+title(wcj, "M1 — Entrada do cônjuge: custo de complexidade",
+      "A hipótese foi levantada na reunião e ficou em análise, nem descartada nem recomendada. Esta folha "
+      "põe de um lado tudo o que a entrada do cônjuge dá e do outro tudo o que custa, para que a decisão "
+      "não se tome pela metade que é mais fácil de calcular.")
+widths(wcj, {"A": 60, "B": 13, "C": 15, "D": 15, "E": 15, "F": 56})
+wcj.merge_cells("A2:F2"); wcj["A2"].alignment = Alignment(wrap_text=True, vertical="top")
+wcj.row_dimensions[2].height = 46
+r = 4
+hdr(wcj, r, ["Rubrica", "Ref.", "Baixo", "Base", "Alto", "Nota"]); r += 1
+CJ = {}
+
+
+def cjrow(key, label, fn, fmt=EUR, style="calc", note=""):
+    global r
+    wcj.cell(row=r, column=1, value=label).font = F_RESULT if style == "result" else F_BODY
+    wcj.cell(row=r, column=2, value=key).font = F_NOTE
+    for j, (col, _n) in enumerate(SCEN):
+        c = wcj.cell(row=r, column=3 + j, value=fn(col) if callable(fn) else fn)
+        c.number_format, c.border = fmt, BOX
+        c.font = {"calc": F_CALC, "link": F_LINK, "result": F_RESULT, "input": F_INPUT}[style]
+        if style == "result":
+            c.fill = FILL_RES
+        if style == "input":
+            c.fill = FILL_FILL
+    n = wcj.cell(row=r, column=6, value=note)
+    n.font, n.alignment = F_NOTE, Alignment(wrap_text=True, vertical="top")
+    CJ[key] = r
+    r += 1
+
+
+def cc_(key, col):
+    return "$%s$%d" % (col, CJ[key])
+
+
+section(wcj, r, "A premissa de que tudo depende", span=6); r += 1
+wcj.cell(row=r, column=1,
+         value="Toda esta folha assume que a atividade do cônjuge NÃO consta da tabela do art. 151.º CIRS. "
+               "Se constar — por enquadramento como desportista ou pelo código residual — a entrada dele "
+               "não afasta a transparência fiscal com percentagem de capital nenhuma, e tudo o que está "
+               "abaixo passa a ser custo sem contrapartida. A premissa nunca foi verificada.").font = F_SUB
+wcj.merge_cells(start_row=r, start_column=1, end_row=r, end_column=6)
+wcj["A%d" % r].alignment = Alignment(wrap_text=True, vertical="top")
+wcj.row_dimensions[r].height = 46
+r += 1
+cjrow("PREMISSA", "Premissa verificada? (1 = sim / 0 = não)",
+      lambda c: "=Alertas!" + SW["SW_R114"].replace("$B$", "$B$"), fmt=NUM, style="link",
+      note="Interruptor na folha Alertas. Ver R1-14 e N1-01.")
+
+section(wcj, r, "O que a entrada do cônjuge dá", span=6); r += 1
+cjrow("G_IVA", "IVA recuperável atribuível à entrada do cônjuge",
+      lambda c: "=" + "IVA!$%s$%d" % (c, VR["GANHO"]), style="link",
+      note="Zero enquanto o cônjuge não faturar DENTRO da sociedade. Deter capital não dá IVA nenhum: "
+           "são duas decisões diferentes.")
+cjrow("G_ESTR", "Diferencial de líquido para a sócia, via 4 face à via 3",
+      lambda c: "={a}-{b}".format(a=v4.ref("LIQ_SOC", c), b=v3.ref("LIQ_SOC", c)), style="link",
+      note="Negativo significa que afastar a transparência custa dinheiro à sócia nas condições "
+           "atuais de distribuição. Depende inteiramente da alavanca POL_DIST.")
+cjrow("G_TOT", "Total dos ganhos anuais",
+      lambda c: "={a}+{b}".format(a=cc_("G_IVA", c), b=cc_("G_ESTR", c)), style="result",
+      note="O ganho de IVA é de uma só vez, no ano do investimento; o diferencial de estrutura é "
+           "recorrente. Somá-los na mesma linha é uma simplificação — ler as duas linhas acima.")
+
+section(wcj, r, "O que a entrada do cônjuge custa", span=6); r += 1
+cjrow("C_QUOTA", "Quota de lucros atribuída ao cônjuge, por ano",
+      lambda c: "=" + v4.ref("LIQ_CJ", c), style="link",
+      note="Dentro do agregado é uma transferência, não uma perda. Fora dele — divórcio, sucessão — "
+           "é definitiva. O relatório tem de dizer as duas coisas.")
+cjrow("C_ADM", "Custo administrativo anual de sujeito passivo misto", lambda c: 0, fmt=EUR, style="input",
+      note="A PREENCHER com a estimativa do contabilista: segregação documental, pro rata ou afetação "
+           "real, regularizações anuais, obrigações declarativas adicionais. Não é zero.")
+cjrow("C_CONST", "Custo de constituição e de alterações societárias", lambda c: 0, fmt=EUR, style="input",
+      note="A PREENCHER. Custo único.")
+cjrow("C_TOT", "Total dos custos anuais",
+      lambda c: "={a}+{b}+{d}".format(a=cc_("C_QUOTA", c), b=cc_("C_ADM", c), d=cc_("C_CONST", c)),
+      style="result")
+
+section(wcj, r, "Saldo", span=6); r += 1
+cjrow("SALDO", "SALDO ANUAL DA OPERAÇÃO, NA ESFERA DA SÓCIA",
+      lambda c: "={a}-{b}".format(a=cc_("G_TOT", c), b=cc_("C_TOT", c)), style="result")
+cjrow("SALDO_AGR", "SALDO ANUAL NA ESFERA DO AGREGADO",
+      lambda c: "={a}-{b}-{d}".format(a=cc_("G_TOT", c), b=cc_("C_ADM", c), d=cc_("C_CONST", c)),
+      style="result",
+      note="Exclui a quota de lucros do cônjuge, que dentro do agregado não sai. É a leitura mais "
+           "favorável possível à operação.")
+cjrow("VEREDITO", "Leitura",
+      lambda c: '=IF({p}=0,"NÃO DECIDÍVEL — premissa por verificar",'
+                'IF({s}>0,"Favorável na esfera da sócia",'
+                'IF({sa}>0,"Favorável apenas na ótica do agregado, não na da sócia",'
+                '"Desfavorável nas condições atuais")))'.format(
+                    p=cc_("PREMISSA", c), s=cc_("SALDO", c), sa=cc_("SALDO_AGR", c)),
+      fmt="General", style="result")
+
+r += 1
+wcj.cell(row=r, column=1,
+         value="O que esta folha não quantifica, e tem de ser dito por palavras no capítulo 7: a perda de "
+               "controlo qualificado, já que uma participação superior a 25% dá capacidade de bloqueio das "
+               "deliberações que exijam maioria de três quartos; o efeito em caso de divórcio ou sucessão; "
+               "e o risco de o desenho ser lido como artificial ao abrigo do art. 38.º n.º 2 da LGT se a "
+               "participação não tiver substância económica real. Nenhuma destas três coisas tem preço, e "
+               "todas podem ser mais caras do que o saldo acima.").font = F_SUB
+wcj.merge_cells(start_row=r, start_column=1, end_row=r, end_column=6)
+wcj["A%d" % r].alignment = Alignment(wrap_text=True, vertical="top")
+wcj.row_dimensions[r].height = 76
+wcj.freeze_panes = "C5"
+
+
 # ================================================================ LEIA-ME
 wl = wb.create_sheet("LEIA-ME", 0)
 title(wl, "M1 — Modelo comparativo das quatro vias")
@@ -1985,6 +2322,10 @@ TXT = [
           "PontoViragem, que é o break-even fiscal: são três conceitos distintos e a folha explica-os."),
     ("T", "Espaco — comparação 2 versus 3 gabinetes a procura constante, com investimento e payback."),
     ("T", "Validação — recálculo independente e espaço para assinatura."),
+    ("T", "RiscoLaboral — passivo contingente da requalificação dos colaboradores, e o mapa dos indícios "
+          "do art. 12.º n.º 1 do Código do Trabalho. Dois deles verificam-se por natureza numa clínica."),
+    ("T", "Conjuge — custo de complexidade da entrada do cônjuge: ganhos de um lado, custos do outro, e "
+          "o que não é quantificável."),
     ("T", "Alertas — verificação de plausibilidade empresarial e semáforo global. Enquanto houver um "
           "alerta bloqueante ativo, nenhum número sai do ficheiro."),
     ("SEC", "Três break-even distintos, que nunca se misturam"),
@@ -2009,6 +2350,13 @@ TXT = [
     ("T", "4. O modelo de colaboração é uma escolha única para todos os colaboradores. A ata admite "
           "modelos distintos por profissional; uma combinação exige correr o modelo com a faturação "
           "repartida. Registado em R1-30."),
+    ("SEC", "Para quem é este trabalho"),
+    ("T", "A cliente final tem zero experiência empresarial e está a montar a primeira estrutura da vida "
+          "dela, com arrendamento, obras e integração de pessoas. As consequências de a matemática não "
+          "funcionar não são um relatório desatualizado — são dívida pessoal."),
+    ("T", "Consequência prática para quem usar este modelo: toda a conclusão tem de acabar em unidades "
+          "que a cliente controla — doentes por dia, euros por mês — e o cenário de baixa tem de ser "
+          "apresentado em dinheiro, não só a recomendação."),
     ("SEC", "Reprodução"),
     ("T", "Este ficheiro é gerado por build_m1.py. Alterações estruturais fazem-se no script e regenera-se; "
           "alterações de valores fazem-se nas células amarelas."),
