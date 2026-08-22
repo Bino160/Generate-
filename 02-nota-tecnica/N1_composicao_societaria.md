@@ -113,7 +113,21 @@ Nota de coerência entre pontos da ata que até aqui foram tratados como indepen
 1. Se a cedência de espaço configura arrendamento (isento pelo art. 9.º n.º 29 CIVA, salvo renúncia) ou prestação de serviços com disponibilização de meios (tributada). A ata já identifica esta bifurcação no ponto 4 e ela não está resolvida.
 2. Se a AT aceita que rendimentos instrumentais da atividade principal contam para o denominador dos 25%, ou se os considera acessórios e absorvidos pela atividade profissional. É o ponto fraco desta via e tem de ser dito no relatório com essa franqueza.
 
-**Esta via não é uma recomendação nesta fase.** É uma alternativa que tem de ser posta em cima da mesa antes de a cliente decidir dar mais de um quarto da sociedade ao cônjuge, porque, se resistir à verificação, é materialmente mais barata.
+### 5.1 Quanto é preciso, em concreto — e é mais do que parece
+
+A álgebra do teste impõe uma condição exigente, que só ficou visível depois de a modelar. Para os rendimentos profissionais descerem a 75% ou menos do total, a receita não profissional tem de atingir **um terço da faturação profissional**:
+
+> receita não profissional ≥ faturação profissional ÷ 3
+
+O M1 calcula-o na linha `REC_SALA_MIN` da folha `Inputs`, para cada cenário.
+
+**Ordem de grandeza com os valores de trabalho:** com faturação própria de 65.000 €, a cedência de espaço teria de render **cerca de 21.700 € por ano**, ou aproximadamente 1.800 € por mês. Para dois gabinetes é um valor alto mas não impossível; para um, é irrealista.
+
+Corolário que tem de ser dito com esta clareza: **não basta escolher o modelo de cedência de sala.** No cenário de trabalho, cedência de sala a 30% da faturação dos colaboradores dá 87,8% de rendimentos profissionais — o teste **mantém-se verificado** e a transparência **não** é afastada. A via só funciona se a renda cobrada for substancial em termos absolutos, o que por sua vez exige que os colaboradores faturem o suficiente para a suportar.
+
+**Esta via não é uma recomendação nesta fase, e não é a alternativa barata que aparentava.** É uma alternativa que tem de ser posta em cima da mesa antes de a cliente decidir dar mais de um quarto da sociedade ao cônjuge — mas apresentada com a condição quantificada, não como princípio. Se a renda necessária não for atingível com o número de gabinetes em avaliação, a via cai e sobra a do capital, com a premissa por verificar da secção 4.1.
+
+**Consequência para a decisão da fase 0:** a escolha do modelo de colaboração deixa de ser binária. Passa a ser «que modelo, e a que preço» — porque é o preço que determina se o efeito fiscal existe.
 
 ---
 

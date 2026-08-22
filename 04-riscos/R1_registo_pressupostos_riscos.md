@@ -38,6 +38,8 @@ Decisões nossas, tomadas para o modelo poder correr. Discutíveis, e por isso e
 |---|---|---|---|---|---|---|
 | R1-08 | As aquisições de investimento do ano contam integralmente para a justificação de despesas do art. 31.º n.º 13 al. e) CIRS na via 1 | Leitura literal da alínea, que se refere a «aquisição de bens e serviços relacionadas com a atividade» | Se a elegibilidade for parcial ou o grau de afetação for inferior, surge acréscimo por insuficiência de justificação na via 1 e esta piora | MÉDIA | Fiscalidade | ABERTO |
 | R1-09 | Na folha `PontoViragem`, os custos reais são simultaneamente dedutíveis na via 2 e justificáveis na via 1 | Simplificação necessária para varrer um único eixo | As duas bases não coincidem exatamente (amortizações versus aquisições do ano). O ponto de viragem apurado é conservador: a via 2 tende a virar mais cedo do que aparece | BAIXA | Financeira | ABERTO |
+| R1-30 | O modelo de colaboração está modelado como escolha única para todos os colaboradores (alavanca `MOD_COLAB`, 1 ou 2) | Simplificação | A ata admite modelos distintos por profissional. Uma combinação dos dois exige correr o modelo com a faturação repartida | MÉDIA | Financeira, quando os inputs chegarem | ABERTO |
+| R1-31 | Na via 1, a receita de cedência de espaço é tratada como categoria B, entrando na base de incidência contributiva | Leitura de trabalho | Se for qualificada como rendimento predial (categoria F), sai da base da Segurança Social e o coeficiente deixa de se aplicar. Muda a via 1 no modelo 2 | MÉDIA | Fiscalidade, depende de N1-04 | ABERTO |
 | R1-22 | A Segurança Social está modelada em regime de cruzeiro | Evita a circularidade entre lucro tributável e contribuições | No primeiro ano a base é a declarada no início de atividade, não o lucro do próprio ano. O ano 1 difere do modelo, em qualquer das vias | MÉDIA | Fiscalidade | ABERTO |
 | R1-23 | O mínimo de existência (art. 70.º CIRS) não está modelado | Não se prevê que seja vinculativo aos níveis de rendimento em análise | Se algum cenário descer o rendimento coletável o suficiente, o IRS calculado fica sobreavaliado nesse cenário | BAIXA | Fiscalidade | ABERTO |
 | — | O investimento inicial está fora da comparação anual, isolado numa linha de memória | Misturar um efeito de ano 1 com o resultado corrente distorceria a comparação a favor da via 1 | Assumido e documentado no `LEIA-ME` do M1. Não é para resolver, é para explicar no relatório | BAIXA | GS | ASSUMIDO |
@@ -55,6 +57,7 @@ Estes não são pressupostos sobre o caso: são sobre a lei em vigor em 2026. **
 | R1-11 | Taxas de IRC: geral e primeiro escalão PME | 20% e 16% sobre os primeiros 50.000 € | As taxas de IRC têm estado em trajetória descendente por sucessivos orçamentos. Os valores carregados podem não ser os de 2026 | ALTA | Fiscalidade | ABERTO |
 | R1-12 | Segurança Social: base de incidência do TI com contabilidade organizada, e taxas do MOE | Base = lucro tributável; MOE a 23,75% + 11% | Este é o bloco ausente da ata e o de maior efeito. A regra da base do TI com contabilidade organizada é o que separa as vias 1 e 2 mais do que o IRS. As taxas do MOE variam consoante o exercício efetivo de gerência | ALTA | Fiscalidade | ABERTO |
 | R1-13 | Incidência de derrama municipal sobre sociedade transparente | Interruptor a 0 (não incide) | Questão controvertida: a sociedade apura lucro tributável mas não é tributada em IRC (art. 12.º CIRC), e a derrama incide sobre lucro sujeito e não isento | MÉDIA | Fiscalidade | ABERTO |
+| R1-29 | Coeficiente do simplificado aplicável à receita de cedência de espaço | 0,35 (restantes prestações de serviços) | Só é o coeficiente correto se a cedência for qualificada como prestação de serviços. Depende de N1-04 | MÉDIA | Fiscalidade | ABERTO |
 | R1-15 | Tributações autónomas estimadas em 500 / 800 / 1.200 € | Estimativa sem base | Depende de haver viatura afeta e de despesas de representação. Aplicam-se também à sociedade transparente | BAIXA | Fiscalidade | ABERTO |
 | R1-16 | Taxas de amortização: obras 10%, equipamento clínico 20%, software 33,33% | Valores de trabalho | Os códigos do DR 25/2009 aplicáveis a equipamento clínico não foram confirmados. Obras em imóvel alheio podem seguir o período do contrato | BAIXA | Fiscalidade | ABERTO |
 | R1-25 | Derrama municipal de 1,5%, sem isenção para volume de negócios reduzido | Assume município do Porto e ausência de isenção | Muitos municípios isentam ou reduzem a taxa para volumes de negócios baixos. Depende do concelho do espaço escolhido, que ainda não está escolhido | BAIXA | Fiscalidade, após 0.2 | ABERTO |
@@ -68,6 +71,7 @@ Distintos dos pressupostos: não se resolvem com um dado, gerem-se com uma decis
 | ID | Risco | Probabilidade | Impacto | Mitigação | Dono |
 |---|---|---|---|---|---|
 | **R1-14** | **A atividade do cônjuge consta da tabela do art. 151.º CIRS** — designadamente por enquadramento como desportista ou pelo código residual. Nesse caso a entrada do cônjuge **não afasta** a transparência fiscal, com qualquer percentagem de capital | **Desconhecida — nunca foi verificada** | **Invalida a via 4 inteira e o capítulo 4 do relatório.** É o maior risco isolado do projeto e o mais barato de eliminar | Pedir o código de atividade do cônjuge já, isoladamente, sem esperar pelo pacote de inputs (P1, ação 0.1) | GS → Fiscalidade |
+| **R1-32** | **A via dos rendimentos não profissionais (N1, secção 5) pode não ser exequível.** Falhar o teste dos 75% exige que a cedência de espaço renda um terço da faturação profissional — cerca de 21.700 €/ano nos valores de trabalho | Média a alta | Se não for atingível com o número de gabinetes em avaliação, a única via para afastar a transparência é a do capital, que depende da premissa por verificar de R1-14 | Quantificar com a tabela de preços e os encargos reais assim que cheguem. Linha `REC_SALA_MIN` do M1 | GS |
 | R1-17 | Qualificação da cedência de sala em IVA: arrendamento isento (art. 9.º n.º 29 CIVA) ou prestação de serviços com disponibilização de meios, tributada | Média | Muda o IVA, a categoria de rendimento e o teste de rendimentos da transparência (N1, secção 5) | Fixar o enquadramento antes de a cliente escolher o modelo de colaboração | Fiscalidade |
 | R1-18 | O equipamento clínico pode ser elegível para taxa reduzida (verbas 2.5 e 2.6 da Lista I do CIVA) e ninguém verificou | Baixa a média | Reduz o IVA perdido, que é custo definitivo numa atividade isenta. Atenuante barata | Verificação item a item sobre o orçamento de equipamento, quando este chegar | Fiscalidade |
 | R1-19 | Requalificação da relação com os fisioterapeutas como contrato de trabalho, por exclusividade, subordinação ou dependência económica | Média — sobe com o modelo de prestação de serviços e com um só colaborador a tempo inteiro | Contribuições retroativas, coimas, e destruição do pressuposto de custo que sustenta a comparação | Identificar os fatores de risco no capítulo 7. A redação de contratos e o parecer laboral estão fora de âmbito | GS identifica · ADV mitiga |
@@ -84,9 +88,9 @@ Distintos dos pressupostos: não se resolvem com um dado, gerem-se com uma decis
 | Categoria | Abertos | Dos quais de magnitude ALTA |
 |---|---|---|
 | A — Inputs da cliente | 8 | 5 |
-| B — Modelação | 4 | 0 |
-| C — Parâmetros normativos | 7 | 3 |
-| D — Riscos | 9 | 1 crítico (R1-14) |
+| B — Modelação | 6 | 0 |
+| C — Parâmetros normativos | 8 | 3 |
+| D — Riscos | 10 | 1 crítico (R1-14) |
 
 **Duas leituras deste quadro:**
 

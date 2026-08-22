@@ -9,6 +9,7 @@ NAO ENTREGAR AO CLIENTE (ver seccao 5 do brief: entrega do ficheiro M1 esta fora
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
+from openpyxl.chart import LineChart, BarChart, Reference, Series
 
 # ---------------------------------------------------------------- estilos
 FONT = "Arial"
@@ -121,6 +122,9 @@ ROWS = [
      "Art. 28.º n.º 5 CIRS", "Confirmar"),
     ("P", "DED_CATA", "Dedução específica da categoria A", 4104.00, EUR2,
      "Art. 25.º n.º 1 al. a) CIRS", "Confirmar valor em vigor"),
+    ("P", "COEF_SALA", "Coeficiente do simplificado aplicável à receita de cedência de espaço", 0.35, PCT,
+     "Art. 31.º n.º 1 al. c) CIRS — restantes prestações de serviços",
+     "CONFIRMAR (ver R1-29). Depende de N1-04"),
 
     ("SEC", "IRC e tributação da distribuição"),
     ("P", "IRC_PME", "IRC — taxa aplicável ao primeiro escalão (PME)", 0.16, PCT,
@@ -275,9 +279,21 @@ hdr(wsi, r, ["Input", "Referência", "Baixo", "Base", "Alto", "Nota / origem"]);
 
 I = {}
 IN_ROWS = [
-    ("SEC", "Faturação"),
-    ("P", "FAT", "Faturação anual de fisioterapia (isenta, art. 9.º CIVA)", (70000, 95000, 130000), EUR,
-     "Input cliente 1 — EM FALTA. Placeholder ancorado na referência de ~80.000 € da ata."),
+    ("SEC", "Faturação e modelo de colaboração"),
+    ("P", "FAT_PROP", "Faturação anual da própria Dra. Júlia (isenta, art. 9.º CIVA)", (52000, 65000, 85000), EUR,
+     "Input cliente 1 — EM FALTA. Doentes próprios, independentemente do modelo de colaboração."),
+    ("P", "FAT_COLAB", "Faturação anual gerada pelos fisioterapeutas a integrar", (18000, 30000, 45000), EUR,
+     "Input cliente 1 e 5 — EM FALTA. No modelo 1 é faturada pela clínica; no modelo 2 é faturada "
+     "diretamente pelos profissionais e nunca passa pela clínica."),
+    ("P", "MOD_COLAB", "MODELO DE COLABORAÇÃO: 1 = prestação de serviços · 2 = cedência de sala", (1, 1, 1), NUM,
+     "ALAVANCA. Ata, ponto 4. Alterna toda a estrutura de receita e custo. Sustenta a exposição E2.6."),
+    ("P", "HONOR", "Modelo 1 — honorários anuais a pagar aos fisioterapeutas", (12600, 21000, 31500), EUR,
+     "Input cliente 5 — EM FALTA. Placeholder a 70% da faturação que geram. Ignorado no modelo 2."),
+    ("P", "REC_SALA", "Modelo 2 — receita anual de cedência de sala", (5400, 9000, 13500), EUR,
+     "Input cliente 5 — EM FALTA. Placeholder a 30% da faturação que geram. Ignorado no modelo 1."),
+    ("P", "SALA_TRIB", "Cedência de sala sujeita a IVA? (1 = sim / 0 = arrendamento isento)", (0, 0, 0), NUM,
+     "Depende de N1-04: arrendamento isento (art. 9.º n.º 29 CIVA) ou prestação de serviços com "
+     "disponibilização de meios, tributada. Não está resolvido."),
     ("P", "FAT_TRIB", "Faturação anual sujeita a IVA dentro da sociedade (atividade do cônjuge)", (0, 0, 0), EUR,
      "Input cliente 6 — EM FALTA. Só relevante na via 4 e no cenário de sujeito passivo misto."),
 
@@ -289,8 +305,6 @@ IN_ROWS = [
     ("P", "SOFTW", "Software de gestão e faturação", (600, 900, 1200), EUR, "EM FALTA."),
     ("P", "CONSUM", "Consumíveis clínicos", (2100, 2850, 3900), EUR, "EM FALTA. Placeholder a 3% da faturação."),
     ("P", "OUTROS", "Outros custos operacionais", (1500, 2000, 2500), EUR, "EM FALTA."),
-    ("P", "HONOR", "Honorários a fisioterapeutas a integrar (total anual)", (18000, 30000, 45000), EUR,
-     "Input cliente 5 — EM FALTA. Variável crítica: é o que separa faturação de margem (ata, ponto 6)."),
     ("P", "N_FISIO", "N.º de fisioterapeutas a integrar", (1, 1, 2), NUM, "Ata, ponto 3."),
 
     ("SEC", "Investimento inicial (valores sem IVA)"),
@@ -336,23 +350,79 @@ for item in IN_ROWS:
     I[key] = r
     r += 1
 
+
+def inp(key, col):
+    return "Inputs!$%s$%d" % (col, I[key])
+
+
+# ---- grandezas derivadas do modelo de colaboracao
+def der(key, label, fn, fmt=EUR, note="", style="calc"):
+    global r
+    wsi.cell(row=r, column=1, value=label).font = F_RESULT if style == "result" else F_BODY
+    wsi.cell(row=r, column=2, value=key).font = F_NOTE
+    for j, (col, _n) in enumerate(SCEN):
+        c = wsi.cell(row=r, column=3 + j, value=fn(col))
+        c.number_format, c.border = fmt, BOX
+        c.font = F_RESULT if style == "result" else F_CALC
+        if style == "result":
+            c.fill = FILL_RES
+    n = wsi.cell(row=r, column=6, value=note)
+    n.font, n.alignment = F_NOTE, Alignment(wrap_text=True, vertical="top")
+    I[key] = r
+    r += 1
+
+
+section(wsi, r, "Derivadas — não preencher, calculam-se a partir do modelo de colaboração", span=6); r += 1
+_M = lambda c: "Inputs!$%s$%d" % (c, I["MOD_COLAB"])
+der("FAT_ISENTA", "Faturação isenta faturada pela estrutura",
+    lambda c: "={p}+IF({m}=1,{k},0)".format(p=inp("FAT_PROP", c), m=_M(c), k=inp("FAT_COLAB", c)),
+    note="No modelo 1 a clínica fatura ao doente a totalidade; no modelo 2 fatura apenas os doentes próprios.")
+der("REC_NAOPROF", "Receita de cedência de espaço",
+    lambda c: "=IF({m}=2,{r},0)".format(m=_M(c), r=inp("REC_SALA", c)),
+    note="Rendimento que NÃO provém de atividade da lista do art. 151.º CIRS. Ver linha PCT_PROF.")
+der("CUSTO_COLAB", "Custo com os colaboradores",
+    lambda c: "=IF({m}=1,{h},0)".format(m=_M(c), h=inp("HONOR", c)))
+der("MARGEM_COLAB", "MARGEM GERADA PELOS COLABORADORES",
+    lambda c: "=IF({m}=1,{k}-{h},{r})".format(m=_M(c), k=inp("FAT_COLAB", c),
+                                              h=inp("HONOR", c), r=inp("REC_SALA", c)),
+    style="result",
+    note="Exposição E2.6. É a resposta à pergunta da ata: qual dos dois modelos deixa mais margem. "
+         "Alternar MOD_COLAB entre 1 e 2 e comparar esta linha.")
+der("REC_TOTAL", "Receita total da estrutura (incl. cônjuge, se aplicável)",
+    lambda c: "={a}+{b}+{d}".format(a=inp("FAT_ISENTA", c), b=inp("REC_NAOPROF", c), d=inp("FAT_TRIB", c)))
+der("REC_TRIB", "Receita sujeita a IVA (base do pro rata)",
+    lambda c: "={t}+IF({s}=1,{n},0)".format(t=inp("FAT_TRIB", c), s=inp("SALA_TRIB", c),
+                                            n=inp("REC_NAOPROF", c)),
+    note="Depende de N1-04: se a cedência for arrendamento isento, não entra.")
+der("PCT_PROF", "% de rendimentos provenientes de atividades da lista do art. 151.º CIRS",
+    lambda c: "=IF({t}<=0,0,{p}/{t})".format(t=inp("REC_TOTAL", c), p=inp("FAT_ISENTA", c)),
+    fmt=PCT, style="result",
+    note="Teste de rendimentos do art. 6.º n.º 4 al. b) ii) CIRC. Pressupõe que nem a cedência de espaço "
+         "nem a atividade do cônjuge constam da lista — o segundo ponto é o R1-14, por verificar.")
+der("REC_SALA_MIN", "Receita de cedência necessária para FALHAR o teste de rendimentos",
+    lambda c: "={f}*(1-{t})/{t}".format(f=inp("FAT_ISENTA", c), t=P["TF_REND"]),
+    note="Álgebra do teste: para os rendimentos profissionais descerem a 75% ou menos, a receita não "
+         "profissional tem de atingir um terço da faturação profissional. Comparar com a linha REC_NAOPROF "
+         "antes de propor esta via em N1, secção 5.")
+der("TESTE_TF", "Teste de rendimentos do art. 6.º n.º 4 al. b) ii) CIRC",
+    lambda c: '=IF({p}>{lim},"VERIFICADO — transparência não é afastada por esta via",'
+              '"FALHADO — transparência afastada pelo critério de rendimentos")'.format(
+                  p=inp("PCT_PROF", c), lim=P["TF_REND"]), fmt="General", style="result",
+    note="N1, secção 5. Falhar este teste afasta o regime sem ceder um único euro de capital ao cônjuge.")
+
 r += 1
 wsi.cell(row=r, column=1, value="Exemplo de preenchimento correto — linha ilustrativa").font = F_SEC
 r += 1
-wsi.cell(row=r, column=1, value="Faturação anual de fisioterapia").font = F_NOTE
-for j, v in enumerate([70000, 95000, 130000]):
+wsi.cell(row=r, column=1, value="Faturação anual da própria Dra. Júlia").font = F_NOTE
+for j, v in enumerate([52000, 65000, 85000]):
     c = wsi.cell(row=r, column=3 + j, value=v); c.font, c.number_format = F_NOTE, EUR
 wsi.cell(row=r, column=6,
          value="Formato esperado: valor anual, em euros, sem IVA, número puro sem texto.").font = F_NOTE
 wsi.freeze_panes = "C5"
 
 
-def inp(key, col):
-    return "Inputs!$%s$%d" % (col, I[key])
-
-
 CUSTOS_OP = lambda col: "+".join(inp(k, col) for k in
-                                 ["RENDA", "CONDOM", "SEGUROS", "SOFTW", "CONSUM", "OUTROS", "HONOR"])
+                                 ["RENDA", "CONDOM", "SEGUROS", "SOFTW", "CONSUM", "OUTROS", "CUSTO_COLAB"])
 CUSTOS_SEM_HON = lambda col: "+".join(inp(k, col) for k in
                                       ["RENDA", "CONDOM", "SEGUROS", "SOFTW", "CONSUM", "OUTROS"])
 AMORT = lambda col: "{o}*{ao}+({e}+{er})*{ae}+{s}*{as_}".format(
@@ -427,22 +497,32 @@ v1 = Via("V1_ENI_Simplificado",
          "insuficiência de justificação.")
 
 v1.sec("Categoria B — regime simplificado")
-v1.row("FAT", "Faturação bruta da categoria B", lambda c: "=" + inp("FAT", c), style="link")
-v1.row("COEF", "Coeficiente aplicável", lambda c: "=" + P["COEF"], fmt=PCT, style="link",
+v1.row("FAT", "Faturação isenta (fisioterapia)", lambda c: "=" + inp("FAT_ISENTA", c), style="link")
+v1.row("REC_S", "Receita de cedência de espaço", lambda c: "=" + inp("REC_NAOPROF", c), style="link",
+       note="Zero no modelo de prestação de serviços. Ver a alavanca MOD_COLAB na folha Inputs.")
+v1.row("RB_TOT", "Rendimento bruto total da categoria B",
+       lambda c: "={a}+{b}".format(a=v1.c("FAT", c), b=v1.c("REC_S", c)), style="result")
+v1.row("COEF", "Coeficiente aplicável à fisioterapia", lambda c: "=" + P["COEF"], fmt=PCT, style="link",
        note="Art. 31.º n.º 1 al. b) CIRS. Fisioterapeutas constam da tabela do art. 151.º — o coeficiente "
-            "0,35 não é aplicável.")
-v1.row("RT_COEF", "Rendimento tributável pelo coeficiente",
-       lambda c: "={f}*{k}".format(f=v1.c("FAT", c), k=v1.c("COEF", c)))
+            "0,35 não é aplicável a esta parcela.")
+v1.row("COEF_S", "Coeficiente aplicável à cedência de espaço", lambda c: "=" + P["COEF_SALA"], fmt=PCT,
+       style="link",
+       note="Coeficiente distinto, e por confirmar (R1-29). Depende de a cedência ser qualificada como "
+            "prestação de serviços ou como rendimento predial — N1-04.")
+v1.row("RT_COEF", "Rendimento tributável pelos coeficientes",
+       lambda c: "={f}*{k}+{s}*{ks}".format(f=v1.c("FAT", c), k=v1.c("COEF", c),
+                                            s=v1.c("REC_S", c), ks=v1.c("COEF_S", c)))
 v1.row("LIMIAR", "Limiar de justificação de despesas (15% do rendimento bruto)",
-       lambda c: "={f}*{l}".format(f=v1.c("FAT", c), l=P["LIM_JUST"]), note="Art. 31.º n.º 13 CIRS.")
+       lambda c: "={f}*{l}".format(f=v1.c("RB_TOT", c), l=P["LIM_JUST"]), note="Art. 31.º n.º 13 CIRS.")
 v1.row("D_ESP", "Despesas justificáveis — dedução específica", lambda c: "=" + P["DED_ESP"], style="link")
 v1.row("D_RENDA", "Despesas justificáveis — rendas do imóvel afeto",
        lambda c: "=" + inp("RENDA", c), style="link", note="Art. 31.º n.º 13 al. c) CIRS.")
 v1.row("D_BENS", "Despesas justificáveis — aquisição de bens e serviços",
        lambda c: "=" + "+".join(inp(k, c) for k in
-                                ["CONDOM", "SEGUROS", "SOFTW", "CONSUM", "OUTROS", "HONOR"]),
+                                ["CONDOM", "SEGUROS", "SOFTW", "CONSUM", "OUTROS", "CUSTO_COLAB"]),
        style="link",
-       note="Art. 31.º n.º 13 al. e) CIRS. Inclui os honorários pagos aos fisioterapeutas.")
+       note="Art. 31.º n.º 13 al. e) CIRS. Inclui os honorários, quando o modelo de colaboração for o de "
+            "prestação de serviços.")
 v1.row("D_INV", "Despesas justificáveis — aquisições de investimento do ano",
        lambda c: "={a}+{b}+{d}+{e}".format(a=inp("INV_OBRAS", c), b=inp("INV_EQUIP", c),
                                            d=inp("INV_EQUIP_R", c), e=inp("INV_SOFT", c)),
@@ -459,8 +539,9 @@ v1.row("RB_CATB", "Rendimento da categoria B antes da dedução de contribuiçõ
 
 v1.sec("Segurança Social — trabalhador independente")
 v1.row("SS_REL", "Rendimento relevante",
-       lambda c: "={f}*{p}".format(f=v1.c("FAT", c), p=P["SS_TI_PCT"]),
-       note="Art. 162.º Cód. Contributivo: 70% do valor das prestações de serviços.")
+       lambda c: "={f}*{p}".format(f=v1.c("RB_TOT", c), p=P["SS_TI_PCT"]),
+       note="Art. 162.º Cód. Contributivo: 70% do valor das prestações de serviços. A inclusão da receita "
+            "de cedência de espaço depende de esta ser qualificada como prestação de serviços — N1-04.")
 v1.row("SS_BASE", "Base de incidência anual, limitada ao teto",
        lambda c: "=MIN({r},{i}*{m}*12)".format(r=v1.c("SS_REL", c), i=P["IAS"], m=P["SS_TI_TETO"]),
        note="Teto mensal de 12 x IAS.")
@@ -470,7 +551,7 @@ v1.row("SS_CONTR", "Contribuição anual para a Segurança Social",
        note="Bloco ausente da ata. Na via 1 a base é a faturação bruta, não a margem — é aqui que está o "
             "maior diferencial entre as vias.")
 v1.row("SS_DED", "Parte dedutível em IRS",
-       lambda c: "=MAX(0,{s}-{f}*{l})".format(s=v1.c("SS_CONTR", c), f=v1.c("FAT", c), l=P["LIM_CONTRIB"]),
+       lambda c: "=MAX(0,{s}-{f}*{l})".format(s=v1.c("SS_CONTR", c), f=v1.c("RB_TOT", c), l=P["LIM_CONTRIB"]),
        note="Art. 31.º n.º 2 CIRS: dedutível apenas na parte que excede 10% do rendimento bruto.")
 v1.row("RL_CATB", "Rendimento líquido da categoria B",
        lambda c: "={a}-{b}".format(a=v1.c("RB_CATB", c), b=v1.c("SS_DED", c)), style="result")
@@ -503,7 +584,8 @@ def bloco_irs(v, rend_julia_fn, nota=""):
 def bloco_resultado(v, leak_extra, retido="0", conj_div="0", nota_leak=""):
     v.sec("Resultado")
     v.row("CAIXA", "Caixa gerada pela atividade, antes de impostos e contribuições",
-          lambda c: "={f}+{t}-({o})".format(f=inp("FAT", c), t=inp("FAT_TRIB", c), o=CUSTOS_OP(c)),
+          lambda c: "={f}+{n}+{t}-({o})".format(f=inp("FAT_ISENTA", c), n=inp("REC_NAOPROF", c),
+                                              t=inp("FAT_TRIB", c), o=CUSTOS_OP(c)),
           style="result", note=NOTE_CAIXA)
     v.row("CARGA", "Total de impostos e contribuições",
           lambda c: "={i}+{e}".format(i=v.c("IRS_ATIV", c),
@@ -542,10 +624,11 @@ v2 = Via("V2_ENI_ContOrg",
          "tributável, e a opção vincula por 3 anos.")
 
 v2.sec("Apuramento do lucro tributável")
-v2.row("FAT", "Faturação bruta", lambda c: "=" + inp("FAT", c), style="link")
+v2.row("FAT", "Receita bruta (fisioterapia + cedência de espaço)",
+       lambda c: "={a}+{b}".format(a=inp("FAT_ISENTA", c), b=inp("REC_NAOPROF", c)), style="link")
 v2.row("C_OP", "Custos operacionais dedutíveis (excl. honorários)",
        lambda c: "=" + CUSTOS_SEM_HON(c), style="link")
-v2.row("C_HON", "Honorários a fisioterapeutas", lambda c: "=" + inp("HONOR", c), style="link",
+v2.row("C_HON", "Custo com os colaboradores", lambda c: "=" + inp("CUSTO_COLAB", c), style="link",
        note="Dedutíveis como custo da atividade (ata, ponto 4). Sujeitos ao risco de requalificação "
             "tratado na fase 2 do P1.")
 v2.row("AMORT", "Amortizações do exercício", lambda c: "=" + AMORT(c),
@@ -602,9 +685,10 @@ v3 = Via("V3_Soc_Transparente",
          "tributada em IRC sobre o lucro, mas mantém-se sujeita a tributações autónomas (art. 12.º CIRC).")
 
 v3.sec("Apuramento ao nível da sociedade")
-v3.row("FAT", "Prestações de serviços", lambda c: "=" + inp("FAT", c), style="link")
+v3.row("FAT", "Receita bruta (fisioterapia + cedência de espaço)",
+       lambda c: "={a}+{b}".format(a=inp("FAT_ISENTA", c), b=inp("REC_NAOPROF", c)), style="link")
 v3.row("C_OP", "Custos operacionais (excl. honorários)", lambda c: "=" + CUSTOS_SEM_HON(c), style="link")
-v3.row("C_HON", "Honorários a fisioterapeutas", lambda c: "=" + inp("HONOR", c), style="link")
+v3.row("C_HON", "Custo com os colaboradores", lambda c: "=" + inp("CUSTO_COLAB", c), style="link")
 v3.row("AMORT", "Amortizações do exercício", lambda c: "=" + AMORT(c))
 v3.row("REM", "Remuneração bruta de gerência", lambda c: "=" + inp("REM_GER", c), style="link",
        note="Variável de decisão. É a única base de incidência contributiva nesta via.")
@@ -645,8 +729,9 @@ bloco_resultado(
     v3,
     leak_extra=lambda c: "{a}+{b}+{d}+{e}".format(a=v3.c("SS_TRAB", c), b=v3.c("TSU_ENT", c),
                                                   d=v3.c("TA", c), e=v3.c("DERR", c)),
-    retido=lambda c: "MAX(0,({f}+{t}-({o}))-{r}-{s}-{ta}-{de})*(1-{p})".format(
-        f=inp("FAT", c), t=inp("FAT_TRIB", c), o=CUSTOS_OP(c), r=v3.c("REM", c),
+    retido=lambda c: "MAX(0,({f}+{n}+{t}-({o}))-{r}-{s}-{ta}-{de})*(1-{p})".format(
+        f=inp("FAT_ISENTA", c), n=inp("REC_NAOPROF", c),
+        t=inp("FAT_TRIB", c), o=CUSTOS_OP(c), r=v3.c("REM", c),
         s=v3.c("TSU_ENT", c), ta=v3.c("TA", c), de=v3.c("DERR", c), p=inp("POL_DIST", c)),
     nota_leak="IRS imputável + contribuições da sócia + contribuições da sociedade + tributações "
               "autónomas + derrama. A distribuição do lucro já imputado não é novamente tributada.")
@@ -660,11 +745,13 @@ v4 = Via("V4_Soc_NaoTransparente",
          "A pergunta a que esta folha responde não é 'sai da transparência?' mas 'compensa sair?'.")
 
 v4.sec("Apuramento ao nível da sociedade")
-v4.row("FAT", "Prestações de serviços isentas (fisioterapia)", lambda c: "=" + inp("FAT", c), style="link")
-v4.row("FAT_T", "Prestações de serviços tributadas (atividade do cônjuge)",
-       lambda c: "=" + inp("FAT_TRIB", c), style="link")
+v4.row("FAT", "Receita isenta (fisioterapia + cedência de espaço, se isenta)",
+       lambda c: "={a}+IF({s}=1,0,{b})".format(a=inp("FAT_ISENTA", c), s=inp("SALA_TRIB", c),
+                                               b=inp("REC_NAOPROF", c)), style="link")
+v4.row("FAT_T", "Receita sujeita a IVA (cônjuge e/ou cedência tributada)",
+       lambda c: "=" + inp("REC_TRIB", c), style="link")
 v4.row("C_OP", "Custos operacionais (excl. honorários)", lambda c: "=" + CUSTOS_SEM_HON(c), style="link")
-v4.row("C_HON", "Honorários a fisioterapeutas", lambda c: "=" + inp("HONOR", c), style="link")
+v4.row("C_HON", "Custo com os colaboradores", lambda c: "=" + inp("CUSTO_COLAB", c), style="link")
 v4.row("AMORT", "Amortizações do exercício", lambda c: "=" + AMORT(c))
 v4.row("REM", "Remuneração bruta de gerência", lambda c: "=" + inp("REM_GER", c), style="link")
 v4.row("BASE_MOE", "Base de incidência contributiva do MOE",
@@ -691,8 +778,8 @@ v4.row("LUCRO_LIQ", "Lucro após imposto",
 
 v4.sec("Distribuição de resultados")
 v4.row("CX_DIST", "Caixa distribuível",
-       lambda c: "=MAX(0,({f}+{t}-({o}))-{r}-{s}-{i}-{d}-{ta})".format(
-           f=inp("FAT", c), t=inp("FAT_TRIB", c), o=CUSTOS_OP(c), r=v4.c("REM", c), s=v4.c("TSU_ENT", c),
+       lambda c: "=MAX(0,({f}+{n}+{t}-({o}))-{r}-{s}-{i}-{d}-{ta})".format(
+           f=inp("FAT_ISENTA", c), n=inp("REC_NAOPROF", c), t=inp("FAT_TRIB", c), o=CUSTOS_OP(c), r=v4.c("REM", c), s=v4.c("TSU_ENT", c),
            i=v4.c("IRC", c), d=v4.c("DERR", c), ta=v4.c("TA", c)),
        note="Base de caixa: as amortizações não são saída de caixa, pelo que a caixa distribuível excede "
             "o lucro contabilístico enquanto o investimento estiver a ser amortizado.")
@@ -797,7 +884,7 @@ vrow("P_ISENTO", "IVA perdido, convertido em custo do investimento",
 
 section(wv, r, "Tratamento na via 4 — sujeito passivo misto", span=6); r += 1
 vrow("PRO_RATA", "Pro rata de dedução",
-     lambda c: "=IF(({f}+{t})<=0,0,{t}/({f}+{t}))".format(f=inp("FAT", c), t=inp("FAT_TRIB", c)),
+     lambda c: "=IF({r}<=0,0,{t}/{r})".format(r=inp("REC_TOTAL", c), t=inp("REC_TRIB", c)),
      fmt=PCT, note="Art. 23.º n.º 4 CIVA: volume de negócios com direito a dedução sobre o total. "
                    "Com FAT_TRIB a zero o pro rata é zero — só há dedução se o cônjuge faturar dentro da sociedade.")
 vrow("PCT_EXCL", "% do investimento afeto exclusivamente à atividade tributada", 0.0, fmt=PCT, style="input",
@@ -827,7 +914,7 @@ vrow("SENS_GAN", "Poupança de IVA nesse cenário",
 section(wv, r, "IVA em custos correntes (anual, memória)", span=6); r += 1
 vrow("C_CORR", "Base dos custos correntes sujeitos a IVA",
      lambda c: "={a}+{b}+{d}".format(a=inp("SOFTW", c), b=inp("CONSUM", c), d=inp("OUTROS", c)),
-     style="link", note="Renda excluída: o arrendamento é isento salvo renúncia (art. 9.º n.º 29 CIVA). "
+     style="link", note="Renda paga excluída: o arrendamento é isento salvo renúncia (art. 9.º n.º 29 CIVA). "
                         "Honorários de fisioterapeutas excluídos: também isentos pelo art. 9.º n.º 1.")
 vrow("C_IVA", "IVA anual suportado e não dedutível (vias 1 a 3)",
      lambda c: "={a}*{t}".format(a=vc("C_CORR", c), t=P["IVA_NORM"]), style="result")
@@ -878,6 +965,7 @@ DIV_TOT = {0: lambda c: "=0", 1: lambda c: "=0", 2: lambda c: "=0",
            3: lambda c: "=" + v4.ref("IMP_DIV", c)}
 
 r = 4
+BLOCOS = []
 for sc_col, sc_name in SCEN:
     section(wc_, r, "CENÁRIO %s" % sc_name.upper(), span=7); r += 1
     hdr_row = r
@@ -916,7 +1004,19 @@ for sc_col, sc_name in SCEN:
                           % (hdr_row, hdr_row, liq_row, liq_row, liq_row, liq_row))
     cell.font, cell.fill, cell.border = F_RESULT, FILL_RES, BOX
     wc_.merge_cells(start_row=r, start_column=3, end_row=r, end_column=6)
+    BLOCOS.append((sc_name, hdr_row, liq_row))
     r += 3
+
+_nome, _hdr, _liq = [b for b in BLOCOS if b[0] == "Base"][0]
+_bar = BarChart()
+_bar.type, _bar.style = "col", 10
+_bar.title = "Líquido anual disponível para a sócia, por via — cenário Base"
+_bar.y_axis.title = "euros"
+_bar.legend = None
+_bar.add_data(Reference(wc_, min_col=3, max_col=6, min_row=_liq, max_row=_liq), from_rows=True)
+_bar.set_categories(Reference(wc_, min_col=3, max_col=6, min_row=_hdr, max_row=_hdr))
+_bar.height, _bar.width = 8, 18
+wc_.add_chart(_bar, "I4")
 
 wc_.cell(row=r, column=1,
          value="Leitura obrigatória antes de citar qualquer número: os inputs são placeholders. "
@@ -936,7 +1036,7 @@ widths(wp, {"A": 13, "B": 15, "C": 16, "D": 14, "E": 14, "F": 15,
 wp.merge_cells("A2:L2"); wp["A2"].alignment = Alignment(wrap_text=True, vertical="top")
 wp.row_dimensions[2].height = 44
 
-FATB = inp("FAT", "D")
+FATB = "(%s+%s)" % (inp("FAT_ISENTA", "D"), inp("REC_NAOPROF", "D"))
 RCONJ = inp("REND_CONJ", "D")
 CONJ = inp("CONJUNTA", "D")
 
@@ -949,7 +1049,7 @@ def colfull(expr):
 
 
 r = 4
-wp.cell(row=r, column=1, value="Faturação (cenário Base)").font = F_BODY
+wp.cell(row=r, column=1, value="Rendimento bruto (cenário Base)").font = F_BODY
 c = wp.cell(row=r, column=3, value="=" + FATB); c.number_format, c.font = EUR, F_LINK
 r += 1
 wp.cell(row=r, column=1, value="Rendimento do cônjuge").font = F_BODY
@@ -993,6 +1093,16 @@ for i in range(15):
     l.number_format, l.font, l.border = PCT, F_CALC, BOX
     r += 1
 BOT = r - 1
+_ln = LineChart()
+_ln.title = "Ponto de viragem — carga fiscal e contributiva por nível de custos reais"
+_ln.y_axis.title = "euros"
+_ln.x_axis.title = "custos reais em % do rendimento bruto"
+_ln.height, _ln.width = 9, 20
+for _col in (6, 10):
+    _ln.append(Series(Reference(wp, min_col=_col, min_row=TOP - 1, max_row=BOT), title_from_data=True))
+_ln.set_categories(Reference(wp, min_col=1, min_row=TOP, max_row=BOT))
+wp.add_chart(_ln, "N4")
+
 r += 1
 wp.cell(row=r, column=1, value="Ponto de viragem — peso dos custos reais").font = F_RESULT
 c = wp.cell(row=r, column=3, value="=MAX(L%d:L%d)" % (TOP, BOT))
@@ -1055,47 +1165,55 @@ def g(k, i):
 
 
 def comuns(i):
+    mod = g("MOD_COLAB", i)
+    fat_is = g("FAT_PROP", i) + (g("FAT_COLAB", i) if mod == 1 else 0.0)
+    rec_np = g("REC_SALA", i) if mod == 2 else 0.0
+    custo_col = g("HONOR", i) if mod == 1 else 0.0
     op_sem_hon = sum(g(k, i) for k in ["RENDA", "CONDOM", "SEGUROS", "SOFTW", "CONSUM", "OUTROS"])
-    op = op_sem_hon + g("HONOR", i)
+    op = op_sem_hon + custo_col
     inv = g("INV_OBRAS", i) + g("INV_EQUIP", i) + g("INV_EQUIP_R", i) + g("INV_SOFT", i)
     amort = g("INV_OBRAS", i) * 0.10 + (g("INV_EQUIP", i) + g("INV_EQUIP_R", i)) * 0.20 \
         + g("INV_SOFT", i) * 0.3333
-    return op_sem_hon, op, inv, amort
+    return dict(fat_is=fat_is, rec_np=rec_np, rb=fat_is + rec_np, custo_col=custo_col,
+                op_sem=op_sem_hon, op=op, inv=inv, amort=amort)
 
 
 def sh_v1(i):
-    fat, rc_, cj = g("FAT", i), g("REND_CONJ", i), g("CONJUNTA", i)
-    op_sem_hon, op, inv, _am = comuns(i)
-    d_tot = 4104.0 + g("RENDA", i) + (op_sem_hon - g("RENDA", i)) + g("HONOR", i) + inv
-    rb = fat * 0.75 + max(0.0, fat * 0.15 - d_tot)
-    ss = max(min(fat * 0.70, TETO_ANO) * 0.214, MIN_ANO)
-    rl = rb - max(0.0, ss - fat * 0.10)
+    rc_, cj = g("REND_CONJ", i), g("CONJUNTA", i)
+    k = comuns(i)
+    d_tot = 4104.0 + k["op_sem"] + k["custo_col"] + k["inv"]
+    rt = k["fat_is"] * 0.75 + k["rec_np"] * 0.35
+    rb = rt + max(0.0, k["rb"] * 0.15 - d_tot)
+    ss = max(min(k["rb"] * 0.70, TETO_ANO) * 0.214, MIN_ANO)
+    rl = rb - max(0.0, ss - k["rb"] * 0.10)
     irs = py_irs(rl + rc_, cj) - py_irs(rc_, cj)
-    caixa = fat - op
+    caixa = k["rb"] + g("FAT_TRIB", i) - k["op"]
     return dict(irs=irs, ss=ss, carga=irs + ss, liq=caixa - irs - ss)
 
 
 def sh_v2(i):
-    fat, rc_, cj = g("FAT", i), g("REND_CONJ", i), g("CONJUNTA", i)
-    op_sem_hon, op, _inv, amort = comuns(i)
-    lt0 = fat - op_sem_hon - g("HONOR", i) - amort
+    rc_, cj = g("REND_CONJ", i), g("CONJUNTA", i)
+    k = comuns(i)
+    lt0 = k["rb"] - k["op_sem"] - k["custo_col"] - k["amort"]
     ss = max(min(max(lt0, 0.0), TETO_ANO) * 0.214, MIN_ANO)
     lt = max(0.0, lt0 - ss)
     irs = py_irs(lt + rc_, cj) - py_irs(rc_, cj)
-    caixa = fat - op
+    caixa = k["rb"] + g("FAT_TRIB", i) - k["op"]
     return dict(irs=irs, ss=ss, carga=irs + ss, liq=caixa - irs - ss)
 
 
 def sh_soc(i, transparente):
-    fat, rc_, cj = g("FAT", i), g("REND_CONJ", i), g("CONJUNTA", i)
-    op_sem_hon, op, _inv, amort = comuns(i)
+    rc_, cj = g("REND_CONJ", i), g("CONJUNTA", i)
+    k = comuns(i)
     rem, ta, pol = g("REM_GER", i), g("TA_EST", i), g("POL_DIST", i)
     base_moe = max(rem, IAS_V * 1 * 12)
     tsu_ent, ss_trab = base_moe * 0.2375, base_moe * 0.11
-    lt = fat + g("FAT_TRIB", i) - op_sem_hon - g("HONOR", i) - amort - rem - tsu_ent
+    amort = k["amort"]
+    lt = k["rb"] + (g("FAT_TRIB", i) if not transparente else 0.0) \
+        - k["op_sem"] - k["custo_col"] - amort - rem - tsu_ent
     ded_a = min(rem, max(4104.0, ss_trab))
     rl_a = max(0.0, rem - ded_a)
-    caixa = fat + g("FAT_TRIB", i) - op
+    caixa = k["rb"] + g("FAT_TRIB", i) - k["op"]
     if transparente:
         irc = derr = 0.0
         r_jul = rl_a + max(lt, 0.0)
@@ -1207,12 +1325,18 @@ TXT = [
     ("SEC", "Como está organizado"),
     ("T", "Parâmetros — todas as taxas, escalões e limiares, cada um com a norma e o estado de validação. "
           "Nenhuma taxa é escrita dentro de uma fórmula noutra folha."),
-    ("T", "Inputs — folha única de parâmetros do caso, em três cenários de faturação."),
+    ("T", "Inputs — folha única de parâmetros do caso, em três cenários de faturação. Contém a alavanca "
+          "MOD_COLAB, que alterna entre os dois modelos de colaboração da ata (1 = prestação de serviços, "
+          "2 = cedência de sala) e reconfigura toda a estrutura de receita e custo."),
+    ("T", "As linhas derivadas no fim da folha Inputs não se preenchem. Entre elas está o teste de "
+          "rendimentos do art. 6.º n.º 4 al. b) ii) CIRC, e a receita de cedência que seria precisa para o "
+          "falhar — que é a via para afastar a transparência sem ceder capital."),
     ("T", "V1 a V4 — uma folha por via, com a mesma estrutura: apuramento, Segurança Social, IRS do "
           "agregado, resultado."),
     ("T", "IVA — quantificação do IVA perdido no investimento e teste das duas atenuantes."),
-    ("T", "PontoViragem — nível de custos reais a partir do qual o simplificado deixa de compensar."),
-    ("T", "Comparativo — output que alimenta o capítulo 3 e o anexo E2."),
+    ("T", "PontoViragem — nível de custos reais a partir do qual o simplificado deixa de compensar, "
+          "com o gráfico correspondente."),
+    ("T", "Comparativo — output que alimenta o capítulo 3 e o anexo E2, com o gráfico do líquido por via."),
     ("T", "Validação — recálculo independente e espaço para assinatura."),
     ("SEC", "Convenções"),
     ("T", "Azul sobre amarelo = célula de preenchimento. Verde = ligação a outra folha. Preto = fórmula. "
@@ -1226,6 +1350,9 @@ TXT = [
           "Misturá-lo com o resultado corrente faria a via 1 parecer melhor do que é no ano 1."),
     ("T", "3. Nas vias societárias, o valor retido na sociedade é mostrado separado do líquido da sócia. "
           "Somar os dois responderia a uma pergunta que a cliente não fez."),
+    ("T", "4. O modelo de colaboração é uma escolha única para todos os colaboradores. A ata admite "
+          "modelos distintos por profissional; uma combinação exige correr o modelo com a faturação "
+          "repartida. Registado em R1-30."),
     ("SEC", "Reprodução"),
     ("T", "Este ficheiro é gerado por build_m1.py. Alterações estruturais fazem-se no script e regenera-se; "
           "alterações de valores fazem-se nas células amarelas."),

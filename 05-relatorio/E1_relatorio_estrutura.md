@@ -115,12 +115,17 @@ Sequência de argumentação, fixa:
 | E2.3 | Líquido disponível para a sócia e para o agregado, com o retido na sociedade destacado | `Comparativo` | Indicador de decisão |
 | E2.4 | Ponto de viragem do regime simplificado, em % de custos e em euros | `PontoViragem` | E2, ponto 2 |
 | E2.5 | IVA recuperável no investimento, com e sem cônjuge na sociedade | `IVA` | E2, ponto 3 |
-| E2.6 | Impacto do modelo de colaboração na margem: prestação de serviços vs. cedência de sala | `Inputs` + `Comparativo`, dois cenários | E2, ponto 4 |
+| E2.6 | Impacto do modelo de colaboração na margem: prestação de serviços vs. cedência de sala | `Inputs`, alavanca `MOD_COLAB` + `Comparativo` | E2, ponto 4 |
 | E2.7 | Sensibilidade à política de distribuição: vias 3 e 4 a 0%, 50% e 100% | `V4`, alavanca `POL_DIST` | Suporte do capítulo 5 |
 
 **Regras de apresentação do anexo:** sem fórmulas visíveis, sem referências a folhas de cálculo, sem ficheiro Excel entregue (secção 5 do brief). Cada exposição com uma frase de leitura por baixo — o que a tabela mostra, não o que contém.
 
-**E2.6 e E2.7 exigem correr o M1 duas vezes com inputs diferentes.** Prever o tempo. Não são tabelas, são cenários.
+**E2.6 e E2.7 exigem correr o M1 mais do que uma vez.** Não são tabelas, são cenários, e cada um é uma passagem pelo modelo:
+
+- **E2.6** alterna a alavanca `MOD_COLAB` da folha `Inputs` entre 1 (prestação de serviços) e 2 (cedência de sala). A linha `MARGEM_COLAB` é a resposta direta à pergunta da ata.
+- **E2.7** varre a alavanca `POL_DIST` em 0%, 50% e 100%, e alterna `ENGLOB` na via 4.
+
+Prever o tempo: são cinco passagens pelo modelo, com os resultados a copiar para o anexo.
 
 ---
 
@@ -133,7 +138,7 @@ Sequência de argumentação, fixa:
 | 4.1 O regime do art. 6.º CIRC e as duas vias de qualificação | N1, secção 2 |
 | 4.2 Porque se aplica a uma sociedade detida a 100% pela Dra. Júlia | N1, secção 3 |
 | 4.3 O que seria preciso para o afastar: teste de capital | N1, secção 4 |
-| 4.4 A alternativa não considerada: teste de rendimentos | N1, secção 5 |
+| 4.4 A alternativa não considerada: teste de rendimentos, e o que exigiria | N1, secções 5 e 5.1 |
 | 4.5 Afastar a transparência não é, por si, uma vantagem | N1, secção 6 |
 | 4.6 Substância económica e risco de requalificação | N1, secção 7 |
 | 4.7 Efeito em IVA: sujeito passivo misto | N1, secção 8 |
@@ -231,6 +236,6 @@ Três blocos, por esta ordem:
 | 7 | Capítulos 6 e 7 | P1, R1 | Pode arrancar |
 | 8 | Capítulo 1 | Todos | — |
 | 9 | Anexo E2 no template, sem fórmulas visíveis | 4 | Bloqueado |
-| 10 | Deck E3, 12 a 15 slides, derivado do relatório | 8 | — |
+| 10 | Deck E3, 14 slides, derivado do relatório | 8 | Estrutura e guião fechados em `06-reuniao/` |
 
 **O passo 1 não depende da cliente e está a bloquear tanto quanto o passo 2.** Vale a pena arrancar já.

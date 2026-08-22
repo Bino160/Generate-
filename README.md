@@ -17,6 +17,7 @@
 | R1 — registo de pressupostos e riscos | `04-riscos/R1_registo_pressupostos_riscos.md` | Aberto e em manutenção |
 | Pedido de inputs à cliente | `00-inputs/pedido_inputs_cliente.md` | **Minuta, não enviada** |
 | E1 — estrutura do relatório | `05-relatorio/E1_relatorio_estrutura.md` | Cap. 2 redigido, cap. 5 com a regra de decisão fechada, restantes em esqueleto |
+| E3 — estrutura do deck e guião da sessão | `06-reuniao/E3_estrutura_deck.md` | 14 slides e guião de 90 min fechados |
 
 **Nada disto sai para a cliente.** Os entregáveis são o relatório E1, o anexo E2 e a reunião E3. A entrega do ficheiro do modelo está expressamente fora de âmbito.
 
@@ -39,6 +40,8 @@ Dois bloqueios, e nenhum deles é falta de trabalho nosso.
 **2. Há uma via alternativa para afastar a transparência que não exige ceder capital.** Fazer com que 25% ou mais dos rendimentos provenham de atividades não previstas na lista — designadamente cedência de espaço — falha o teste de rendimentos do art. 6.º n.º 4 al. b) ii) CIRC. Liga o ponto 4 da ata (modelo de colaboração) ao ponto 6 (composição societária), que até aqui foram tratados como independentes. N1, secção 5.
 
 **3. A Segurança Social, ausente da ata, é provavelmente o maior diferencial entre as vias.** No simplificado a base de incidência é uma percentagem da faturação bruta; com contabilidade organizada é o lucro tributável; em sociedade incide apenas sobre a remuneração de gerência. O efeito excede com frequência o diferencial de IRS.
+
+**4. A via alternativa do ponto 2 é mais exigente do que aparentava.** Depois de a modelar: falhar o teste dos 75% obriga a que a cedência de espaço renda **um terço da faturação profissional**. Com os valores de trabalho, a cedência de sala a 30% da faturação dos colaboradores dá 87,8% de rendimentos profissionais e **não** afasta a transparência. A via existe, mas só com renda substancial — está quantificada na linha `REC_SALA_MIN` do M1 e registada como R1-32.
 
 ---
 
