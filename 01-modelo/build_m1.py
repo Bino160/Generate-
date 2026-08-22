@@ -115,6 +115,16 @@ ROWS = [
      "Art. 187.º Cód. Contributivo", "CONFIRMAR (ver R1-37)"),
     ("P", "JUROS_MORA", "Taxa anual de juros de mora aplicada às contribuições em falta", 0.05, PCT2,
      "Regime dos juros de mora de dívidas ao Estado", "CONFIRMAR taxa em vigor"),
+    ("P", "COIMA_PCT", "Coima estimada, em % das contribuições devidas pela entidade", 0.50, PCT,
+     "Moldura das contraordenações do Cód. Contributivo", "ESTIMATIVA GROSSEIRA — ver R1-38"),
+
+    ("SEC", "Limiares operacionais de alerta"),
+    ("P", "UTIL_MAX", "Utilização acima da qual a projeção é impossível", 1.00, PCT,
+     "Definição do modelo", "Validado"),
+    ("P", "UTIL_ALTA", "Utilização acima da qual a operação é muito exigente", 0.85, PCT,
+     "Convenção de trabalho VCLevel", "Decisão de equipa"),
+    ("P", "UTIL_BAIXA", "Utilização abaixo da qual o espaço está subaproveitado", 0.30, PCT,
+     "Convenção de trabalho VCLevel", "Decisão de equipa"),
 
     ("SEC", "IRS — categoria B e regras de determinação"),
     ("P", "COEF", "Coeficiente do regime simplificado (atividades do art. 151.º)", 0.75, PCT,
@@ -359,9 +369,10 @@ orow("UTILIZ", "TAXA DE UTILIZAÇÃO DOS GABINETES", fn=lambda c:
      note="Acima de 100% a projeção é impossível: não há gabinetes para as consultas previstas. "
           "Acima de 85% é operacionalmente muito exigente. Ver folha Alertas.")
 orow("TESTE_CAP", "Leitura da utilização", fn=lambda c:
-     '=IF({u}>1,"IMPOSSÍVEL — a projeção não cabe no espaço",'
-     'IF({u}>0.85,"MUITO EXIGENTE — pouca folga operacional",'
-     'IF({u}<0.3,"FOLGA ELEVADA — capacidade subaproveitada","PLAUSÍVEL")))'.format(u=oc("UTILIZ", c)),
+     '=IF({u}>{mx},"IMPOSSÍVEL — a projeção não cabe no espaço",'
+     'IF({u}>{al},"MUITO EXIGENTE — pouca folga operacional",'
+     'IF({u}<{bx},"FOLGA ELEVADA — capacidade subaproveitada","PLAUSÍVEL")))'.format(
+         u=oc("UTILIZ", c), mx=P["UTIL_MAX"], al=P["UTIL_ALTA"], bx=P["UTIL_BAIXA"]),
      fmt="General", style="result")
 
 section(wso, r, "Faturação derivada", span=6); r += 1
@@ -1972,7 +1983,8 @@ rrow("JUROS", "Juros de mora estimados",
                                              j=P["JUROS_MORA"], n=rc_("ANOS", c)),
      note="Aproximação: metade do período médio de mora sobre o total em dívida. Ordem de grandeza, "
           "não liquidação.")
-rrow("COIMA", "Coima estimada", lambda c: "={a}*0.5".format(a=rc_("TSU_E", c)),
+rrow("COIMA", "Coima estimada",
+     lambda c: "={a}*{p}".format(a=rc_("TSU_E", c), p=P["COIMA_PCT"]),
      note="ESTIMATIVA GROSSEIRA, a 50% das contribuições da entidade. A moldura das contraordenações "
           "por falta de comunicação de admissão e de pagamento de contribuições tem de ser confirmada "
           "pela Fiscalidade ou por advogado. Ver R1-38.")
@@ -2100,13 +2112,15 @@ ALERTAS = [
     ("Inputs da cliente por confirmar", "=SUM(%s)" % INP_J, NUM, "B{r}>0",
      "BLOQUEANTE para o relatório. Os valores em uso são placeholders de teste do motor.",
      "R1, secção A · brief, secção 4"),
-    ("Utilização dos gabinetes acima de 100%", "=" + oref("UTILIZ", "D"), PCT, "B{r}>1",
+    ("Utilização dos gabinetes acima de 100%", "=" + oref("UTILIZ", "D"), PCT, "B{r}>" + P["UTIL_MAX"],
      "A projeção é impossível: não há gabinetes para as consultas previstas. Corrigir a projeção ou o "
      "número de gabinetes antes de qualquer outra coisa.", "Folha Operacao"),
-    ("Utilização dos gabinetes acima de 85%", "=" + oref("UTILIZ", "D"), PCT, "AND(B{r}>0.85,B{r}<=1)",
+    ("Utilização dos gabinetes acima de 85%", "=" + oref("UTILIZ", "D"), PCT,
+     "AND(B{r}>" + P["UTIL_ALTA"] + ",B{r}<=" + P["UTIL_MAX"] + ")",
      "Operacionalmente muito exigente: sem folga para faltas, férias ou variação de procura.",
      "Folha Operacao"),
-    ("Utilização subaproveitada, abaixo de 30%", "=" + oref("UTILIZ", "D"), PCT, "B{r}<0.3",
+    ("Utilização subaproveitada, abaixo de 30%", "=" + oref("UTILIZ", "D"), PCT,
+     "B{r}<" + P["UTIL_BAIXA"],
      "O espaço está sobredimensionado para a procura projetada. Rever a opção de espaço.",
      "Folhas Operacao e Espaco"),
     ("Receita projetada abaixo do break-even operacional",
