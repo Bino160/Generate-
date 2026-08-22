@@ -1,0 +1,236 @@
+# E1 — Relatório final: estrutura e estado de redação
+
+**Projeto:** Dra. Júlia Best — cliente faturável: Gerir Saúde
+**Formato de entrega:** PDF único, template Gerir Saúde, 15 a 20 páginas, com o anexo E2 integrado
+**Data:** 22/08/2026
+
+**Regra de redação (do brief, e é vinculativa):** cada afirmação com efeito fiscal remete para norma — artigo e código — ou para pressuposto identificado em R1. Sem números sem fonte.
+
+**Estado global:** 1 capítulo redigido, 1 com a lógica fechada à espera de números, 5 em esqueleto. O que falta não é redação: são os inputs da cliente e a validação normativa da Fiscalidade.
+
+| Cap. | Conteúdo | Origem | Páginas | Estado |
+|---|---|---|---|---|
+| 1 | Sumário executivo, recomendação em primeiro lugar | Síntese | 1–2 | Esqueleto |
+| 2 | Enquadramento consolidado e pressupostos | Ata + inputs | 2–3 | **Redigido** |
+| 3 | Análise comparativa das quatro vias, quantificada | M1 | 4–5 | Esqueleto + mapa de exposições |
+| 4 | Composição societária e transparência fiscal | N1 | 2–3 | Esqueleto, N1 pronta |
+| 5 | Recomendação fundamentada | Síntese | 2 | **Regra de decisão fechada**, à espera de números |
+| 6 | Plano de implementação por fases | P1 | 2–3 | Esqueleto, P1 pronto |
+| 7 | Riscos, condicionantes e decisões da cliente | R1 | 2 | Esqueleto, R1 pronto |
+
+---
+
+## Capítulo 1 — Sumário executivo
+
+**Esqueleto. Redige-se em último lugar e lê-se em primeiro.**
+
+Estrutura fixa, uma página, quatro blocos:
+
+1. **A recomendação, em duas frases, logo na primeira linha.** Não uma síntese do processo, não um agradecimento pela confiança: a recomendação. Quem só ler este parágrafo tem de ficar a saber o que fazer.
+2. **O número que a sustenta.** O diferencial de líquido anual disponível entre a via recomendada e a atual, num cenário identificado.
+3. **As duas ou três condições de que a recomendação depende.** Extraídas de R1, magnitude ALTA apenas.
+4. **A ação imediata, com a data-limite.** Tipicamente a janela de março ou a de junho (P1, «Janelas que não se recuperam»).
+
+**Não incluir:** metodologia, agradecimentos, descrição do trabalho realizado.
+
+---
+
+## Capítulo 2 — Enquadramento consolidado e pressupostos assumidos
+
+**REDIGIDO. Base: ata de 18/08/2026 e brief de 22/08/2026. Rever após a receção dos inputs.**
+
+### 2.1 Situação de partida
+
+A Dra. Júlia Best exerce a atividade de fisioterapia como Empresária em Nome Individual, enquadrada no regime simplificado de tributação em sede de IRS. A atividade é isenta de IVA ao abrigo do art. 9.º n.º 1 do Código do IVA, na qualidade de prestação de serviços efetuada no exercício de profissão paramédica.
+
+Trata-se de uma isenção **incompleta**: não confere direito à dedução do imposto suportado a montante (art. 20.º n.º 1 CIVA *a contrario*). Todo o IVA suportado na aquisição de bens e serviços para a atividade — designadamente em obras e equipamento — constitui custo definitivo e não é recuperável. Este ponto tem efeito direto na avaliação do investimento e é retomado no capítulo 3.
+
+À data da reunião de 18 de agosto de 2026 não existia tabela de preços formalmente definida, apesar de já existirem faturações a clientes, nem decisão fechada quanto ao espaço ou quanto à estrutura societária.
+
+### 2.2 O que motiva a revisão do enquadramento
+
+Três alterações previstas na atividade tornam o enquadramento atual objeto de reavaliação:
+
+**Aumento significativo de custos fixos.** Está em avaliação um novo espaço, com duas hipóteses — dois ou três gabinetes —, com os encargos de arrendamento, obras de adaptação e equipamento clínico correspondentes.
+
+**Integração de outros profissionais.** Prevê-se a integração de um ou dois fisioterapeutas, segundo um de dois modelos de colaboração: prestação de serviços, com os honorários a constituírem custo da atividade, ou cedência de sala. O modelo pode ser distinto para cada profissional.
+
+**Hipótese de aquisição do espaço por investidor.** Foi colocada a hipótese de um investidor adquirir o espaço, passando a Dra. Júlia a pagar renda numa lógica de futura aquisição do imóvel. As implicações fiscais e contratuais desta modalidade — natureza do contrato, tratamento das rendas, momento e forma da transmissão — não foram analisadas em detalhe e permanecem fora do âmbito deste relatório.
+
+### 2.3 A inadequação do regime atual
+
+No regime simplificado, a tributação incide sobre uma percentagem do rendimento bruto determinada por coeficiente, presumindo-se as despesas da atividade. Os custos efetivamente suportados não são deduzidos na sua totalidade.
+
+À atividade de fisioterapia, constante da tabela a que se refere o art. 151.º do Código do IRS, aplica-se o coeficiente de **0,75** (art. 31.º n.º 1 al. b) CIRS). Tributa-se, assim, 75% do rendimento bruto, presumindo-se que os restantes 25% correspondem aos custos da atividade.
+
+Acresce um segundo mecanismo, frequentemente esquecido: o art. 31.º n.º 13 CIRS agrava a matéria coletável quando as despesas efetivamente suportadas e devidamente justificadas ficam abaixo de 15% do rendimento bruto. O regime não se limita, pois, a presumir custos — exige a justificação de uma parte deles.
+
+**A consequência é aritmética.** A partir do momento em que os custos reais excedam a percentagem presumida, o regime deixa de ser vantajoso, porque se tributa rendimento que não existe. Com o aumento de custos fixos e o pagamento de honorários a terceiros, é previsível que os custos reais venham a exceder os 25% presumidos. O nível exato a partir do qual essa inversão ocorre está quantificado no capítulo 3.
+
+### 2.4 As quatro vias em análise
+
+| Via | Descrição | O que a distingue |
+|---|---|---|
+| 1 | ENI, regime simplificado | Situação atual. Termo de comparação |
+| 2 | ENI, contabilidade organizada | Dedução dos custos efetivos, mantendo a atividade em nome individual. Vincula por 3 anos (art. 28.º n.º 5 CIRS) |
+| 3 | Sociedade sujeita a transparência fiscal | Sociedade detida integralmente pela Dra. Júlia. O lucro é imputado à sócia e tributado em IRS, independentemente de distribuição (art. 6.º CIRC) |
+| 4 | Sociedade fora da transparência fiscal | Pressupõe composição societária que afaste o regime. O lucro é tributado em IRC e a distribuição volta a ser tributada |
+
+As vias 1 e 2 mantêm a atividade em nome individual; as vias 3 e 4 implicam a constituição de sociedade, com separação entre o património pessoal e o património afeto à atividade. Essa separação tem alcance real mas limitado: é efetiva sobretudo quanto a dívidas comerciais, relações com fornecedores e contratos celebrados com prestadores de serviços.
+
+### 2.5 Pressupostos assumidos
+
+*[Bloco a preencher a partir de R1, secções A e B, apenas as linhas de magnitude ALTA e MÉDIA. Formato: uma linha por pressuposto, com o valor assumido e a origem. As de magnitude BAIXA ficam apenas em R1.]*
+
+**Advertência a manter no relatório final, com esta força:**
+
+> Os valores utilizados neste relatório assentam nos elementos fornecidos pela cliente e nos pressupostos identificados nesta secção. Alterações relevantes nesses elementos podem alterar as conclusões. As taxas, escalões e limiares utilizados são os em vigor à data de emissão.
+
+---
+
+## Capítulo 3 — Análise comparativa das quatro vias
+
+**Esqueleto com o mapa de exposições. Não se redige antes de a folha `Validacao` do M1 estar assinada.**
+
+Sequência de argumentação, fixa:
+
+**3.1 O que se compara e porquê.** Explicar que o indicador de decisão é o **líquido anual disponível para a sócia**, e não a carga fiscal absoluta. Uma via pode pagar menos imposto e entregar menos dinheiro — nas vias societárias porque parte do resultado fica retido, e na via 4 porque parte é atribuída ao cônjuge. Explicar também que o IRS é apresentado em diferencial face ao agregado sem a atividade, porque é o que torna as quatro vias comparáveis quando o cônjuge tem rendimento próprio.
+
+**3.2 O peso da Segurança Social.** Este bloco não constava da ata e é, muito provavelmente, o de maior efeito. No regime simplificado a base de incidência é uma percentagem da faturação bruta; com contabilidade organizada é o lucro tributável; nas vias societárias incide apenas sobre a remuneração de gerência. O diferencial contributivo é, com frequência, superior ao diferencial de IRS — e é a razão principal pela qual as vias 1 e 2 divergem tanto.
+
+**3.3 Comparação das quatro vias, em três cenários.**
+
+**3.4 Ponto de viragem do regime simplificado.**
+
+**3.5 O efeito do modelo de colaboração na margem.**
+
+**3.6 IVA no investimento.**
+
+### Mapa de exposições (anexo E2)
+
+| Ex. | Conteúdo | Folha do M1 | Requisito do brief |
+|---|---|---|---|
+| E2.1 | Carga fiscal e contributiva total por via, em três cenários | `Comparativo` | E2, ponto 1 |
+| E2.2 | Decomposição da carga: IRS, Segurança Social, IRC e derrama, distribuição | `Comparativo` | Suporte de 3.2 |
+| E2.3 | Líquido disponível para a sócia e para o agregado, com o retido na sociedade destacado | `Comparativo` | Indicador de decisão |
+| E2.4 | Ponto de viragem do regime simplificado, em % de custos e em euros | `PontoViragem` | E2, ponto 2 |
+| E2.5 | IVA recuperável no investimento, com e sem cônjuge na sociedade | `IVA` | E2, ponto 3 |
+| E2.6 | Impacto do modelo de colaboração na margem: prestação de serviços vs. cedência de sala | `Inputs` + `Comparativo`, dois cenários | E2, ponto 4 |
+| E2.7 | Sensibilidade à política de distribuição: vias 3 e 4 a 0%, 50% e 100% | `V4`, alavanca `POL_DIST` | Suporte do capítulo 5 |
+
+**Regras de apresentação do anexo:** sem fórmulas visíveis, sem referências a folhas de cálculo, sem ficheiro Excel entregue (secção 5 do brief). Cada exposição com uma frase de leitura por baixo — o que a tabela mostra, não o que contém.
+
+**E2.6 e E2.7 exigem correr o M1 duas vezes com inputs diferentes.** Prever o tempo. Não são tabelas, são cenários.
+
+---
+
+## Capítulo 4 — Composição societária e transparência fiscal
+
+**Esqueleto. A nota técnica N1 está pronta e cobre todo o capítulo.**
+
+| Secção | Fonte em N1 |
+|---|---|
+| 4.1 O regime do art. 6.º CIRC e as duas vias de qualificação | N1, secção 2 |
+| 4.2 Porque se aplica a uma sociedade detida a 100% pela Dra. Júlia | N1, secção 3 |
+| 4.3 O que seria preciso para o afastar: teste de capital | N1, secção 4 |
+| 4.4 A alternativa não considerada: teste de rendimentos | N1, secção 5 |
+| 4.5 Afastar a transparência não é, por si, uma vantagem | N1, secção 6 |
+| 4.6 Substância económica e risco de requalificação | N1, secção 7 |
+| 4.7 Efeito em IVA: sujeito passivo misto | N1, secção 8 |
+
+**Duas advertências de redação:**
+
+1. **O capítulo não pode ser escrito antes de N1-01 estar resolvido.** Se a atividade do cônjuge constar da tabela do art. 151.º CIRS, as secções 4.3 e 4.4 mudam de sentido e a via 4 sai da análise. Ver R1-14.
+2. **A afirmação da ata de que o efeito da transparência é «materialmente superior» ao da recuperação parcial de IVA tem de ser demonstrada com os números do M1, não repetida.** Se os números não a sustentarem no caso concreto, corrige-se — e diz-se que se corrigiu.
+
+---
+
+## Capítulo 5 — Recomendação fundamentada
+
+**A regra de decisão está fechada. Faltam os números que a percorrem.**
+
+Esta secção é o motivo pelo qual o capítulo 5 não fica para o fim: a lógica pode e deve ser fixada antes de os números existirem. Assim a recomendação decorre do modelo, em vez de ser escolhida e depois justificada com ele.
+
+### Regra de decisão
+
+**Passo 1 — O simplificado ainda serve?**
+Ler `PontoViragem`. Se os custos reais projetados ficarem **abaixo** do ponto de viragem, a via 1 mantém-se e as restantes não se justificam pelo argumento fiscal. Recomendação: manter, com revisão anual.
+*Improvável face ao projetado, mas é o passo que impede a análise de assumir a sua própria conclusão.*
+
+**Passo 2 — Sociedade ou nome individual?**
+Se o simplificado deixou de servir, a escolha entre a via 2 e as vias societárias **não se decide por via exclusivamente fiscal.** A ata já o regista: em sociedade detida a 100%, a transparência fiscal reduz o diferencial entre as duas vias. Pesar:
+
+| A favor da sociedade | A favor do nome individual |
+|---|---|
+| Separação patrimonial, relevante com encargos fixos e contratação de terceiros | Custo de estrutura e de contabilidade menor |
+| Formalização da relação com os prestadores | Menos obrigações declaratórias |
+| Escalabilidade: entrada de sócios, transmissão, sucessão | Sem custos de constituição nem de dissolução |
+| | A vinculação de 3 anos é o único compromisso |
+
+**Passo 3 — Se sociedade: transparente ou não?**
+Depende de **uma** variável, e é a única pergunta que a cliente tem de responder por si:
+
+> Quanto do lucro precisa de levantar todos os anos?
+
+- **Distribuição integral e recorrente** → a dupla tributação anula ou inverte o ganho. Recomenda-se a **via 3**, mais simples e sem cedência de capital.
+- **Retenção significativa de lucros** → afastar a transparência difere a segunda tributação e pode compensar. Avaliar a **via 4**, mas apenas se N1-01 confirmar que é sequer possível, e apenas depois de comparar com a alternativa da secção 5 de N1, que não exige ceder capital.
+
+**Passo 4 — Se via 4: como afastar o regime?**
+Comparar a entrada do cônjuge com mais de 25% do capital contra a via dos rendimentos não profissionais. A segunda não cede capital nem controlo, mas tem risco de qualificação próprio. Ver a tabela comparativa em N1, secção 5.
+
+### Como redigir
+
+- A recomendação é **uma** via, não um leque. Se as condições forem tais que a recomendação dependa de uma decisão pessoal da cliente, o relatório apresenta a decisão pessoal e o que cada resposta implica — mas não devolve a análise sob a forma de opções.
+- Cada passo da regra de decisão remete para a exposição de E2 que o sustenta.
+- O que a análise **não** decide diz-se explicitamente: proteção patrimonial e objetivos pessoais não são quantificáveis e são da cliente. A ata já o antecipa na conclusão.
+
+---
+
+## Capítulo 6 — Plano de implementação por fases
+
+**Esqueleto. P1 está pronto e é a fonte integral.**
+
+Adaptação necessária para a versão cliente:
+
+- Manter as fases 0 a 4, com responsável, pré-requisito e prazo.
+- Manter integralmente a secção «Janelas que não se recuperam» — é a parte do plano com consequência imediata.
+- Manter a secção «O que este plano não faz», reformulada em linguagem de cliente. A fronteira de âmbito diz-se antes, não a meio.
+- Retirar as siglas internas e as referências a R1.
+- Incluir o diagrama do caminho crítico, redesenhado no template.
+
+---
+
+## Capítulo 7 — Riscos, condicionantes e pontos que carecem de decisão da cliente
+
+**Esqueleto. R1 é a fonte. Não se copia: filtra-se.**
+
+Três blocos, por esta ordem:
+
+**7.1 Decisões que só a cliente pode tomar.** Extraídas da fase 0 de P1. Cada uma com o que implica e até quando. Este bloco vem primeiro porque é o único acionável.
+
+**7.2 Condicionantes da análise.** Os pressupostos de magnitude ALTA de R1, secções A e B, em linguagem de cliente. O que foi assumido, porquê, e o que mudaria se fosse diferente.
+
+**7.3 Riscos a gerir.** De R1, secção D, os que são da esfera da cliente: requalificação laboral (R1-19), licenciamento ERS (R1-20), RGPD (R1-27), substância económica do desenho societário (R1-26).
+
+**O que fica de fora do capítulo 7:** os parâmetros normativos por confirmar (R1, secção C). Se ainda estiverem abertos, o relatório não sai. Não se transferem para a cliente sob a forma de ressalva.
+
+**Nota sobre R1-14.** Se, à data do relatório, a questão do código de atividade do cônjuge continuar por resolver, não vai para o capítulo 7 como risco: **a via 4 sai do relatório**, com nota de que a análise fica disponível assim que o elemento for fornecido. Apresentar uma via inteira em cima de uma premissa não verificada é pior do que não a apresentar.
+
+---
+
+## Sequência de produção
+
+| # | Passo | Depende de | Estado |
+|---|---|---|---|
+| 1 | Confirmação normativa dos parâmetros | Fiscalidade | R1 secção C aberta |
+| 2 | Receção dos inputs da cliente | Cliente | Nenhum recebido |
+| 3 | Substituição dos placeholders no M1 e assinatura da folha `Validacao` | 1 e 2 | Bloqueado |
+| 4 | Cenários adicionais para E2.6 e E2.7 | 3 | Bloqueado |
+| 5 | Capítulos 3 e 4 | 3, N1-01 a N1-06 | Bloqueado |
+| 6 | Capítulo 5, percorrendo a regra de decisão | 5 | Lógica fechada |
+| 7 | Capítulos 6 e 7 | P1, R1 | Pode arrancar |
+| 8 | Capítulo 1 | Todos | — |
+| 9 | Anexo E2 no template, sem fórmulas visíveis | 4 | Bloqueado |
+| 10 | Deck E3, 12 a 15 slides, derivado do relatório | 8 | — |
+
+**O passo 1 não depende da cliente e está a bloquear tanto quanto o passo 2.** Vale a pena arrancar já.
