@@ -2281,6 +2281,261 @@ wcj.row_dimensions[r].height = 76
 wcj.freeze_panes = "C5"
 
 
+# ================================================================ TESOURARIA
+wt = wb.create_sheet("Tesouraria")
+title(wt, "M1 — Tesouraria do ano 1 e necessidade de fundo de maneio",
+      "Um negócio pode ser rentável e mesmo assim ficar sem dinheiro. O investimento paga-se todo no "
+      "início, a receita sobe devagar, e há pagamentos que chegam em bloco. Esta folha responde à única "
+      "pergunta que importa antes de assinar seja o que for: quanto dinheiro é preciso ter na mão para "
+      "chegar ao fim do primeiro ano.")
+MES = ["C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N"]
+widths(wt, dict([("A", 46), ("B", 12)] + [(c, 11) for c in MES] + [("O", 13), ("P", 50)]))
+wt.merge_cells("A2:P2"); wt["A2"].alignment = Alignment(wrap_text=True, vertical="top")
+wt.row_dimensions[2].height = 46
+
+CAPM = "({c}/12)".format(c=oref("CAP_ANO", "D"))
+PRECO = "BreakEven!$D$%d" % B["PRECO_M"]
+PVAR = "(1-BreakEven!$D$%d)" % B["MCP"]
+CFA = "BreakEven!$D$%d" % B["CF"]
+r = 4
+
+# ---- bloco A: fundos de arranque
+section(wt, r, "Fundos necessários no arranque", span=4); r += 1
+T = {}
+
+
+def trow1(key, label, val, fmt=EUR, style="calc", note=""):
+    global r
+    wt.cell(row=r, column=1, value=label).font = F_RESULT if style == "result" else F_BODY
+    wt.cell(row=r, column=2, value=key).font = F_NOTE
+    c = wt.cell(row=r, column=3, value=val)
+    c.number_format, c.border = fmt, BOX
+    c.font = {"calc": F_CALC, "link": F_LINK, "result": F_RESULT, "input": F_INPUT}[style]
+    if style == "result":
+        c.fill = FILL_RES
+    if style == "input":
+        c.fill = FILL_FILL
+    n = wt.cell(row=r, column=4, value=note); n.font = F_NOTE
+    n.alignment = Alignment(wrap_text=True, vertical="top")
+    T[key] = r
+    r += 1
+
+
+def t1(key):
+    return "$C$%d" % T[key]
+
+
+trow1("INV", "Investimento em obras, equipamento e software",
+      "={a}+{b}+{d}+{e}".format(a=inp("INV_OBRAS", "D"), b=inp("INV_EQUIP", "D"),
+                                d=inp("INV_EQUIP_R", "D"), e=inp("INV_SOFT", "D")), style="link")
+trow1("IVA_IRR", "IVA irrecuperável sobre o investimento", "=IVA!$D$%d" % VR["I_TOT"], style="link",
+      note="Sai da conta e não volta: a fisioterapia é isenta sem direito à dedução.")
+trow1("MESES_CAUC", "Caução do arrendamento (meses de renda)", 3, fmt=NUM, style="input",
+      note="Rubrica que quase sempre se esquece no plano de investimento. Confirmar com a proposta de "
+           "arrendamento.")
+trow1("CAUCAO", "Caução do arrendamento",
+      "={m}*{r}/12".format(m=t1("MESES_CAUC"), r=inp("RENDA", "D")))
+trow1("ARRANQUE", "TOTAL A DESEMBOLSAR NO ARRANQUE",
+      "={a}+{b}+{d}".format(a=t1("INV"), b=t1("IVA_IRR"), d=t1("CAUCAO")), style="result")
+
+# ---- bloco B: ano 1 mes a mes
+r += 1
+section(wt, r, "Ano 1, mês a mês", span=16); r += 1
+hdr(wt, r, ["Rubrica", "Ref."] + ["Mês %d" % (i + 1) for i in range(12)] + ["Ano 1", "Nota"])
+r += 1
+T2 = {}
+
+
+def trow(key, label, fn, fmt=EUR, style="calc", total=True, note=""):
+    global r
+    T2[key] = r
+    wt.cell(row=r, column=1, value=label).font = F_RESULT if style == "result" else F_BODY
+    wt.cell(row=r, column=2, value=key).font = F_NOTE
+    for i, col in enumerate(MES):
+        c = wt.cell(row=r, column=3 + i, value=fn(col, i))
+        c.number_format, c.border = fmt, BOX
+        c.font = {"calc": F_CALC, "link": F_LINK, "result": F_RESULT, "input": F_INPUT}[style]
+        if style == "input":
+            c.fill = FILL_FILL
+        if style == "result":
+            c.fill = FILL_RES
+    if total:
+        tc = wt.cell(row=r, column=15, value="=SUM(C%d:N%d)" % (r, r))
+        tc.number_format, tc.font, tc.border = fmt, F_RESULT, BOX
+    n = wt.cell(row=r, column=16, value=note); n.font = F_NOTE
+    n.alignment = Alignment(wrap_text=True, vertical="top")
+    r += 1
+
+
+def t2(key, col):
+    return "%s$%d" % (col, T2[key])
+
+
+RAMPA = [0.15, 0.20, 0.25, 0.30, 0.33, 0.36, 0.39, 0.41, 0.43, 0.44, 0.45, 0.45]
+trow("OCUP", "Taxa de ocupação dos gabinetes", lambda c, i: RAMPA[i], fmt=PCT, style="input", total=False,
+     note="RAMPA DE ARRANQUE. É a fila de inputs mais importante desta folha e a que ninguém quer "
+          "preencher com honestidade. Uma clínica nova não abre à ocupação de cruzeiro.")
+trow("CONS", "Consultas do mês", lambda c, i: "={cap}*{o}".format(cap=CAPM, o=t2("OCUP", c)), fmt=NUM)
+trow("FAT", "Faturação do mês",
+     lambda c, i: "={n}*{p}".format(n=t2("CONS", c), p=PRECO), style="result")
+trow("PCT_PRONTO", "% recebida no próprio mês", lambda c, i: 0.85, fmt=PCT, style="input", total=False,
+     note="Consultas particulares pagam-se na hora; subsistemas e seguros pagam a 30 dias ou mais.")
+trow("REC", "Recebimentos",
+     lambda c, i: "={f}*{p}".format(f=t2("FAT", c), p=t2("PCT_PRONTO", c)) if i == 0 else
+     "={f}*{p}+{fa}*(1-{pa})".format(f=t2("FAT", c), p=t2("PCT_PRONTO", c),
+                                     fa=t2("FAT", MES[i - 1]), pa=t2("PCT_PRONTO", MES[i - 1])),
+     style="result", note="O desfasamento entre faturar e receber é dinheiro que falta em caixa.")
+trow("CV", "Custos variáveis (consumíveis e colaboradores)",
+     lambda c, i: "={f}*{v}".format(f=t2("FAT", c), v=PVAR))
+trow("CF", "Custos fixos", lambda c, i: "={cf}/12".format(cf=CFA), style="link",
+     note="Renda, condomínio, seguros, software e outros. Pagam-se haja ou não doentes.")
+trow("SS", "Segurança Social", lambda c, i: "={s}/12".format(s=v2.ref("SS_CONTR", "D")), style="link",
+     note="Aproximação de cruzeiro. No primeiro ano a base é a declarada, não o lucro do próprio ano. "
+          "Ver R1-40.")
+trow("IRS_PC", "IRS — pagamentos por conta", lambda c, i: 0, fmt=EUR, style="input",
+     note="A PREENCHER, e é uma armadilha clássica: no ano 1 os pagamentos por conta são calculados "
+          "sobre o rendimento do ano ANTERIOR, no regime antigo. Paga-se IRS do passado enquanto se "
+          "está a investir no futuro. Vencem em julho, setembro e dezembro — meses 7, 9 e 12.")
+trow("INV_M", "Investimento e caução",
+     lambda c, i: ("=" + t1("ARRANQUE")) if i == 0 else 0, style="calc",
+     note="Todo no mês 1. Se a empreitada for faseada, repartir.")
+trow("SALDO", "SALDO DO MÊS",
+     lambda c, i: "={r}-{cv}-{cf}-{ss}-{irs}-{inv}".format(
+         r=t2("REC", c), cv=t2("CV", c), cf=t2("CF", c), ss=t2("SS", c),
+         irs=t2("IRS_PC", c), inv=t2("INV_M", c)), style="result")
+trow("ACUM", "SALDO ACUMULADO",
+     lambda c, i: ("=" + t2("SALDO", c)) if i == 0 else
+     "={a}+{s}".format(a=t2("ACUM", MES[i - 1]), s=t2("SALDO", c)), style="result", total=False,
+     note="É esta a linha que decide se o projeto sobrevive ao primeiro ano.")
+trow("MARC_MIN", "Marcador do ponto mais baixo",
+     lambda c, i: "=IF({a}=MIN($C${x}:$N${x}),{n},0)".format(a=t2("ACUM", c), x=T2["ACUM"], n=i + 1),
+     fmt=NUM, total=False)
+trow("MARC", "Marcador de recuperação",
+     lambda c, i: 0 if i == 0 else "=IF(AND({a}>=0,{p}<0),{n},0)".format(
+         a=t2("ACUM", c), p=t2("ACUM", MES[i - 1]), n=i + 1), fmt=NUM, total=False)
+
+r += 1
+AC = "$C$%d:$N$%d" % (T2["ACUM"], T2["ACUM"])
+for lbl, f, fmt2, nota in [
+    ("NECESSIDADE MÁXIMA DE TESOURARIA", "=-MIN(%s)" % AC, EUR,
+     "O ponto mais fundo do saldo acumulado. JÁ INCLUI o investimento e a caução, porque eles saem da "
+     "mesma conta bancária — não somar outra vez."),
+    ("   da qual, investimento e caução", "=" + t1("ARRANQUE"), EUR,
+     "Desembolso de uma só vez, no arranque."),
+    ("   da qual, cobertura do défice operacional", "=-MIN({a})-{b}".format(a=AC, b=t1("ARRANQUE")), EUR,
+     "O que a operação consome enquanto a receita não chega para os custos. É a parte que quase ninguém "
+     "orça, e é a que apanha quem abre pela primeira vez."),
+    ("Mês em que o saldo acumulado atinge o ponto mais baixo",
+     "=MAX($C${m}:$N${m})".format(m=T2["MARC_MIN"]), NUM, ""),
+    ("Mês em que o saldo acumulado volta a ser positivo",
+     '=IF(MAX($C${m}:$N${m})=0,"Não recupera dentro do ano 1",MAX($C${m}:$N${m}))'.format(m=T2["MARC"]),
+     NUM, "Se não recuperar dentro do ano 1, o fundo de maneio tem de cobrir também o ano 2."),
+    ("Margem de segurança (meses de custos fixos)", 3, NUM,
+     "A PREENCHER. Nenhuma projeção acerta. Três meses é uma convenção prudente para quem não tem "
+     "outra fonte de rendimento."),
+]:
+    wt.cell(row=r, column=1, value=lbl).font = F_RESULT if lbl.isupper() else F_BODY
+    c = wt.cell(row=r, column=3, value=f)
+    c.number_format, c.border = fmt2, BOX
+    c.font, c.fill = (F_INPUT, FILL_FILL) if isinstance(f, int) else (F_RESULT, FILL_RES)
+    n = wt.cell(row=r, column=5, value=nota); n.font = F_NOTE
+    n.alignment = Alignment(wrap_text=True, vertical="top")
+    wt.merge_cells(start_row=r, start_column=5, end_row=r, end_column=14)
+    wt.row_dimensions[r].height = 26
+    T["L_" + lbl[:10]] = r
+    r += 1
+MARG_ROW = r - 1
+NEC_ROW = r - 6
+r += 1
+wt.cell(row=r, column=1, value="Margem de segurança, em euros").font = F_BODY
+c = wt.cell(row=r, column=3, value="=$C${m}*{cf}/12".format(m=MARG_ROW, cf=CFA))
+c.number_format, c.font, c.border = EUR, F_CALC, BOX
+FM_ROW = r
+r += 1
+wt.cell(row=r, column=1, value="TOTAL DE DINHEIRO NECESSÁRIO ANTES DE ABRIR").font = F_RESULT
+c = wt.cell(row=r, column=3, value="=$C${a}+$C${f}".format(a=NEC_ROW, f=FM_ROW))
+c.number_format, c.font, c.fill, c.border = EUR, F_RESULT, FILL_WARN, BOX
+n = wt.cell(row=r, column=5,
+            value="Investimento, caução e fundo de maneio. É este o número a dizer à cliente antes de "
+                  "qualquer conversa sobre estrutura fiscal. Se ela não o tiver ou não o conseguir "
+                  "financiar, a discussão sobre ENI ou sociedade é prematura.")
+n.font = F_NOTE; n.alignment = Alignment(wrap_text=True, vertical="top")
+wt.merge_cells(start_row=r, start_column=5, end_row=r, end_column=14)
+wt.row_dimensions[r].height = 30
+r += 2
+
+_l4 = LineChart()
+_l4.title = "Saldo de tesouraria acumulado — ano 1"
+_l4.y_axis.title, _l4.x_axis.title = "euros", "mês"
+_l4.height, _l4.width = 8, 18
+_l4.append(Series(Reference(wt, min_col=3, max_col=14, min_row=T2["ACUM"], max_row=T2["ACUM"]),
+                  title="Saldo acumulado"))
+wt.add_chart(_l4, "R4")
+
+# ---- bloco C: tres anos
+section(wt, r, "Visão a três anos", span=6); r += 1
+hdr(wt, r, ["Rubrica", "Ref.", "Ano 1", "Ano 2", "Ano 3", "Nota"]); r += 1
+A3 = {}
+ACOLS = ["C", "D", "E"]
+
+
+def a3row(key, label, fn, fmt=EUR, style="calc", note=""):
+    global r
+    A3[key] = r
+    wt.cell(row=r, column=1, value=label).font = F_RESULT if style == "result" else F_BODY
+    wt.cell(row=r, column=2, value=key).font = F_NOTE
+    for i, col in enumerate(ACOLS):
+        c = wt.cell(row=r, column=3 + i, value=fn(col, i))
+        c.number_format, c.border = fmt, BOX
+        c.font = {"calc": F_CALC, "link": F_LINK, "result": F_RESULT, "input": F_INPUT}[style]
+        if style == "input":
+            c.fill = FILL_FILL
+        if style == "result":
+            c.fill = FILL_RES
+    n = wt.cell(row=r, column=6, value=note); n.font = F_NOTE
+    n.alignment = Alignment(wrap_text=True, vertical="top")
+    r += 1
+
+
+def a3(key, col):
+    return "$%s$%d" % (col, A3[key])
+
+
+a3row("OCUP", "Taxa de ocupação média do ano",
+      lambda c, i: "=AVERAGE($C${o}:$N${o})".format(o=T2["OCUP"]) if i == 0 else [0, 0.52, 0.58][i],
+      fmt=PCT, style="input",
+      note="Ano 1 é a média da rampa. Anos 2 e 3 a preencher — e a justificar com o plano de captação "
+           "de doentes, que não existe e é o pressuposto silencioso de tudo isto (R1-41).")
+a3row("FAT", "Faturação",
+      lambda c, i: "={cap}*{o}*{p}".format(cap=oref("CAP_ANO", "D"), o=a3("OCUP", c), p=PRECO),
+      style="result")
+a3row("CV", "Custos variáveis", lambda c, i: "={f}*{v}".format(f=a3("FAT", c), v=PVAR))
+a3row("CF", "Custos fixos", lambda c, i: "=" + CFA, style="link")
+a3row("RES", "Resultado operacional",
+      lambda c, i: "={f}-{cv}-{cf}".format(f=a3("FAT", c), cv=a3("CV", c), cf=a3("CF", c)), style="result")
+a3row("CARGA", "Impostos e contribuições estimados",
+      lambda c, i: "=MAX(0,{r})*{t}".format(r=a3("RES", c), t=v2.ref("TAXA_EF", "D")), style="calc",
+      note="Aplica a taxa de esforço da via 2 no cenário Base. Aproximação: a taxa real varia com o "
+           "nível de rendimento. Ver R1-33.")
+a3row("LIQ", "Resultado líquido",
+      lambda c, i: "={r}-{c}".format(r=a3("RES", c), c=a3("CARGA", c)), style="result")
+a3row("CX", "Caixa acumulada desde o arranque",
+      lambda c, i: "={l}-{a}".format(l=a3("LIQ", c), a=t1("ARRANQUE")) if i == 0 else
+      "={p}+{l}".format(p=a3("CX", ACOLS[i - 1]), l=a3("LIQ", c)), style="result",
+      note="Inclui o desembolso inicial. O ano em que esta linha passa a positiva é o payback real.")
+r += 1
+wt.cell(row=r, column=1,
+        value="Esta visão a três anos assume custos fixos constantes e preço constante. Não é uma "
+              "projeção financeira completa — é o suficiente para responder a «quando é que recupero o "
+              "que meti» e a «o ano 1 é sustentável». Uma projeção completa exigiria inflação de custos, "
+              "renovação de equipamento e evolução da tabela de preços, e nenhuma dessas coisas está "
+              "informada. Registado em R1-42.").font = F_SUB
+wt.merge_cells(start_row=r, start_column=1, end_row=r, end_column=16)
+wt["A%d" % r].alignment = Alignment(wrap_text=True, vertical="top")
+wt.row_dimensions[r].height = 44
+wt.freeze_panes = "C5"
+
+
 # ================================================================ LEIA-ME
 wl = wb.create_sheet("LEIA-ME", 0)
 title(wl, "M1 — Modelo comparativo das quatro vias")
@@ -2326,8 +2581,17 @@ TXT = [
           "do art. 12.º n.º 1 do Código do Trabalho. Dois deles verificam-se por natureza numa clínica."),
     ("T", "Conjuge — custo de complexidade da entrada do cônjuge: ganhos de um lado, custos do outro, e "
           "o que não é quantificável."),
+    ("T", "Tesouraria — ano 1 mês a mês, fundo de maneio e vista a três anos. Responde à pergunta que "
+          "vem antes de todas as outras: quanto dinheiro é preciso ter na mão antes de abrir."),
     ("T", "Alertas — verificação de plausibilidade empresarial e semáforo global. Enquanto houver um "
           "alerta bloqueante ativo, nenhum número sai do ficheiro."),
+    ("SEC", "Rentabilidade e solvência são perguntas diferentes"),
+    ("T", "As folhas das quatro vias, o Comparativo e o BreakEven dizem se o negócio é rentável. A folha "
+          "Tesouraria diz se sobrevive ao primeiro ano. Um negócio rentável fica sem dinheiro quando o "
+          "investimento se paga à cabeça, a receita sobe devagar e há pagamentos que chegam em bloco."),
+    ("T", "Para quem abre pela primeira vez, a segunda pergunta é a que morde primeiro. O número a dar "
+          "à cliente antes de qualquer conversa sobre ENI ou sociedade é o total de dinheiro necessário "
+          "antes de abrir, na folha Tesouraria."),
     ("SEC", "Três break-even distintos, que nunca se misturam"),
     ("T", "Break-even FISCAL (folha PontoViragem): a partir de que nível de custos reais uma estrutura "
           "fiscal passa a ser melhor do que outra."),

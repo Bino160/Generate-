@@ -20,6 +20,7 @@
 | E3 — estrutura do deck e guião da sessão | `06-reuniao/E3_estrutura_deck.md` | 14 slides e guião de 90 min fechados |
 | D1 — avaliação da spec de evolução VCLevel | `07-decisoes/D1_avaliacao_spec_vclevel.md` | Decisão proposta: implementar P0 e núcleo do P1, rejeitar o scoring, diferir P2/P3 |
 | D2 — avaliação da análise em quatro pilares | `07-decisoes/D2_avaliacao_analise_quatro_pilares.md` | Implementado o risco laboral e o custo do cônjuge; três imprecisões registadas para não transitarem |
+| D3 — avaliação da análise de gaps | `07-decisoes/D3_avaliacao_analise_gaps.md` | Implementada a tesouraria; dois gaps apontados estavam factualmente errados |
 
 **Nada disto sai para a cliente.** Os entregáveis são o relatório E1, o anexo E2 e a reunião E3. A entrega do ficheiro do modelo está expressamente fora de âmbito.
 
@@ -69,8 +70,28 @@ O risco maior deste projeto não é escolher a estrutura fiscal errada. É ela c
 | Terceiro gabinete que não enche | **3.524 €/ano** líquidos, mais 23.370 € de investimento adicional |
 | IVA irrecuperável no investimento | **10.810 €**, custo definitivo |
 | Ficar no regime simplificado com esta estrutura de custos | Taxa de esforço de ~79% sobre a caixa gerada |
+| **Abrir sem fundo de maneio suficiente** | Precisa de **67.306 €** antes de abrir; a tesouraria só recupera no ano 3 |
 
 Ordens de grandeza sobre placeholders, para calibrar prioridades — não valores do caso.
+
+---
+
+## Rentabilidade não é solvência
+
+O modelo mostrava que o negócio é rentável. Nunca mostrava se ela sobrevive ao mês 4. A folha `Tesouraria` responde à pergunta que vem antes de todas as outras:
+
+| | |
+|---|---|
+| **Dinheiro necessário antes de abrir** | **67.306 €** |
+| — investimento e caução | 61.410 € |
+| — cobertura do défice operacional | 921 € |
+| — margem de segurança | 4.975 € |
+| Saldo acumulado ao fim do ano 1 | ainda negativo, −38.913 € |
+| Ano em que a caixa recupera o investimento | Ano 3 |
+
+Três rubricas que não estavam em lado nenhum: a **caução do arrendamento**, o **desfasamento entre faturar e receber**, e a armadilha dos **pagamentos por conta de IRS no ano 1** — calculados sobre o rendimento do ano anterior, no regime antigo, e a vencer no pior momento da tesouraria.
+
+Se a cliente não tiver este dinheiro ou não o conseguir financiar, a discussão sobre ENI ou sociedade é prematura.
 
 ---
 
