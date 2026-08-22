@@ -39,11 +39,20 @@ O código de atividade que consta da declaração de início ou de alterações 
 
 ---
 
-### 2. Projeção de faturação para 24 meses
+### 2. Como trabalha, em números
 
-Valor mensal previsto, ainda que aproximado. Se distinguir entre a sua própria atividade e a dos fisioterapeutas a integrar, melhor.
+Não lhe vamos pedir uma projeção de faturação. Vamos pedir-lhe os números do seu dia, que conhece bem, e a faturação sai daí:
 
-**Para que serve:** é a base dos três cenários da análise. Prefira ser realista a ser otimista — a comparação entre estruturas é mais sensível ao nível de custos do que ao de faturação, e uma projeção inflacionada não favorece nenhuma via, apenas piora a qualidade da decisão.
+- **Quantos dias por ano** tenciona atender, descontando férias e feriados;
+- **Quantas consultas por dia** consegue fazer, num dia normal;
+- **Quanto dura** uma sessão, em média;
+- **Que horas** o espaço estará aberto, por dia.
+
+E o mesmo, para cada fisioterapeuta que pretende integrar: dias por ano, consultas por dia, duração.
+
+**Porque perguntamos assim:** uma previsão de faturação é um palpite e ninguém a consegue verificar. Estes números, não — com eles calculamos a faturação **e** verificamos se ela cabe no espaço. É uma diferença prática: uma projeção que exija mais consultas do que os gabinetes comportam é impossível, não é ambiciosa, e mais vale descobri-lo agora do que depois de assinar o arrendamento.
+
+Se preferir dar-nos diretamente um valor de faturação previsto, também trabalhamos com ele. Mas perdemos essa verificação.
 
 ---
 
@@ -60,7 +69,10 @@ Para **cada um** dos espaços (2 e 3 gabinetes):
 - renda mensal e duração proposta do contrato;
 - condomínio e outros encargos fixos;
 - concelho onde se situa;
-- se a renda inclui ou não IVA.
+- se a renda inclui ou não IVA;
+- **número de gabinetes efetivamente utilizáveis para consulta**, e o horário de funcionamento previsto.
+
+**Sobre o último ponto:** é o que permite comparar os dois espaços a sério. A escolha entre dois e três gabinetes não se decide pela diferença de renda — decide-se pelo número de doentes que espera atender. Abaixo de um certo nível de procura, o terceiro gabinete é renda e obras a mais sem receita a acompanhar; acima dele, o espaço mais pequeno começa a recusar consultas. Conseguimos dizer-lhe onde está esse ponto, mas só com estes dados.
 
 **Nota:** o concelho não é um detalhe. A taxa de derrama municipal varia de município para município, e alguns isentam volumes de negócios reduzidos.
 
@@ -79,6 +91,7 @@ Orçamentos dos fornecedores, com o valor sem IVA, a taxa aplicada e o total, **
 Para cada profissional, ainda que em negociação:
 
 - valor acordado ou pretendido, e forma de cálculo (percentagem da faturação, valor por sessão, valor fixo);
+- dias por ano e consultas por dia que espera de cada um;
 - se trabalha em exclusividade para si ou também noutros locais;
 - se usa equipamento e materiais seus ou próprios;
 - quem marca as consultas e define os horários;
@@ -128,6 +141,7 @@ Não é uma imposição burocrática: os números que produzimos têm de refleti
 
 ## Notas internas *(não enviar)*
 
+- O ponto **2** foi reescrito: o brief pedia «projeção de faturação a 24 meses», e passámos a pedir os drivers operacionais. O M1 passou a derivar a faturação da capacidade instalada, o que torna a projeção verificável e permite responder à questão dos 2 vs. 3 gabinetes. As pessoas estimam mal receita e estimam bem quantos doentes veem por dia. Ver D1, secção «O ponto sensível ao tempo».
 - Os pontos **1** e **10** não constam da secção 4 do brief. Foram acrescentados: o 1 porque toda a via 4 assenta numa premissa não verificada (N1, secção 4.1 e R1-14); o 10 porque a política de distribuição é a variável que decide entre as vias 3 e 4 (N1, secção 6 e R1-07).
 - A ordem foi alterada face ao brief: o código de atividade do cônjuge passou de sexto para primeiro. Se só vier uma resposta a este pedido, que seja essa.
 - Considerar enviar o ponto 1 isoladamente, hoje, e a lista completa depois. Desbloqueia a análise mais incerta sem esperar pelo pacote.

@@ -80,13 +80,14 @@ ws.title = "Parametros"
 title(ws, "M1 — Parâmetros fiscais e contributivos",
       "Todos os parâmetros do modelo vivem aqui. Nenhuma folha de cálculo pode conter uma taxa escrita "
       "dentro de uma fórmula. Coluna E indica o estado de validação pela equipa de Fiscalidade.")
-widths(ws, {"A": 46, "B": 16, "C": 16, "D": 62, "E": 26})
+widths(ws, {"A": 46, "B": 16, "C": 16, "D": 62, "E": 26, "F": 10})
 
 r = 4
-hdr(ws, r, ["Parâmetro", "Referência", "Valor", "Fonte normativa", "Estado de validação"])
+hdr(ws, r, ["Parâmetro", "Referência", "Valor", "Fonte normativa", "Estado de validação", "Por validar"])
 r += 1
 
 P = {}   # chave -> referencia absoluta "Parametros!$C$n"
+VALID_ROWS = []   # linhas com o sinalizador numerico de "por validar" (coluna F)
 
 ROWS = [
     ("SEC", "Segurança Social"),
@@ -178,8 +179,12 @@ for item in ROWS:
     ws.cell(row=r, column=4, value=src).font = F_NOTE
     st = ws.cell(row=r, column=5, value=status)
     st.font = F_NOTE
-    if status.startswith(("CONFIRMAR", "A ATUALIZAR", "EM ABERTO")):
+    porvalidar = 1 if status.startswith(("CONFIRMAR", "A ATUALIZAR", "EM ABERTO")) else 0
+    if porvalidar:
         st.fill = FILL_WARN
+    fl = ws.cell(row=r, column=6, value=porvalidar)
+    fl.font, fl.number_format = F_NOTE, NUM
+    VALID_ROWS.append(r)
     P[key] = "Parametros!$C$%d" % r
     r += 1
 
@@ -262,6 +267,118 @@ def solidariedade(rc):
     return "SUMPRODUCT(({rc}>{inf})*({rc}-{inf})*{d})".format(rc=rc, inf=SOL_INF, d=SOL_DEL)
 
 
+# ================================================================ OPERACAO
+wso = wb.create_sheet("Operacao")
+title(wso, "M1 — Camada operacional: capacidade, utilização e faturação",
+      "A faturação deixa de ser um palpite e passa a ser uma consequência. Gabinetes, dias de "
+      "funcionamento, duração da consulta e preço determinam quanto é possível faturar — e a linha de "
+      "utilização diz se a projeção cabe no espaço. Uma projeção que exija mais de 100% de utilização é "
+      "impossível, não é otimista.")
+widths(wso, {"A": 56, "B": 14, "C": 14, "D": 14, "E": 14, "F": 54})
+wso.merge_cells("A2:F2"); wso["A2"].alignment = Alignment(wrap_text=True, vertical="top")
+wso.row_dimensions[2].height = 46
+r = 4
+hdr(wso, r, ["Rubrica", "Ref.", "Baixo", "Base", "Alto", "Nota"]); r += 1
+O = {}
+OVALS = {}
+
+
+def orow(key, label, vals=None, fn=None, fmt=NUM, style="input", note=""):
+    global r
+    if vals is not None:
+        OVALS[key] = vals
+    wso.cell(row=r, column=1, value=label).font = F_RESULT if style == "result" else F_BODY
+    wso.cell(row=r, column=2, value=key).font = F_NOTE
+    for j, (col, _n) in enumerate(SCEN):
+        c = wso.cell(row=r, column=3 + j, value=(vals[j] if vals is not None else fn(col)))
+        c.number_format, c.border = fmt, BOX
+        c.font = {"input": F_INPUT, "calc": F_CALC, "result": F_RESULT}[style]
+        if style == "input":
+            c.fill = FILL_FILL
+        if style == "result":
+            c.fill = FILL_RES
+    n = wso.cell(row=r, column=6, value=note)
+    n.font, n.alignment = F_NOTE, Alignment(wrap_text=True, vertical="top")
+    O[key] = r
+    r += 1
+
+
+def oc(key, col):
+    return "$%s$%d" % (col, O[key])
+
+
+def oref(key, col):
+    return "Operacao!$%s$%d" % (col, O[key])
+
+
+section(wso, r, "Espaço e horário", span=6); r += 1
+orow("N_GAB", "N.º de gabinetes", (2, 2, 3),
+     note="Input cliente 3 — EM FALTA. Ata, ponto 3: dois espaços em avaliação, 2 e 3 gabinetes. "
+          "A comparação dedicada está na folha Espaco.")
+orow("DIAS_ANO", "Dias de funcionamento por ano", (220, 220, 220),
+     note="EM FALTA. 220 dias corresponde a semana de 5 dias com férias e feriados.")
+orow("HORAS_DIA", "Horas úteis por gabinete por dia", (8, 8, 8), note="EM FALTA.")
+orow("DUR_CONS", "Duração média da consulta (minutos)", (45, 45, 45),
+     note="EM FALTA. Determina a capacidade. Sessões de 30 ou de 60 minutos mudam tudo o que vem abaixo.")
+
+section(wso, r, "Atividade da Dra. Júlia", span=6); r += 1
+orow("DIAS_JUL", "Dias por ano em que atende", (190, 200, 210), note="EM FALTA.")
+orow("CONS_JUL", "Consultas por dia", (5, 6, 7), note="EM FALTA.")
+orow("PRECO_JUL", "Preço médio por consulta", (45, 48, 50), fmt=EUR,
+     note="Input cliente 2 — EM FALTA. Sai da tabela de preços, que a ata regista como inexistente.")
+
+section(wso, r, "Fisioterapeutas a integrar", span=6); r += 1
+orow("N_FISIO", "N.º de fisioterapeutas", (1, 1, 2), note="Ata, ponto 3.")
+orow("DIAS_FIS", "Dias por ano, por profissional", (160, 180, 180), note="EM FALTA.")
+orow("CONS_FIS", "Consultas por dia, por profissional", (4, 5, 4), note="EM FALTA.")
+orow("PRECO_FIS", "Preço médio por consulta", (45, 48, 50), fmt=EUR, note="EM FALTA.")
+
+section(wso, r, "Capacidade", span=6); r += 1
+orow("CAP_DIA", "Capacidade diária por gabinete (consultas)", fn=lambda c:
+     "={h}*60/{d}".format(h=oc("HORAS_DIA", c), d=oc("DUR_CONS", c)), fmt='#,##0.0', style="calc")
+orow("CAP_ANO", "Capacidade anual instalada (consultas)", fn=lambda c:
+     "={g}*{d}*{k}".format(g=oc("N_GAB", c), d=oc("DIAS_ANO", c), k=oc("CAP_DIA", c)), style="result")
+
+section(wso, r, "Procura projetada", span=6); r += 1
+orow("CONS_JUL_A", "Consultas anuais da Dra. Júlia", fn=lambda c:
+     "={d}*{k}".format(d=oc("DIAS_JUL", c), k=oc("CONS_JUL", c)), style="calc")
+orow("CONS_FIS_A", "Consultas anuais dos colaboradores", fn=lambda c:
+     "={n}*{d}*{k}".format(n=oc("N_FISIO", c), d=oc("DIAS_FIS", c), k=oc("CONS_FIS", c)), style="calc")
+orow("CONS_TOT", "Consultas anuais totais", fn=lambda c:
+     "={a}+{b}".format(a=oc("CONS_JUL_A", c), b=oc("CONS_FIS_A", c)), style="result")
+orow("UTILIZ", "TAXA DE UTILIZAÇÃO DOS GABINETES", fn=lambda c:
+     "=IF({c}<=0,0,{t}/{c})".format(c=oc("CAP_ANO", c), t=oc("CONS_TOT", c)), fmt=PCT, style="result",
+     note="Acima de 100% a projeção é impossível: não há gabinetes para as consultas previstas. "
+          "Acima de 85% é operacionalmente muito exigente. Ver folha Alertas.")
+orow("TESTE_CAP", "Leitura da utilização", fn=lambda c:
+     '=IF({u}>1,"IMPOSSÍVEL — a projeção não cabe no espaço",'
+     'IF({u}>0.85,"MUITO EXIGENTE — pouca folga operacional",'
+     'IF({u}<0.3,"FOLGA ELEVADA — capacidade subaproveitada","PLAUSÍVEL")))'.format(u=oc("UTILIZ", c)),
+     fmt="General", style="result")
+
+section(wso, r, "Faturação derivada", span=6); r += 1
+orow("FAT_JUL", "Faturação anual da Dra. Júlia", fn=lambda c:
+     "={a}*{p}".format(a=oc("CONS_JUL_A", c), p=oc("PRECO_JUL", c)), fmt=EUR, style="result")
+orow("FAT_FIS", "Faturação anual gerada pelos colaboradores", fn=lambda c:
+     "={a}*{p}".format(a=oc("CONS_FIS_A", c), p=oc("PRECO_FIS", c)), fmt=EUR, style="result")
+orow("FAT_TOT", "Faturação anual total gerada", fn=lambda c:
+     "={a}+{b}".format(a=oc("FAT_JUL", c), b=oc("FAT_FIS", c)), fmt=EUR, style="result")
+
+section(wso, r, "Unit economics", span=6); r += 1
+orow("FAT_GAB", "Faturação por gabinete", fn=lambda c:
+     "=IF({g}<=0,0,{f}/{g})".format(g=oc("N_GAB", c), f=oc("FAT_TOT", c)), fmt=EUR, style="calc")
+orow("CONS_GAB", "Consultas por gabinete", fn=lambda c:
+     "=IF({g}<=0,0,{t}/{g})".format(g=oc("N_GAB", c), t=oc("CONS_TOT", c)), style="calc")
+orow("FAT_PROF", "Faturação por profissional", fn=lambda c:
+     "={f}/(1+{n})".format(f=oc("FAT_TOT", c), n=oc("N_FISIO", c)), fmt=EUR, style="calc")
+orow("FAT_HORA", "Faturação por hora de gabinete disponível", fn=lambda c:
+     "=IF({g}*{d}*{h}<=0,0,{f}/({g}*{d}*{h}))".format(g=oc("N_GAB", c), d=oc("DIAS_ANO", c),
+                                                      h=oc("HORAS_DIA", c), f=oc("FAT_TOT", c)),
+     fmt=EUR2, style="calc",
+     note="Indicador de eficiência do espaço, independente da estrutura fiscal.")
+wso.freeze_panes = "C5"
+
+
 # ================================================================ INPUTS
 wsi = wb.create_sheet("Inputs")
 title(wsi, "M1 — Inputs (folha única de parâmetros do caso)",
@@ -269,28 +386,53 @@ title(wsi, "M1 — Inputs (folha única de parâmetros do caso)",
       "Todos os valores abaixo são ILUSTRATIVOS, servem apenas para testar o motor de cálculo, e estão "
       "registados como pressupostos em R1. Nenhum número desta folha pode transitar para o relatório "
       "enquanto não for substituído por dados da cliente.")
-widths(wsi, {"A": 58, "B": 14, "C": 14, "D": 14, "E": 14, "F": 52})
-wsi.merge_cells("A2:F2")
+widths(wsi, {"A": 58, "B": 15, "C": 14, "D": 14, "E": 14, "F": 52,
+                 "G": 20, "H": 13, "I": 11, "J": 8})
+wsi.merge_cells("A2:J2")
 wsi["A2"].alignment = Alignment(wrap_text=True, vertical="top")
 wsi.row_dimensions[2].height = 46
 
 r = 4
 hdr(wsi, r, ["Input", "Referência", "Baixo", "Base", "Alto", "Nota / origem"]); r += 1
 
+def inp(key, col):
+    return "Inputs!$%s$%d" % (col, I[key])
+
+
 I = {}
 IN_ROWS = [
-    ("SEC", "Faturação e modelo de colaboração"),
-    ("P", "FAT_PROP", "Faturação anual da própria Dra. Júlia (isenta, art. 9.º CIVA)", (52000, 65000, 85000), EUR,
-     "Input cliente 1 — EM FALTA. Doentes próprios, independentemente do modelo de colaboração."),
-    ("P", "FAT_COLAB", "Faturação anual gerada pelos fisioterapeutas a integrar", (18000, 30000, 45000), EUR,
-     "Input cliente 1 e 5 — EM FALTA. No modelo 1 é faturada pela clínica; no modelo 2 é faturada "
-     "diretamente pelos profissionais e nunca passa pela clínica."),
+    ("SEC", "Faturação — origem e modelo de colaboração"),
+    ("P", "FONTE_FAT", "ORIGEM DA FATURAÇÃO: 1 = valores manuais · 2 = derivada da capacidade (folha Operacao)",
+     (2, 2, 2), NUM,
+     "ALAVANCA. Em 2, a faturação é uma consequência de gabinetes, dias, duração e preço, e é verificável "
+     "contra a capacidade instalada. Em 1, é um número que alguém escreveu."),
+    ("P", "FAT_PROP_MAN", "Faturação anual da Dra. Júlia — valor manual", (52000, 65000, 85000), EUR,
+     "Só usado se FONTE_FAT = 1."),
+    ("P", "FAT_COLAB_MAN", "Faturação dos colaboradores — valor manual", (18000, 30000, 45000), EUR,
+     "Só usado se FONTE_FAT = 1."),
+    ("F", "FAT_PROP", "Faturação anual da própria Dra. Júlia (isenta, art. 9.º CIVA)",
+     lambda c: "=IF({s}=1,{m},{o})".format(s=inp("FONTE_FAT", c), m=inp("FAT_PROP_MAN", c),
+                                           o=oref("FAT_JUL", c)), EUR,
+     "Doentes próprios, independentemente do modelo de colaboração."),
+    ("F", "FAT_COLAB", "Faturação anual gerada pelos fisioterapeutas a integrar",
+     lambda c: "=IF({s}=1,{m},{o})".format(s=inp("FONTE_FAT", c), m=inp("FAT_COLAB_MAN", c),
+                                           o=oref("FAT_FIS", c)), EUR,
+     "No modelo 1 é faturada pela clínica; no modelo 2 é faturada diretamente pelos profissionais e nunca "
+     "passa pela clínica."),
     ("P", "MOD_COLAB", "MODELO DE COLABORAÇÃO: 1 = prestação de serviços · 2 = cedência de sala", (1, 1, 1), NUM,
-     "ALAVANCA. Ata, ponto 4. Alterna toda a estrutura de receita e custo. Sustenta a exposição E2.6."),
-    ("P", "HONOR", "Modelo 1 — honorários anuais a pagar aos fisioterapeutas", (12600, 21000, 31500), EUR,
-     "Input cliente 5 — EM FALTA. Placeholder a 70% da faturação que geram. Ignorado no modelo 2."),
-    ("P", "REC_SALA", "Modelo 2 — receita anual de cedência de sala", (5400, 9000, 13500), EUR,
-     "Input cliente 5 — EM FALTA. Placeholder a 30% da faturação que geram. Ignorado no modelo 1."),
+     "ALAVANCA. Ata, ponto 4. Alterna toda a estrutura de receita e custo. Sustenta a exposição E2.6. "
+     "AVISO: a qualificação jurídica e fiscal depende da configuração contratual e operacional concreta, "
+     "não do nome comercial do modelo. Ver N1-04 e R1-31."),
+    ("P", "PCT_HONOR", "Modelo 1 — honorários em % da faturação que o colaborador gera", (0.70, 0.70, 0.70), PCT,
+     "Input cliente 5 — EM FALTA. Variável de sensibilidade: é o que separa faturação de margem."),
+    ("F", "HONOR", "Modelo 1 — honorários anuais a pagar aos fisioterapeutas",
+     lambda c: "={f}*{p}".format(f=inp("FAT_COLAB", c), p=inp("PCT_HONOR", c)), EUR,
+     "Ignorado no modelo 2."),
+    ("P", "PCT_SALA", "Modelo 2 — renda em % da faturação que o colaborador gera", (0.30, 0.30, 0.30), PCT,
+     "Input cliente 5 — EM FALTA. Se a renda for fixa e não percentual, introduzir o valor equivalente."),
+    ("F", "REC_SALA", "Modelo 2 — receita anual de cedência de sala",
+     lambda c: "={f}*{p}".format(f=inp("FAT_COLAB", c), p=inp("PCT_SALA", c)), EUR,
+     "Ignorado no modelo 1."),
     ("P", "SALA_TRIB", "Cedência de sala sujeita a IVA? (1 = sim / 0 = arrendamento isento)", (0, 0, 0), NUM,
      "Depende de N1-04: arrendamento isento (art. 9.º n.º 29 CIVA) ou prestação de serviços com "
      "disponibilização de meios, tributada. Não está resolvido."),
@@ -303,9 +445,13 @@ IN_ROWS = [
     ("P", "CONDOM", "Condomínio e encargos do espaço", (1200, 1500, 1800), EUR, "Input cliente 3 — EM FALTA."),
     ("P", "SEGUROS", "Seguros (RC profissional, multirriscos)", (900, 1100, 1400), EUR, "EM FALTA."),
     ("P", "SOFTW", "Software de gestão e faturação", (600, 900, 1200), EUR, "EM FALTA."),
-    ("P", "CONSUM", "Consumíveis clínicos", (2100, 2850, 3900), EUR, "EM FALTA. Placeholder a 3% da faturação."),
+    ("P", "PCT_CONSUM", "Consumíveis clínicos, em % da faturação da estrutura", (0.03, 0.03, 0.03), PCT,
+     "EM FALTA. Modelado como custo variável, o que é necessário para o break-even operacional."),
+    ("F", "CONSUM", "Consumíveis clínicos",
+     lambda c: "=({p}+IF({m}=1,{k},0))*{x}".format(p=inp("FAT_PROP", c), m=inp("MOD_COLAB", c),
+                                                   k=inp("FAT_COLAB", c), x=inp("PCT_CONSUM", c)), EUR,
+     "Custo variável: acompanha as consultas realizadas dentro da estrutura."),
     ("P", "OUTROS", "Outros custos operacionais", (1500, 2000, 2500), EUR, "EM FALTA."),
-    ("P", "N_FISIO", "N.º de fisioterapeutas a integrar", (1, 1, 2), NUM, "Ata, ponto 3."),
 
     ("SEC", "Investimento inicial (valores sem IVA)"),
     ("P", "INV_OBRAS", "Obras e adaptação do espaço", (15000, 25000, 40000), EUR, "Input cliente 4 — EM FALTA."),
@@ -333,26 +479,68 @@ IN_ROWS = [
      "EM FALTA. Não afeta a comparação entre vias (cancela-se no diferencial), afeta o IRS total."),
 ]
 
+PROV = {
+    "FONTE_FAT": ("ESTIMATIVA_VCLEVEL", "VCLevel", "Alta"),
+    "FAT_PROP_MAN": ("A_VALIDAR", "cliente", "Baixa"),
+    "FAT_COLAB_MAN": ("A_VALIDAR", "cliente", "Baixa"),
+    "MOD_COLAB": ("A_VALIDAR", "cliente", "Baixa"),
+    "PCT_HONOR": ("A_VALIDAR", "cliente", "Baixa"),
+    "PCT_SALA": ("A_VALIDAR", "cliente", "Baixa"),
+    "SALA_TRIB": ("A_VALIDAR", "legislação", "Baixa"),
+    "FAT_TRIB": ("A_VALIDAR", "cliente", "Baixa"),
+    "RENDA": ("A_VALIDAR", "contrato", "Baixa"),
+    "CONDOM": ("A_VALIDAR", "contrato", "Baixa"),
+    "SEGUROS": ("ESTIMATIVA_VCLEVEL", "VCLevel", "Baixa"),
+    "SOFTW": ("ESTIMATIVA_VCLEVEL", "VCLevel", "Baixa"),
+    "PCT_CONSUM": ("ESTIMATIVA_VCLEVEL", "benchmark", "Média"),
+    "OUTROS": ("ESTIMATIVA_VCLEVEL", "VCLevel", "Baixa"),
+    "INV_OBRAS": ("A_VALIDAR", "orçamento", "Baixa"),
+    "INV_EQUIP": ("A_VALIDAR", "orçamento", "Baixa"),
+    "INV_EQUIP_R": ("A_VALIDAR", "legislação", "Baixa"),
+    "INV_SOFT": ("A_VALIDAR", "orçamento", "Baixa"),
+    "REM_GER": ("ESTIMATIVA_VCLEVEL", "VCLevel", "Média"),
+    "TA_EST": ("ESTIMATIVA_VCLEVEL", "VCLevel", "Baixa"),
+    "POL_DIST": ("A_VALIDAR", "cliente", "Baixa"),
+    "PCT_CONJ": ("ESTIMATIVA_VCLEVEL", "VCLevel", "Média"),
+    "REND_CONJ": ("A_VALIDAR", "cliente", "Baixa"),
+    "CONJUNTA": ("A_VALIDAR", "cliente", "Baixa"),
+    "N_DEP": ("A_VALIDAR", "cliente", "Baixa"),
+    "DED_COL": ("ESTIMATIVA_VCLEVEL", "VCLevel", "Baixa"),
+}
+hdr(wsi, 4, ["Tipo", "Fonte", "Confiança"], start=7)
+FALTA_ROWS = []
+
 for item in IN_ROWS:
     if item[0] == "SEC":
-        section(wsi, r, item[1], span=6); r += 1
+        section(wsi, r, item[1], span=9); r += 1
         continue
-    _, key, label, vals, fmt, note = item
+    kind, key, label, vals, fmt, note = item
     wsi.cell(row=r, column=1, value=label).font = F_BODY
     wsi.cell(row=r, column=2, value=key).font = F_NOTE
+    I[key] = r
     for j, (col, _n) in enumerate(SCEN):
-        c = wsi.cell(row=r, column=3 + j, value=vals[j])
-        c.font, c.number_format, c.fill, c.border = F_INPUT, fmt, FILL_FILL, BOX
+        c = wsi.cell(row=r, column=3 + j, value=(vals(col) if kind == "F" else vals[j]))
+        c.number_format, c.border = fmt, BOX
+        if kind == "F":
+            c.font = F_CALC
+        else:
+            c.font, c.fill = F_INPUT, FILL_FILL
     n = wsi.cell(row=r, column=6, value=note)
     n.font, n.alignment = F_NOTE, Alignment(wrap_text=True, vertical="top")
-    if "EM FALTA" in note:
+    tipo, fonte, conf = PROV.get(key, ("DERIVADO", "modelo", "n/a")) if kind != "F" \
+        else ("DERIVADO", "modelo", "n/a")
+    for k2, val in enumerate((tipo, fonte, conf)):
+        cc = wsi.cell(row=r, column=7 + k2, value=val)
+        cc.font, cc.border = F_NOTE, BOX
+        cc.alignment = Alignment(horizontal="center")
+    falta = 1 if tipo == "A_VALIDAR" else 0
+    if falta:
         n.fill = FILL_WARN
-    I[key] = r
+        wsi.cell(row=r, column=7).fill = FILL_WARN
+    fl = wsi.cell(row=r, column=10, value=falta)
+    fl.font, fl.number_format = F_NOTE, NUM
+    FALTA_ROWS.append(r)
     r += 1
-
-
-def inp(key, col):
-    return "Inputs!$%s$%d" % (col, I[key])
 
 
 # ---- grandezas derivadas do modelo de colaboracao
@@ -1126,6 +1314,331 @@ wp.row_dimensions[r].height = 40
 wp.freeze_panes = "A%d" % TOP
 
 
+# ================================================================ BREAK-EVEN
+wb_ = wb.create_sheet("BreakEven")
+title(wb_, "M1 — Break-even operacional e rendimento-alvo",
+      "Três coisas diferentes que a mesma palavra designa. O break-even FISCAL, na folha PontoViragem, "
+      "diz quando uma estrutura passa a ser melhor que outra. O break-even OPERACIONAL, aqui em cima, diz "
+      "quando a clínica cobre os custos. O RENDIMENTO-ALVO, aqui em baixo, diz quanto é preciso faturar "
+      "para a fundadora receber o que quer receber. Nunca misturar as três numa frase.")
+widths(wb_, {"A": 54, "B": 13, "C": 15, "D": 15, "E": 15, "F": 52})
+wb_.merge_cells("A2:F2"); wb_["A2"].alignment = Alignment(wrap_text=True, vertical="top")
+wb_.row_dimensions[2].height = 52
+r = 4
+hdr(wb_, r, ["Rubrica", "Ref.", "Baixo", "Base", "Alto", "Nota"]); r += 1
+B = {}
+
+
+def brow(key, label, fn, fmt=EUR, style="calc", note=""):
+    global r
+    wb_.cell(row=r, column=1, value=label).font = F_RESULT if style == "result" else F_BODY
+    wb_.cell(row=r, column=2, value=key).font = F_NOTE
+    for j, (col, _n) in enumerate(SCEN):
+        c = wb_.cell(row=r, column=3 + j, value=fn(col) if callable(fn) else fn)
+        c.number_format, c.border = fmt, BOX
+        c.font = {"calc": F_CALC, "link": F_LINK, "result": F_RESULT, "input": F_INPUT}[style]
+        if style == "result":
+            c.fill = FILL_RES
+        if style == "input":
+            c.fill = FILL_FILL
+    n = wb_.cell(row=r, column=6, value=note)
+    n.font, n.alignment = F_NOTE, Alignment(wrap_text=True, vertical="top")
+    B[key] = r
+    r += 1
+
+
+def bc(key, col):
+    return "$%s$%d" % (col, B[key])
+
+
+section(wb_, r, "Break-even operacional", span=6); r += 1
+brow("REC", "Receita da estrutura",
+     lambda c: "={a}+{b}".format(a=inp("FAT_ISENTA", c), b=inp("REC_NAOPROF", c)), style="link")
+brow("CV", "Custos variáveis",
+     lambda c: "={a}+{b}".format(a=inp("CONSUM", c), b=inp("CUSTO_COLAB", c)), style="link",
+     note="Consumíveis e honorários dos colaboradores. Acompanham o volume.")
+brow("MC", "Margem de contribuição",
+     lambda c: "={a}-{b}".format(a=bc("REC", c), b=bc("CV", c)), style="result")
+brow("MCP", "Margem de contribuição (%)",
+     lambda c: "=IF({a}<=0,0,{b}/{a})".format(a=bc("REC", c), b=bc("MC", c)), fmt=PCT, style="result",
+     note="É o denominador do break-even. No modelo de prestação de serviços, a % de honorários "
+          "esmaga esta linha — e é por isso que a ata avisa que faturação não é margem.")
+brow("CF", "Custos fixos",
+     lambda c: "=" + "+".join(inp(k, c) for k in ["RENDA", "CONDOM", "SEGUROS", "SOFTW", "OUTROS"]),
+     style="link", note="Base de caixa: exclui amortizações, que não são saída de dinheiro.")
+brow("BE", "BREAK-EVEN OPERACIONAL (faturação anual)",
+     lambda c: "=IF({m}<=0,0,{f}/{m})".format(m=bc("MCP", c), f=bc("CF", c)), style="result")
+brow("BE_MES", "Break-even operacional (faturação mensal)",
+     lambda c: "={a}/12".format(a=bc("BE", c)), style="result",
+     note="É este o número para dizer à cliente. Ninguém pensa em faturação anual.")
+brow("MARG_SEG", "Margem de segurança sobre a receita projetada",
+     lambda c: "=IF({a}<=0,0,({a}-{b})/{a})".format(a=bc("REC", c), b=bc("BE", c)), fmt=PCT, style="result",
+     note="Negativa significa que a projeção não cobre os custos fixos.")
+brow("PRECO_M", "Preço médio por consulta",
+     lambda c: "=IF({t}<=0,0,{f}/{t})".format(t=oref("CONS_TOT", c), f=oref("FAT_TOT", c)),
+     fmt=EUR2, style="link")
+brow("CONS_BE", "Consultas anuais necessárias para o break-even",
+     lambda c: "=IF({p}<=0,0,{b}/{p})".format(p=bc("PRECO_M", c), b=bc("BE", c)), fmt=NUM, style="calc")
+brow("UTIL_BE", "UTILIZAÇÃO DOS GABINETES NECESSÁRIA PARA O BREAK-EVEN",
+     lambda c: "=IF({k}<=0,0,{n}/{k})".format(k=oref("CAP_ANO", c), n=bc("CONS_BE", c)),
+     fmt=PCT, style="result",
+     note="Acima de 100% significa que o espaço escolhido não permite cobrir os seus próprios custos "
+          "fixos, seja qual for a estrutura fiscal. É a verificação de plausibilidade empresarial.")
+
+# ---- rendimento-alvo
+r += 1
+section(wb_, r, "Rendimento-alvo da fundadora", span=6); r += 1
+TGT_ROW = r
+wb_.cell(row=r, column=1, value="Rendimento anual líquido pretendido pela fundadora").font = F_RESULT
+tc = wb_.cell(row=r, column=3, value=30000)
+tc.number_format, tc.font, tc.fill, tc.border = EUR, F_INPUT, FILL_FILL, BOX
+wb_.cell(row=r, column=6,
+         value="Ação 0.8 do P1. É o input que a cliente não sabe que tem de dar, e é o que decide entre "
+               "a via 3 e a via 4.").font = F_NOTE
+r += 2
+
+CFB, PCTVAR = "$D$%d" % B["CF"], "(1-$D$%d)" % B["MCP"]
+RCB, AMB = inp("REND_CONJ", "D"), AMORT("D")
+REMB, TAB = inp("REM_GER", "D"), inp("TA_EST", "D")
+BMOE = "MAX({r},{i}*{m}*12)".format(r=REMB, i=P["IAS"], m=P["SS_MOE_MIN"])
+TSUB, SSTB = "({b})*{t}".format(b=BMOE, t=P["SS_MOE_ENT"]), "({b})*{t}".format(b=BMOE, t=P["SS_MOE_BEN"])
+
+wb_.cell(row=r, column=1,
+         value="Faturação necessária para atingir o rendimento-alvo, por estrutura. Custos fixos e peso "
+               "dos custos variáveis fixados no cenário Base. Resolução de 10.000 €.").font = F_SUB
+wb_.merge_cells(start_row=r, start_column=1, end_row=r, end_column=18)
+r += 1
+hdr(wb_, r, ["Faturação", "Custos", "Caixa", "Rend. cat. B (v1)", "SS v1", "IRS v1", "LÍQUIDO v1",
+             "Lucro trib. (v2)", "SS v2", "IRS v2", "LÍQUIDO v2", "Lucro trib. (v3)", "Rend. sócia (v3)",
+             "IRS v3", "LÍQUIDO v3", "Alvo v1", "Alvo v2", "Alvo v3"])
+r += 1
+TT = r
+for i in range(13):
+    fat = 40000 + 10000 * i
+    a = wb_.cell(row=r, column=1, value=fat); a.number_format, a.font, a.border = EUR, F_INPUT, BOX
+    cells = {
+        2: "=({cf})+A{r}*{pv}".format(cf=CFB, r=r, pv=PCTVAR),
+        3: "=A{r}-B{r}".format(r=r),
+        4: "=A{r}*{k}+MAX(0,A{r}*{lj}-B{r})-MAX(0,E{r}-A{r}*{lc})".format(
+            r=r, k=P["COEF"], lj=P["LIM_JUST"], lc=P["LIM_CONTRIB"]),
+        5: "=MAX(MIN(A{r}*{p},{i}*{m}*12)*{t},{mn}*12)".format(
+            r=r, p=P["SS_TI_PCT"], i=P["IAS"], m=P["SS_TI_TETO"], t=P["SS_TI_TAXA"], mn=P["SS_TI_MIN"]),
+        6: "=" + colfull("D%d+%s" % (r, RCB)) + "-" + colfull(RCB),
+        7: "=C{r}-E{r}-F{r}".format(r=r),
+        8: "=MAX(0,A{r}-B{r}-({am})-I{r})".format(r=r, am=AMB),
+        9: "=MAX(MIN(MAX(A{r}-B{r}-({am}),0),{i}*{m}*12)*{t},{mn}*12)".format(
+            r=r, am=AMB, i=P["IAS"], m=P["SS_TI_TETO"], t=P["SS_TI_TAXA"], mn=P["SS_TI_MIN"]),
+        10: "=" + colfull("H%d+%s" % (r, RCB)) + "-" + colfull(RCB),
+        11: "=C{r}-I{r}-J{r}".format(r=r),
+        12: "=A{r}-B{r}-({am})-({rm})-({ts})".format(r=r, am=AMB, rm=REMB, ts=TSUB),
+        13: "=MAX(0,({rm})-MIN(({rm}),MAX({d},{st})))+MAX(L{r},0)".format(
+            rm=REMB, d=P["DED_CATA"], st=SSTB, r=r),
+        14: "=" + colfull("M%d+%s" % (r, RCB)) + "-" + colfull(RCB),
+        15: "=C{r}-({st})-({ts})-({ta})-N{r}".format(r=r, st=SSTB, ts=TSUB, ta=TAB),
+    }
+    for col, f in cells.items():
+        c = wb_.cell(row=r, column=col, value=f)
+        c.number_format, c.border = EUR, BOX
+        c.font = F_RESULT if col in (7, 11, 15) else F_CALC
+    for k2, (col, src) in enumerate([(16, "G"), (17, "K"), (18, "O")]):
+        f = "=0" if i == 0 else "=IF(AND({s}{r}>=$C${t},{s}{p}<$C${t}),A{r},0)".format(
+            s=src, r=r, p=r - 1, t=TGT_ROW)
+        c = wb_.cell(row=r, column=col, value=f)
+        c.number_format, c.font, c.border = EUR, F_CALC, BOX
+    r += 1
+TB = r - 1
+r += 1
+for k2, (col, nome) in enumerate([(16, "Via 1 — ENI simplificado"), (17, "Via 2 — ENI cont. organizada"),
+                                  (18, "Via 3 — Sociedade transparente")]):
+    wb_.cell(row=r, column=1, value="Faturação necessária para o rendimento-alvo — " + nome).font = F_RESULT
+    cl = get_column_letter(col)
+    c = wb_.cell(row=r, column=3,
+                 value='=IF(MAX({cl}{a}:{cl}{b})=0,"Fora do intervalo analisado",MAX({cl}{a}:{cl}{b}))'
+                       .format(cl=cl, a=TT, b=TB))
+    c.number_format, c.font, c.fill, c.border = EUR, F_RESULT, FILL_RES, BOX
+    r += 1
+r += 1
+wb_.cell(row=r, column=1,
+         value="A via 4 não consta desta tabela: o líquido depende da política de distribuição e da opção "
+               "de englobamento, que são decisões e não funções da faturação. Para a via 4, fixar essas "
+               "alavancas na folha Inputs e ler o resultado na folha Comparativo.").font = F_SUB
+wb_.merge_cells(start_row=r, start_column=1, end_row=r, end_column=18)
+wb_["A%d" % r].alignment = Alignment(wrap_text=True, vertical="top")
+wb_.row_dimensions[r].height = 30
+wb_.freeze_panes = "A5"
+
+
+# ================================================================ ESPACO 2 vs 3 GABINETES
+we = wb.create_sheet("Espaco")
+title(we, "M1 — Espaço: 2 versus 3 gabinetes",
+      "A ata deixa a escolha em aberto e trata-a como uma questão de renda. Não é: o terceiro gabinete "
+      "acrescenta capacidade e acrescenta custo fixo, e só compensa a partir de um nível de utilização. "
+      "O output principal desta folha é esse nível.")
+widths(we, {"A": 50, "B": 12, "C": 17, "D": 17, "E": 50})
+we.merge_cells("A2:E2"); we["A2"].alignment = Alignment(wrap_text=True, vertical="top")
+we.row_dimensions[2].height = 44
+r = 4
+hdr(we, r, ["Rubrica", "Ref.", "Opção A — 2 gabinetes", "Opção B — 3 gabinetes", "Nota"]); r += 1
+E = {}
+ECOLS = [("C", 0), ("D", 1)]
+
+
+def erow(key, label, vals=None, fn=None, fmt=EUR, style="input", note=""):
+    global r
+    we.cell(row=r, column=1, value=label).font = F_RESULT if style == "result" else F_BODY
+    we.cell(row=r, column=2, value=key).font = F_NOTE
+    for col, j in ECOLS:
+        c = we.cell(row=r, column=3 if col == "C" else 4,
+                    value=(vals[j] if vals is not None else fn(col)))
+        c.number_format, c.border = fmt, BOX
+        c.font = {"input": F_INPUT, "calc": F_CALC, "result": F_RESULT, "link": F_LINK}[style]
+        if style == "input":
+            c.fill = FILL_FILL
+        if style == "result":
+            c.fill = FILL_RES
+    n = we.cell(row=r, column=5, value=note)
+    n.font, n.alignment = F_NOTE, Alignment(wrap_text=True, vertical="top")
+    E[key] = r
+    r += 1
+
+
+def ec(key, col):
+    return "$%s$%d" % (col, E[key])
+
+
+section(we, r, "Características de cada espaço", span=5); r += 1
+erow("N_GAB", "N.º de gabinetes", (2, 3), fmt=NUM)
+erow("RENDA", "Renda anual", (14400, 19200), note="Input cliente 3 — EM FALTA, para os dois espaços.")
+erow("CONDOM", "Condomínio e encargos anuais", (1500, 2000), note="EM FALTA.")
+erow("OBRAS", "Obras de adaptação", (25000, 38000), note="Input cliente 4 — EM FALTA.")
+erow("EQUIP", "Equipamento clínico", (20000, 26000), note="EM FALTA.")
+
+section(we, r, "Pressupostos comuns", span=5); r += 1
+erow("UTIL", "Taxa de utilização a testar", (0.45, 0.45), fmt=PCT, style="input",
+     note="ALAVANCA. Varrida na tabela em baixo. Aqui serve para a fotografia de um único ponto.")
+erow("PRECO_M", "Preço médio por consulta", fn=lambda c: "=" + "BreakEven!$D$%d" % B["PRECO_M"],
+     fmt=EUR2, style="link")
+erow("PCT_VAR", "Custos variáveis em % da receita",
+     fn=lambda c: "=1-BreakEven!$D$%d" % B["MCP"], fmt=PCT, style="link")
+erow("CF_OUTROS", "Outros custos fixos (seguros, software, outros)",
+     fn=lambda c: "=" + "+".join(inp(k, "D") for k in ["SEGUROS", "SOFTW", "OUTROS"]), style="link")
+erow("TX_ESF", "Taxa de esforço fiscal e contributiva aplicada",
+     fn=lambda c: "=" + v2.ref("TAXA_EF", "D"), fmt=PCT, style="link",
+     note="Usa a taxa de esforço da via 2 no cenário Base. É uma aproximação assumida: a comparação "
+          "entre espaços é operacional, e a estrutura fiscal é a mesma nos dois. Registado em R1-33.")
+
+section(we, r, "Capacidade e resultado ao nível de utilização testado", span=5); r += 1
+erow("CAP", "Capacidade anual (consultas)",
+     fn=lambda c: "={g}*{d}*{k}".format(g=ec("N_GAB", c), d=oref("DIAS_ANO", "D"), k=oref("CAP_DIA", "D")),
+     fmt=NUM, style="result")
+erow("CONS", "Consultas ao nível de utilização testado",
+     fn=lambda c: "={a}*{u}".format(a=ec("CAP", c), u=ec("UTIL", c)), fmt=NUM, style="calc")
+erow("FAT", "Faturação potencial",
+     fn=lambda c: "={a}*{p}".format(a=ec("CONS", c), p=ec("PRECO_M", c)), style="result")
+erow("MC", "Margem de contribuição",
+     fn=lambda c: "={f}*(1-{v})".format(f=ec("FAT", c), v=ec("PCT_VAR", c)), style="calc")
+erow("CF", "Custos fixos totais",
+     fn=lambda c: "={a}+{b}+{o}".format(a=ec("RENDA", c), b=ec("CONDOM", c), o=ec("CF_OUTROS", c)),
+     style="calc")
+erow("RES", "Resultado operacional",
+     fn=lambda c: "={a}-{b}".format(a=ec("MC", c), b=ec("CF", c)), style="result")
+erow("RES_LIQ", "Resultado líquido de impostos e contribuições",
+     fn=lambda c: "={a}*(1-{t})".format(a=ec("RES", c), t=ec("TX_ESF", c)), style="result")
+
+section(we, r, "Investimento e recuperação", span=5); r += 1
+erow("IVA_P", "IVA não dedutível sobre o investimento",
+     fn=lambda c: "=({o}+{e})*{t}".format(o=ec("OBRAS", c), e=ec("EQUIP", c), t=P["IVA_NORM"]),
+     style="calc", note="Custo definitivo: a fisioterapia é isenta sem direito à dedução.")
+erow("INV", "INVESTIMENTO INICIAL TOTAL",
+     fn=lambda c: "={o}+{e}+{i}".format(o=ec("OBRAS", c), e=ec("EQUIP", c), i=ec("IVA_P", c)),
+     style="result")
+erow("PAYBACK", "PAYBACK (anos)",
+     fn=lambda c: '=IF({l}<=0,"Não recupera",{i}/{l})'.format(l=ec("RES_LIQ", c), i=ec("INV", c)),
+     fmt='#,##0.0', style="result",
+     note="Anos de resultado líquido necessários para recuperar o investimento, ao nível de utilização "
+          "testado. Não desconta o valor do dinheiro no tempo — para esta dimensão, não compensa.")
+erow("ROI", "Retorno anual sobre o investimento",
+     fn=lambda c: "=IF({i}<=0,0,{l}/{i})".format(i=ec("INV", c), l=ec("RES_LIQ", c)), fmt=PCT, style="calc")
+erow("BE_UTIL", "Utilização necessária para o break-even operacional",
+     fn=lambda c: "=IF({cap}*{p}*(1-{v})<=0,0,{cf}/({cap}*{p}*(1-{v})))".format(
+         cap=ec("CAP", c), p=ec("PRECO_M", c), v=ec("PCT_VAR", c), cf=ec("CF", c)),
+     fmt=PCT, style="result",
+     note="Acima de 100%, o espaço não cobre os próprios custos fixos a lotação máxima.")
+
+# ---- varrimento de utilizacao
+r += 1
+section(we, r, "A partir de que procura compensa o terceiro gabinete", span=5); r += 1
+we.cell(row=r, column=1,
+        value="O eixo é a PROCURA, em consultas por ano — não a taxa de utilização. Comparar as duas "
+              "opções à mesma percentagem de utilização daria automaticamente mais 50% de consultas à "
+              "opção de três gabinetes, e a comparação não significaria nada. À mesma procura, cada "
+              "opção atende o que a sua capacidade permite, e o terceiro gabinete só vale alguma coisa "
+              "quando a procura ultrapassa a capacidade de dois.").font = F_SUB
+we.merge_cells(start_row=r, start_column=1, end_row=r, end_column=5)
+we["A%d" % r].alignment = Alignment(wrap_text=True, vertical="top")
+we.row_dimensions[r].height = 44
+r += 1
+hdr(we, r, ["Procura anual (consultas)", "Resultado líquido — 2 gabinetes",
+            "Resultado líquido — 3 gabinetes", "Diferencial", "Viragem"])
+r += 1
+UT = r
+for i in range(16):
+    proc = 1000 + 400 * i
+    a = we.cell(row=r, column=1, value=proc); a.number_format, a.font, a.border = NUM, F_INPUT, BOX
+    for col, gcol in [(2, "C"), (3, "D")]:
+        f = "=(MIN(A{r},{cap})*{p}*(1-{v})-{cf})*(1-{t})".format(
+            r=r, cap=ec("CAP", gcol), p=ec("PRECO_M", gcol), v=ec("PCT_VAR", gcol),
+            cf=ec("CF", gcol), t=ec("TX_ESF", gcol))
+        c = we.cell(row=r, column=col, value=f)
+        c.number_format, c.font, c.border = EUR, F_CALC, BOX
+    d = we.cell(row=r, column=4, value="=C{r}-B{r}".format(r=r))
+    d.number_format, d.font, d.border = EUR, F_RESULT, BOX
+    m = we.cell(row=r, column=5,
+                value=("=0" if i == 0 else "=IF(AND(D{r}>=0,D{p}<0),A{r},0)".format(r=r, p=r - 1)))
+    m.number_format, m.font, m.border = NUM, F_CALC, BOX
+    r += 1
+UB = r - 1
+r += 1
+we.cell(row=r, column=1, value="O TERCEIRO GABINETE COMPENSA A PARTIR DE (consultas/ano)").font = F_RESULT
+c = we.cell(row=r, column=3,
+            value='=IF(MAX(E{a}:E{b})=0,"Nunca compensa no intervalo analisado",MAX(E{a}:E{b}))'
+                  .format(a=UT, b=UB))
+c.number_format, c.font, c.fill, c.border = NUM, F_RESULT, FILL_RES, BOX
+VIR_ROW = r
+r += 1
+we.cell(row=r, column=1, value="…o que corresponde, no espaço de 2 gabinetes, a uma utilização de").font = F_RESULT
+c = we.cell(row=r, column=3,
+            value='=IF(ISNUMBER($C${v}),$C${v}/{cap},"n/a")'.format(v=VIR_ROW, cap=ec("CAP", "C")))
+c.number_format, c.font, c.fill, c.border = PCT, F_RESULT, FILL_RES, BOX
+r += 1
+we.cell(row=r, column=1, value="Consultas por dia úteis implícitas nesse ponto").font = F_BODY
+c = we.cell(row=r, column=3,
+            value='=IF(ISNUMBER($C${v}),$C${v}/{d},"n/a")'.format(v=VIR_ROW, d=oref("DIAS_ANO", "D")))
+c.number_format, c.font, c.border = '#,##0.0', F_CALC, BOX
+r += 2
+we.cell(row=r, column=1,
+        value="Leitura: abaixo do ponto de viragem, o terceiro gabinete é renda e obras a mais sem "
+              "receita adicional — a opção de dois gabinetes ganha por diferença de custo fixo. Acima, "
+              "a opção de dois perde consultas por falta de espaço e a de três recupera o custo. "
+              "A pergunta a fazer à cliente não é qual espaço prefere: é quantos doentes por dia espera "
+              "atender no fim do segundo ano. Resolução do varrimento: 400 consultas por ano. O ponto de "
+              "viragem real situa-se algures no intervalo anterior ao indicado — refinar por interpolação "
+              "se a decisão ficar perto do limite. Registado em R1-34.").font = F_SUB
+we.merge_cells(start_row=r, start_column=1, end_row=r, end_column=5)
+we["A%d" % r].alignment = Alignment(wrap_text=True, vertical="top")
+we.row_dimensions[r].height = 32
+
+_l2 = LineChart()
+_l2.title = "Resultado líquido por nível de procura — 2 vs. 3 gabinetes"
+_l2.y_axis.title, _l2.x_axis.title = "euros", "procura anual (consultas)"
+_l2.height, _l2.width = 9, 18
+for _c in (2, 3):
+    _l2.append(Series(Reference(we, min_col=_c, min_row=UT - 1, max_row=UB), title_from_data=True))
+_l2.set_categories(Reference(we, min_col=1, min_row=UT, max_row=UB))
+we.add_chart(_l2, "G4")
+we.freeze_panes = "A5"
+
+
 # ================================================================ VALIDACAO
 # Recalculo independente, escrito a partir das mesmas normas mas sem reutilizar
 # uma unica formula da folha de calculo. Se as duas implementacoes divergirem,
@@ -1164,12 +1677,23 @@ def g(k, i):
     return float(VALS[k][i])
 
 
+def og(k, i):
+    return float(OVALS[k][i])
+
+
 def comuns(i):
     mod = g("MOD_COLAB", i)
-    fat_is = g("FAT_PROP", i) + (g("FAT_COLAB", i) if mod == 1 else 0.0)
-    rec_np = g("REC_SALA", i) if mod == 2 else 0.0
-    custo_col = g("HONOR", i) if mod == 1 else 0.0
-    op_sem_hon = sum(g(k, i) for k in ["RENDA", "CONDOM", "SEGUROS", "SOFTW", "CONSUM", "OUTROS"])
+    # camada operacional: a faturacao e derivada, nao introduzida
+    fat_jul = og("DIAS_JUL", i) * og("CONS_JUL", i) * og("PRECO_JUL", i)
+    fat_fis = og("N_FISIO", i) * og("DIAS_FIS", i) * og("CONS_FIS", i) * og("PRECO_FIS", i)
+    manual = g("FONTE_FAT", i) == 1
+    fat_prop = g("FAT_PROP_MAN", i) if manual else fat_jul
+    fat_colab = g("FAT_COLAB_MAN", i) if manual else fat_fis
+    fat_is = fat_prop + (fat_colab if mod == 1 else 0.0)
+    rec_np = fat_colab * g("PCT_SALA", i) if mod == 2 else 0.0
+    custo_col = fat_colab * g("PCT_HONOR", i) if mod == 1 else 0.0
+    consum = (fat_prop + (fat_colab if mod == 1 else 0.0)) * g("PCT_CONSUM", i)
+    op_sem_hon = sum(g(k, i) for k in ["RENDA", "CONDOM", "SEGUROS", "SOFTW", "OUTROS"]) + consum
     op = op_sem_hon + custo_col
     inv = g("INV_OBRAS", i) + g("INV_EQUIP", i) + g("INV_EQUIP_R", i) + g("INV_SOFT", i)
     amort = g("INV_OBRAS", i) * 0.10 + (g("INV_EQUIP", i) + g("INV_EQUIP_R", i)) * 0.20 \
@@ -1290,6 +1814,7 @@ cg = wval.cell(row=r, column=4,
                value='=IF(COUNTIF($G$6:$G$%d,"DIVERGE")=0,"TODAS AS VERIFICAÇÕES OK","HÁ DIVERGÊNCIAS")'
                      % (r - 2))
 cg.font, cg.fill, cg.border = F_RESULT, FILL_RES, BOX
+VAL_GLOBAL = "Validacao!$D$%d" % r
 wval.merge_cells(start_row=r, start_column=4, end_row=r, end_column=7)
 r += 2
 wval.cell(row=r, column=1,
@@ -1301,6 +1826,122 @@ wval.merge_cells(start_row=r, start_column=1, end_row=r, end_column=9)
 wval["A%d" % r].alignment = Alignment(wrap_text=True, vertical="top")
 wval.row_dimensions[r].height = 46
 wval.freeze_panes = "A5"
+
+
+# ================================================================ ALERTAS
+wa = wb.create_sheet("Alertas")
+title(wa, "M1 — Alertas",
+      "Um modelo pode ter a fórmula certa, a fiscalidade certa e um pressuposto empresarial errado. Esta "
+      "folha existe para apanhar o terceiro caso. Enquanto houver um alerta ATIVO com consequência "
+      "bloqueante, nenhum número deste ficheiro pode ser citado no relatório, no deck ou perante a cliente.")
+widths(wa, {"A": 52, "B": 14, "C": 12, "D": 56, "E": 22})
+wa.merge_cells("A2:E2"); wa["A2"].alignment = Alignment(wrap_text=True, vertical="top")
+wa.row_dimensions[2].height = 46
+r = 4
+
+PAR_F = "Parametros!$F$%d:$F$%d" % (min(VALID_ROWS), max(VALID_ROWS))
+INP_J = "Inputs!$J$%d:$J$%d" % (min(FALTA_ROWS), max(FALTA_ROWS))
+
+section(wa, r, "Interruptores manuais — a equipa liga e desliga", span=5); r += 1
+SW = {}
+for key, label, val, nota in [
+    ("SW_R114", "Atividade do cônjuge confirmada fora da tabela do art. 151.º CIRS? (1 = sim / 0 = não)",
+     0, "R1-14 e N1-01. Enquanto for 0, a via 4 não é apresentável."),
+    ("SW_N104", "Qualificação da cedência de sala fixada pela Fiscalidade? (1 = sim / 0 = não)",
+     0, "N1-04. Enquanto for 0, o modelo 2 tem consequências fiscais assumidas, não determinadas."),
+    ("SW_FIN", "Financiamento do investimento identificado? (1 = sim / 0 = não)",
+     0, "Obras, equipamento e IVA irrecuperável têm de sair de algum lado."),
+]:
+    wa.cell(row=r, column=1, value=label).font = F_BODY
+    c = wa.cell(row=r, column=2, value=val)
+    c.number_format, c.font, c.fill, c.border = NUM, F_INPUT, FILL_FILL, BOX
+    n = wa.cell(row=r, column=4, value=nota); n.font = F_NOTE
+    n.alignment = Alignment(wrap_text=True, vertical="top")
+    SW[key] = "$B$%d" % r
+    r += 1
+
+r += 1
+hdr(wa, r, ["Alerta", "Valor avaliado", "Estado", "Consequência se ativo", "Referência"]); r += 1
+A_TOP = r
+
+ALERTAS = [
+    ("Parâmetros fiscais por validar para 2026", "=SUM(%s)" % PAR_F, NUM, "B{r}>0",
+     "BLOQUEANTE. Os números podem estar certos na aritmética e errados na lei. Nenhum valor sai do "
+     "ficheiro enquanto este alerta estiver ativo.", "R1, secção C · P0 da spec"),
+    ("Inputs da cliente por confirmar", "=SUM(%s)" % INP_J, NUM, "B{r}>0",
+     "BLOQUEANTE para o relatório. Os valores em uso são placeholders de teste do motor.",
+     "R1, secção A · brief, secção 4"),
+    ("Utilização dos gabinetes acima de 100%", "=" + oref("UTILIZ", "D"), PCT, "B{r}>1",
+     "A projeção é impossível: não há gabinetes para as consultas previstas. Corrigir a projeção ou o "
+     "número de gabinetes antes de qualquer outra coisa.", "Folha Operacao"),
+    ("Utilização dos gabinetes acima de 85%", "=" + oref("UTILIZ", "D"), PCT, "AND(B{r}>0.85,B{r}<=1)",
+     "Operacionalmente muito exigente: sem folga para faltas, férias ou variação de procura.",
+     "Folha Operacao"),
+    ("Utilização subaproveitada, abaixo de 30%", "=" + oref("UTILIZ", "D"), PCT, "B{r}<0.3",
+     "O espaço está sobredimensionado para a procura projetada. Rever a opção de espaço.",
+     "Folhas Operacao e Espaco"),
+    ("Receita projetada abaixo do break-even operacional",
+     "=BreakEven!$D$%d" % B["MARG_SEG"], PCT, "B{r}<0",
+     "A clínica não cobre os custos fixos com a faturação projetada. A discussão de estrutura fiscal é "
+     "secundária face a isto.", "Folha BreakEven"),
+    ("Margem de contribuição nula ou negativa", "=BreakEven!$D$%d" % B["MCP"], PCT, "B{r}<=0",
+     "Cada consulta adicional destrói valor. Rever a % de honorários ou o preço.", "Folha BreakEven"),
+    ("Utilização necessária para o break-even acima de 100%",
+     "=BreakEven!$D$%d" % B["UTIL_BE"], PCT, "B{r}>1",
+     "O espaço não consegue cobrir os próprios custos fixos nem a lotação máxima. O espaço está errado, "
+     "não a estrutura.", "Folhas BreakEven e Espaco"),
+    ("Premissa da atividade do cônjuge por verificar", "=1-%s" % SW["SW_R114"], NUM, "B{r}=1",
+     "BLOQUEANTE para a via 4. Se a atividade do cônjuge constar da tabela do art. 151.º CIRS, a entrada "
+     "dele não afasta a transparência com percentagem nenhuma.", "R1-14 · N1, secção 4.1"),
+    ("Qualificação da cedência de sala por fixar", "=1-%s" % SW["SW_N104"], NUM, "B{r}=1",
+     "O modelo 2 corre com consequências fiscais assumidas. A qualificação depende da configuração "
+     "contratual e operacional concreta, não do nome do modelo.", "N1-04 · R1-31"),
+    ("Investimento sem financiamento identificado", "=1-%s" % SW["SW_FIN"], NUM, "B{r}=1",
+     "O plano assume que o investimento é feito. Se não houver origem de fundos, o cenário não é "
+     "executável.", "Folha Espaco · P1, fase 3"),
+    ("IVA dependente de pro rata ou afetação real", "=" + inp("REC_TRIB", "D"), EUR, "B{r}>0",
+     "A dedução de IVA deixa de ser zero e passa a depender de um método e de segregação documental "
+     "permanente. Confirmar o método antes de contar com o valor.", "Folha IVA · N1, secção 8"),
+    ("Recálculo independente com divergências", '=IF(%s="TODAS AS VERIFICAÇÕES OK",0,1)' % VAL_GLOBAL,
+     NUM, "B{r}=1",
+     "BLOQUEANTE. As duas implementações do modelo discordam. Uma delas está errada.", "Folha Validacao"),
+]
+
+for label, valf, fmt, cond, cons, ref in ALERTAS:
+    wa.cell(row=r, column=1, value=label).font = F_BODY
+    b = wa.cell(row=r, column=2, value=valf)
+    b.number_format, b.font, b.border = fmt, F_LINK, BOX
+    st = wa.cell(row=r, column=3, value='=IF(%s,"ATIVO","—")' % cond.format(r=r))
+    st.font, st.border = F_RESULT, BOX
+    st.alignment = Alignment(horizontal="center")
+    cc = wa.cell(row=r, column=4, value=cons)
+    cc.font, cc.alignment = F_NOTE, Alignment(wrap_text=True, vertical="top")
+    rf = wa.cell(row=r, column=5, value=ref); rf.font = F_NOTE
+    rf.alignment = Alignment(wrap_text=True, vertical="top")
+    wa.row_dimensions[r].height = 30
+    r += 1
+A_BOT = r - 1
+
+r += 1
+wa.cell(row=r, column=1, value="TOTAL DE ALERTAS ATIVOS").font = F_RESULT
+c = wa.cell(row=r, column=2, value='=COUNTIF($C$%d:$C$%d,"ATIVO")' % (A_TOP, A_BOT))
+c.number_format, c.font, c.fill, c.border = NUM, F_RESULT, FILL_RES, BOX
+r += 1
+wa.cell(row=r, column=1, value="O FICHEIRO PODE PRODUZIR NÚMEROS CITÁVEIS?").font = F_RESULT
+c = wa.cell(row=r, column=2,
+            value='=IF(COUNTIF($C$%d:$C$%d,"ATIVO")=0,"SIM","NÃO — resolver os alertas ativos")'
+                  % (A_TOP, A_BOT))
+c.font, c.fill, c.border = F_RESULT, FILL_WARN, BOX
+wa.merge_cells(start_row=r, start_column=2, end_row=r, end_column=4)
+r += 2
+wa.cell(row=r, column=1,
+        value="Esta folha não substitui a Validacao. A Validacao verifica que as duas implementações do "
+              "modelo concordam; esta verifica que o resultado faz sentido como negócio. São perguntas "
+              "diferentes e um modelo pode passar numa e falhar na outra.").font = F_SUB
+wa.merge_cells(start_row=r, start_column=1, end_row=r, end_column=5)
+wa["A%d" % r].alignment = Alignment(wrap_text=True, vertical="top")
+wa.row_dimensions[r].height = 32
+wa.freeze_panes = "A5"
 
 
 # ================================================================ LEIA-ME
@@ -1325,6 +1966,9 @@ TXT = [
     ("SEC", "Como está organizado"),
     ("T", "Parâmetros — todas as taxas, escalões e limiares, cada um com a norma e o estado de validação. "
           "Nenhuma taxa é escrita dentro de uma fórmula noutra folha."),
+    ("T", "Operacao — camada operacional: gabinetes, dias, duração da consulta, preço e utilização. "
+          "É daqui que sai a faturação quando FONTE_FAT = 2. A linha de utilização diz se a projeção "
+          "cabe fisicamente no espaço."),
     ("T", "Inputs — folha única de parâmetros do caso, em três cenários de faturação. Contém a alavanca "
           "MOD_COLAB, que alterna entre os dois modelos de colaboração da ata (1 = prestação de serviços, "
           "2 = cedência de sala) e reconfigura toda a estrutura de receita e custo."),
@@ -1337,7 +1981,19 @@ TXT = [
     ("T", "PontoViragem — nível de custos reais a partir do qual o simplificado deixa de compensar, "
           "com o gráfico correspondente."),
     ("T", "Comparativo — output que alimenta o capítulo 3 e o anexo E2, com o gráfico do líquido por via."),
+    ("T", "BreakEven — break-even operacional e rendimento-alvo da fundadora. Não confundir com o "
+          "PontoViragem, que é o break-even fiscal: são três conceitos distintos e a folha explica-os."),
+    ("T", "Espaco — comparação 2 versus 3 gabinetes a procura constante, com investimento e payback."),
     ("T", "Validação — recálculo independente e espaço para assinatura."),
+    ("T", "Alertas — verificação de plausibilidade empresarial e semáforo global. Enquanto houver um "
+          "alerta bloqueante ativo, nenhum número sai do ficheiro."),
+    ("SEC", "Três break-even distintos, que nunca se misturam"),
+    ("T", "Break-even FISCAL (folha PontoViragem): a partir de que nível de custos reais uma estrutura "
+          "fiscal passa a ser melhor do que outra."),
+    ("T", "Break-even OPERACIONAL (folha BreakEven): a partir de que faturação a clínica cobre os "
+          "custos."),
+    ("T", "RENDIMENTO-ALVO (folha BreakEven): que faturação é precisa para a fundadora receber o que "
+          "quer receber. Nunca usar a mesma palavra para os três numa frase dita à cliente."),
     ("SEC", "Convenções"),
     ("T", "Azul sobre amarelo = célula de preenchimento. Verde = ligação a outra folha. Preto = fórmula. "
           "Fundo laranja na folha Parâmetros = parâmetro por confirmar."),

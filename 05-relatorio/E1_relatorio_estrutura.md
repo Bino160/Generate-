@@ -106,6 +106,10 @@ Sequência de argumentação, fixa:
 
 **3.6 IVA no investimento.**
 
+**3.7 A projeção cabe no espaço?** Verificação de plausibilidade operacional, antes de qualquer conclusão fiscal. Utilização implícita dos gabinetes e break-even operacional. Se a projeção não couber, ou não cobrir os custos fixos, a discussão de estrutura fiscal é secundária e tem de o dizer.
+
+**3.8 Dois ou três gabinetes.** A partir de que procura o terceiro compensa, e o que isso implica em doentes por dia.
+
 ### Mapa de exposições (anexo E2)
 
 | Ex. | Conteúdo | Folha do M1 | Requisito do brief |
@@ -117,6 +121,9 @@ Sequência de argumentação, fixa:
 | E2.5 | IVA recuperável no investimento, com e sem cônjuge na sociedade | `IVA` | E2, ponto 3 |
 | E2.6 | Impacto do modelo de colaboração na margem: prestação de serviços vs. cedência de sala | `Inputs`, alavanca `MOD_COLAB` + `Comparativo` | E2, ponto 4 |
 | E2.7 | Sensibilidade à política de distribuição: vias 3 e 4 a 0%, 50% e 100% | `V4`, alavanca `POL_DIST` | Suporte do capítulo 5 |
+| E2.8 | Break-even operacional: faturação mensal necessária para cobrir os custos, e utilização implícita | `BreakEven` | Acréscimo ao mínimo do brief. Suporta 3.1 e o capítulo 7 |
+| E2.9 | 2 vs. 3 gabinetes: capacidade, investimento, payback, e a procura a partir da qual o terceiro compensa | `Espaco` | Acréscimo. Responde a um ponto que a ata deixou em aberto |
+| E2.10 | Rendimento-alvo: faturação necessária para a fundadora receber o valor pretendido, por estrutura | `BreakEven` | Acréscimo. Suporta a regra de decisão do capítulo 5 |
 
 **Regras de apresentação do anexo:** sem fórmulas visíveis, sem referências a folhas de cálculo, sem ficheiro Excel entregue (secção 5 do brief). Cada exposição com uma frase de leitura por baixo — o que a tabela mostra, não o que contém.
 

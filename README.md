@@ -10,7 +10,7 @@
 
 | Peça | Ficheiro | Estado |
 |---|---|---|
-| M1 — modelo comparativo das 4 vias | `01-modelo/M1_modelo_comparativo.xlsx` | Motor construído e validado por recálculo independente. **A correr com placeholders** |
+| M1 — modelo comparativo das 4 vias | `01-modelo/M1_modelo_comparativo.xlsx` | 15 folhas: fiscal, operacional, break-even, espaço, alertas. Validado por recálculo independente. **A correr com placeholders** |
 | M1 — gerador | `01-modelo/build_m1.py` | Reproduz o ficheiro do zero |
 | N1 — nota técnica de composição societária | `02-nota-tecnica/N1_composicao_societaria.md` | Completa. 6 pendentes de Fiscalidade |
 | P1 — plano de implementação | `03-plano/P1_plano_implementacao.md` | Completo |
@@ -18,6 +18,7 @@
 | Pedido de inputs à cliente | `00-inputs/pedido_inputs_cliente.md` | **Minuta, não enviada** |
 | E1 — estrutura do relatório | `05-relatorio/E1_relatorio_estrutura.md` | Cap. 2 redigido, cap. 5 com a regra de decisão fechada, restantes em esqueleto |
 | E3 — estrutura do deck e guião da sessão | `06-reuniao/E3_estrutura_deck.md` | 14 slides e guião de 90 min fechados |
+| D1 — avaliação da spec de evolução VCLevel | `07-decisoes/D1_avaliacao_spec_vclevel.md` | Decisão proposta: implementar P0 e núcleo do P1, rejeitar o scoring, diferir P2/P3 |
 
 **Nada disto sai para a cliente.** Os entregáveis são o relatório E1, o anexo E2 e a reunião E3. A entrega do ficheiro do modelo está expressamente fora de âmbito.
 
@@ -42,6 +43,20 @@ Dois bloqueios, e nenhum deles é falta de trabalho nosso.
 **3. A Segurança Social, ausente da ata, é provavelmente o maior diferencial entre as vias.** No simplificado a base de incidência é uma percentagem da faturação bruta; com contabilidade organizada é o lucro tributável; em sociedade incide apenas sobre a remuneração de gerência. O efeito excede com frequência o diferencial de IRS.
 
 **4. A via alternativa do ponto 2 é mais exigente do que aparentava.** Depois de a modelar: falhar o teste dos 75% obriga a que a cedência de espaço renda **um terço da faturação profissional**. Com os valores de trabalho, a cedência de sala a 30% da faturação dos colaboradores dá 87,8% de rendimentos profissionais e **não** afasta a transparência. A via existe, mas só com renda substancial — está quantificada na linha `REC_SALA_MIN` do M1 e registada como R1-32.
+
+---
+
+## A camada operacional, e o que ela muda
+
+O modelo deixou de receber a faturação como palpite. A folha `Operacao` deriva-a de gabinetes, dias, duração da consulta e preço — e devolve a **taxa de utilização**, que diz se a projeção cabe fisicamente no espaço. Uma projeção acima de 100% é impossível, não é otimista.
+
+Isto muda três coisas:
+
+1. **O que pedimos à cliente.** O pedido passou a pedir drivers operacionais em vez de uma projeção de faturação. As pessoas estimam mal receita e estimam bem quantos doentes veem por dia. Como o pedido ainda não foi enviado, não se perdeu nada.
+2. **A questão dos 2 vs. 3 gabinetes deixa de ser sobre renda.** A folha `Espaco` compara as duas opções **a procura constante** — comparar à mesma taxa de utilização daria automaticamente mais 50% de consultas à opção maior, e foi um erro que teve de ser corrigido durante a construção. Com a correção, abaixo da capacidade de dois gabinetes a opção maior perde exatamente o custo fixo adicional; acima, recupera-o.
+3. **Três break-even distintos, que nunca se misturam.** O fiscal (`PontoViragem`), o operacional (`BreakEven`) e o rendimento-alvo da fundadora. A mesma palavra designa os três e é uma confusão à espera de acontecer numa reunião.
+
+A folha `Alertas` fecha o circuito: enquanto houver um alerta bloqueante ativo, o semáforo global diz que nenhum número é citável. Neste momento estão cinco ativos.
 
 ---
 
