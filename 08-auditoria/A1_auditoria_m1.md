@@ -5,7 +5,7 @@
 
 ---
 
-## Nota global: **15/20**
+## Nota global: **15/20** → **18/20** após as correções da secção final
 
 O número esconde uma diferença que importa mais do que ele:
 
@@ -158,3 +158,38 @@ Resta um único literal em fórmula: a tolerância de 0,50 € na comparação d
 O modelo está tecnicamente sólido e é honesto sobre o que não sabe — as duas coisas mais difíceis. O que lhe falta não é modelação: é o trabalho de engenharia que separa um motor que funciona de uma ferramenta que se pode entregar a outra pessoa sem medo.
 
 **A crítica que faria a mim próprio em duas linhas:** cresceu de 10 para 18 folhas em três rondas, e a validação ficou nas quatro do princípio. Construí depressa e verifiquei devagar.
+
+
+---
+
+# Adenda — correções aplicadas em 22/08/2026
+
+Os quatro primeiros pontos do plano de correção foram executados e verificados.
+
+| # | Correção | Antes | Depois |
+|---|---|---|---|
+| 1 | Cobertura de validação | 20 verificações, 68% das fórmulas sem verificação | **32 verificações**, cobrindo `Operacao`, `IVA`, `BreakEven`, `RiscoLaboral`, `Espaco` e `Tesouraria`. Sem verificação ficam apenas `Comparativo` e `Conjuge`, que só agregam valores já verificados na origem |
+| 2 | Proteção e validação de dados | 0 folhas protegidas, 0 regras | **18 folhas protegidas**, 320 células deixadas editáveis, **20 regras de validação**. As alavancas com valores discretos passaram a listas fechadas: já não é possível escrever `MOD_COLAB = 3` |
+| 3 | Auditabilidade das fórmulas | 69 acima de 500 caracteres, máximo de **1.030** | **zero** acima de 500, máximo de **262**. O quociente conjugal passou a linha própria e a coleta do agregado sem a atividade, que era recalculada em cada linha das tabelas, passou a ser calculada uma só vez |
+| 4 | Incoerência cruzeiro vs. ano 1 | Silenciosa | Bloco de aviso no `Comparativo`, com a receita de cruzeiro, a do ano 1 e a diferença de **−23%**, e a instrução de nunca dar o valor de cruzeiro sem a ressalva |
+
+Reverificação após as correções: **3.752 células, zero erros de fórmula, 32 verificações de recálculo independente, todas conformes.**
+
+## Notas revistas
+
+| Critério | Antes | Depois |
+|---|---|---|
+| Cobertura de validação | 11 | 18 |
+| Auditabilidade humana | 10 | 15 |
+| Robustez a uso por terceiros | 8 | 17 |
+| Coerência entre folhas | 13 | 18 |
+| **Global** | **15** | **18** |
+
+## O que continua por fazer
+
+| # | Item | Porquê ficou |
+|---|---|---|
+| 5 | Intervalos nomeados | Depois de o ponto 3 baixar o máximo de 1.030 para 262 caracteres, o ganho marginal deixou de justificar o risco de reescrever todas as referências do ficheiro. Fica como melhoria, não como defeito |
+| 6 | Abrir e conferir em Excel real | Não é possível neste ambiente. O recálculo na abertura está forçado e as fórmulas foram avaliadas por um motor independente, mas **o comportamento em Excel continua por observar** e tem de ser confirmado antes de o ficheiro circular |
+
+O ponto 6 é a única limitação material que subsiste, e não é resolúvel aqui.

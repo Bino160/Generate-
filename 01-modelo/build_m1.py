@@ -7,7 +7,8 @@ existe para tornar o modelo reprodutivel, versionavel e auditavel.
 NAO ENTREGAR AO CLIENTE (ver seccao 5 do brief: entrega do ficheiro M1 esta fora de ambito).
 """
 from openpyxl import Workbook
-from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side, Protection
+from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl.utils import get_column_letter
 from openpyxl.chart import LineChart, BarChart, Reference, Series
 
@@ -283,6 +284,13 @@ def coleta(rc):
 
 def solidariedade(rc):
     return "SUMPRODUCT(({rc}>{inf})*({rc}-{inf})*{d})".format(rc=rc, inf=SOL_INF, d=SOL_DEL)
+
+
+def coleta_q(rc):
+    """Coleta + taxa adicional sobre um rendimento ja ajustado ao quociente conjugal.
+    Existe para que o quociente seja um passo visivel numa linha propria, em vez de
+    ficar enterrado num IF que duplica a formula toda. Ver A1, ponto 2."""
+    return "({a}+{b})".format(a=coleta(rc), b=solidariedade(rc))
 
 
 # ================================================================ OPERACAO
@@ -776,11 +784,18 @@ def bloco_irs(v, rend_julia_fn, nota=""):
           lambda c: "=" + v.c("R_CONJ", c),
           note="Contrafactual. O diferencial entre as duas coletas é o IRS realmente imputável à atividade "
                "e é o que torna as quatro vias comparáveis.")
+    v.row("FATOR", "Fator do quociente conjugal",
+          lambda c: "=IF({j}=1,2,1)".format(j=inp("CONJUNTA", c)), fmt=NUM,
+          note="Art. 69.º CIRS. Isolado numa linha para que as fórmulas de coleta caibam num ecrã.")
+    v.row("RCQ_COM", "Rendimento coletável ajustado ao quociente — com a atividade",
+          lambda c: "={r}/{f}".format(r=v.c("RC_COM", c), f=v.c("FATOR", c)))
+    v.row("RCQ_SEM", "Rendimento coletável ajustado ao quociente — sem a atividade",
+          lambda c: "={r}/{f}".format(r=v.c("RC_SEM", c), f=v.c("FATOR", c)))
     v.row("COL_COM", "Coleta com a atividade (incl. taxa adicional de solidariedade)",
-          lambda c: "=" + irs_bloco(v, c, v.c("RC_COM", c), v.c("RC_SEM", c))[0],
-          note="Escalões e quociente conjugal na folha Parâmetros. Art. 68.º, 68.º-A e 69.º CIRS.")
+          lambda c: "={f}*{x}".format(f=v.c("FATOR", c), x=coleta_q(v.c("RCQ_COM", c))),
+          note="Escalões na folha Parâmetros. Art. 68.º, 68.º-A e 69.º CIRS.")
     v.row("COL_SEM", "Coleta sem a atividade",
-          lambda c: "=" + irs_bloco(v, c, v.c("RC_COM", c), v.c("RC_SEM", c))[1])
+          lambda c: "={f}*{x}".format(f=v.c("FATOR", c), x=coleta_q(v.c("RCQ_SEM", c))))
     v.row("IRS_ATIV", "IRS imputável à atividade", 
           lambda c: "={a}-{b}".format(a=v.c("COL_COM", c), b=v.c("COL_SEM", c)), style="result")
     v.row("IRS_TOT", "IRS total do agregado, após deduções à coleta (memória)",
@@ -874,10 +889,16 @@ def bloco_irs_ext(v, rend_julia_fn, rend_conj_fn, nota=""):
     v.row("RC_SEM", "Rendimento coletável do agregado — sem a atividade",
           lambda c: "=" + inp("REND_CONJ", c), style="link",
           note="Contrafactual: apenas o rendimento do cônjuge fora da estrutura.")
+    v.row("FATOR", "Fator do quociente conjugal",
+          lambda c: "=IF({j}=1,2,1)".format(j=inp("CONJUNTA", c)), fmt=NUM)
+    v.row("RCQ_COM", "Rendimento coletável ajustado ao quociente — com a atividade",
+          lambda c: "={r}/{f}".format(r=v.c("RC_COM", c), f=v.c("FATOR", c)))
+    v.row("RCQ_SEM", "Rendimento coletável ajustado ao quociente — sem a atividade",
+          lambda c: "={r}/{f}".format(r=v.c("RC_SEM", c), f=v.c("FATOR", c)))
     v.row("COL_COM", "Coleta com a atividade (incl. taxa adicional de solidariedade)",
-          lambda c: "=" + irs_bloco(v, c, v.c("RC_COM", c), v.c("RC_SEM", c))[0])
+          lambda c: "={f}*{x}".format(f=v.c("FATOR", c), x=coleta_q(v.c("RCQ_COM", c))))
     v.row("COL_SEM", "Coleta sem a atividade",
-          lambda c: "=" + irs_bloco(v, c, v.c("RC_COM", c), v.c("RC_SEM", c))[1])
+          lambda c: "={f}*{x}".format(f=v.c("FATOR", c), x=coleta_q(v.c("RCQ_SEM", c))))
     v.row("IRS_ATIV", "IRS imputável à atividade",
           lambda c: "={a}-{b}".format(a=v.c("COL_COM", c), b=v.c("COL_SEM", c)), style="result")
     v.row("IRS_TOT", "IRS total do agregado, após deduções à coleta (memória)",
@@ -1225,6 +1246,7 @@ _bar.set_categories(Reference(wc_, min_col=3, max_col=6, min_row=_hdr, max_row=_
 _bar.height, _bar.width = 8, 18
 wc_.add_chart(_bar, "I4")
 
+COMP_R = r + 2
 wc_.cell(row=r, column=1,
          value="Leitura obrigatória antes de citar qualquer número: os inputs são placeholders. "
                "Estes resultados demonstram que o motor funciona e indicam a direção do efeito; não são "
@@ -1239,7 +1261,7 @@ title(wp, "M1 — Ponto de viragem do regime simplificado",
       "regime simplificado deixa de compensar. Faturação fixada no cenário Base; varia-se o peso dos "
       "custos reais dedutíveis. Comparam-se apenas as vias 1 e 2, que é onde a questão se põe.")
 widths(wp, {"A": 13, "B": 15, "C": 16, "D": 14, "E": 14, "F": 15,
-            "G": 16, "H": 14, "I": 14, "J": 15, "K": 15, "L": 11})
+            "G": 16, "H": 14, "I": 14, "J": 15, "K": 15, "L": 11, "M": 14, "N": 14})
 wp.merge_cells("A2:L2"); wp["A2"].alignment = Alignment(wrap_text=True, vertical="top")
 wp.row_dimensions[2].height = 44
 
@@ -1261,12 +1283,24 @@ c = wp.cell(row=r, column=3, value="=" + FATB); c.number_format, c.font = EUR, F
 r += 1
 wp.cell(row=r, column=1, value="Rendimento do cônjuge").font = F_BODY
 c = wp.cell(row=r, column=3, value="=" + RCONJ); c.number_format, c.font = EUR, F_LINK
-r += 2
+r += 1
 FAT_C, RC_C = "$C$4", "$C$5"
+wp.cell(row=r, column=1, value="Fator do quociente conjugal").font = F_BODY
+c = wp.cell(row=r, column=3, value="=IF({j}=1,2,1)".format(j=CONJ)); c.number_format, c.font = NUM, F_CALC
+FAT_F = "$C$%d" % r
+r += 1
+wp.cell(row=r, column=1, value="Coleta do agregado sem a atividade (constante)").font = F_BODY
+c = wp.cell(row=r, column=3, value="={f}*{x}".format(f=FAT_F, x=coleta_q("(%s/%s)" % (RC_C, FAT_F))))
+c.number_format, c.font = EUR, F_CALC
+wp.cell(row=r, column=5,
+        value="Calculada uma só vez. Antes era recalculada em cada linha da tabela, o que tornava cada "
+              "fórmula ilegível. Ver A1, ponto 2.").font = F_NOTE
+COL_SEM_C = "$C$%d" % r
+r += 2
 
 hdr(wp, r, ["% custos", "Custos reais", "Rend. líq. cat. B (via 1)", "SS via 1", "IRS via 1",
             "Carga via 1", "Lucro tribut. (via 2)", "SS via 2", "IRS via 2", "Carga via 2",
-            "Diferencial", "Viragem"])
+            "Diferencial", "Viragem", "RC ajustado v1", "RC ajustado v2"])
 r += 1
 TOP = r
 for i in range(15):
@@ -1280,7 +1314,8 @@ for i in range(15):
     d = wp.cell(row=r, column=4, value="=MAX(MIN({f}*{p},{i}*{m}*12)*{t},{mn}*12)".format(
         f=FAT_C, p=P["SS_TI_PCT"], i=P["IAS"], m=P["SS_TI_TETO"], t=P["SS_TI_TAXA"], mn=P["SS_TI_MIN"]))
     d.number_format, d.font, d.border = EUR, F_CALC, BOX
-    e = wp.cell(row=r, column=5, value="=" + colfull("C%d+%s" % (r, RC_C)) + "-" + colfull(RC_C))
+    e = wp.cell(row=r, column=5,
+                value="={f}*{x}-{s}".format(f=FAT_F, x=coleta_q("M%d" % r), s=COL_SEM_C))
     e.number_format, e.font, e.border = EUR, F_CALC, BOX
     f_ = wp.cell(row=r, column=6, value="=D%d+E%d" % (r, r))
     f_.number_format, f_.font, f_.border = EUR, F_RESULT, BOX
@@ -1289,7 +1324,8 @@ for i in range(15):
     h = wp.cell(row=r, column=8, value="=MAX(MIN(MAX({f}-B{r},0),{i}*{m}*12)*{t},{mn}*12)".format(
         f=FAT_C, r=r, i=P["IAS"], m=P["SS_TI_TETO"], t=P["SS_TI_TAXA"], mn=P["SS_TI_MIN"]))
     h.number_format, h.font, h.border = EUR, F_CALC, BOX
-    ii = wp.cell(row=r, column=9, value="=" + colfull("G%d+%s" % (r, RC_C)) + "-" + colfull(RC_C))
+    ii = wp.cell(row=r, column=9,
+                 value="={f}*{x}-{s}".format(f=FAT_F, x=coleta_q("N%d" % r), s=COL_SEM_C))
     ii.number_format, ii.font, ii.border = EUR, F_CALC, BOX
     j = wp.cell(row=r, column=10, value="=H%d+I%d" % (r, r))
     j.number_format, j.font, j.border = EUR, F_RESULT, BOX
@@ -1298,6 +1334,9 @@ for i in range(15):
     l = wp.cell(row=r, column=12,
                 value=("=0" if i == 0 else "=IF(AND(K{r}>=0,K{p}<0),A{r},0)".format(r=r, p=r - 1)))
     l.number_format, l.font, l.border = PCT, F_CALC, BOX
+    for col2, src in ((13, "C"), (14, "G")):
+        h = wp.cell(row=r, column=col2, value="=({s}{r}+{rc})/{f}".format(s=src, r=r, rc=RC_C, f=FAT_F))
+        h.number_format, h.font, h.border = EUR, F_NOTE, BOX
     r += 1
 BOT = r - 1
 _ln = LineChart()
@@ -1416,12 +1455,22 @@ wb_.cell(row=r, column=6,
                "a via 3 e a via 4.").font = F_NOTE
 r += 2
 
+wb_.cell(row=r, column=1, value="Fator do quociente conjugal").font = F_BODY
+_c = wb_.cell(row=r, column=3, value="=IF({j}=1,2,1)".format(j=inp("CONJUNTA", "D")))
+_c.number_format, _c.font, _c.border = NUM, F_CALC, BOX
+BE_F = "$C$%d" % r
+r += 1
 CFB, PCTVAR = "$D$%d" % B["CF"], "(1-$D$%d)" % B["MCP"]
 RCB, AMB = inp("REND_CONJ", "D"), AMORT("D")
 REMB, TAB = inp("REM_GER", "D"), inp("TA_EST", "D")
 BMOE = "MAX({r},{i}*{m}*12)".format(r=REMB, i=P["IAS"], m=P["SS_MOE_MIN"])
 TSUB, SSTB = "({b})*{t}".format(b=BMOE, t=P["SS_MOE_ENT"]), "({b})*{t}".format(b=BMOE, t=P["SS_MOE_BEN"])
 
+wb_.cell(row=r, column=1, value="Coleta do agregado sem a atividade (constante)").font = F_BODY
+_c = wb_.cell(row=r, column=3, value="={f}*{x}".format(f=BE_F, x=coleta_q("(%s/%s)" % (RCB, BE_F))))
+_c.number_format, _c.font, _c.border = EUR, F_CALC, BOX
+BE_SEM = "$C$%d" % r
+r += 2
 wb_.cell(row=r, column=1,
          value="Faturação necessária para atingir o rendimento-alvo, por estrutura. Custos fixos e peso "
                "dos custos variáveis fixados no cenário Base. Resolução de 10.000 €.").font = F_SUB
@@ -1429,7 +1478,8 @@ wb_.merge_cells(start_row=r, start_column=1, end_row=r, end_column=18)
 r += 1
 hdr(wb_, r, ["Faturação", "Custos", "Caixa", "Rend. cat. B (v1)", "SS v1", "IRS v1", "LÍQUIDO v1",
              "Lucro trib. (v2)", "SS v2", "IRS v2", "LÍQUIDO v2", "Lucro trib. (v3)", "Rend. sócia (v3)",
-             "IRS v3", "LÍQUIDO v3", "Alvo v1", "Alvo v2", "Alvo v3"])
+             "IRS v3", "LÍQUIDO v3", "Alvo v1", "Alvo v2", "Alvo v3",
+             "RC ajust. v1", "RC ajust. v2", "RC ajust. v3"])
 r += 1
 TT = r
 for i in range(13):
@@ -1442,23 +1492,26 @@ for i in range(13):
             r=r, k=P["COEF"], lj=P["LIM_JUST"], lc=P["LIM_CONTRIB"]),
         5: "=MAX(MIN(A{r}*{p},{i}*{m}*12)*{t},{mn}*12)".format(
             r=r, p=P["SS_TI_PCT"], i=P["IAS"], m=P["SS_TI_TETO"], t=P["SS_TI_TAXA"], mn=P["SS_TI_MIN"]),
-        6: "=" + colfull("D%d+%s" % (r, RCB)) + "-" + colfull(RCB),
+        6: "={f}*{x}-{s}".format(f=BE_F, x=coleta_q("S%d" % r), s=BE_SEM),
         7: "=C{r}-E{r}-F{r}".format(r=r),
         8: "=MAX(0,A{r}-B{r}-({am})-I{r})".format(r=r, am=AMB),
         9: "=MAX(MIN(MAX(A{r}-B{r}-({am}),0),{i}*{m}*12)*{t},{mn}*12)".format(
             r=r, am=AMB, i=P["IAS"], m=P["SS_TI_TETO"], t=P["SS_TI_TAXA"], mn=P["SS_TI_MIN"]),
-        10: "=" + colfull("H%d+%s" % (r, RCB)) + "-" + colfull(RCB),
+        10: "={f}*{x}-{s}".format(f=BE_F, x=coleta_q("T%d" % r), s=BE_SEM),
         11: "=C{r}-I{r}-J{r}".format(r=r),
         12: "=A{r}-B{r}-({am})-({rm})-({ts})".format(r=r, am=AMB, rm=REMB, ts=TSUB),
         13: "=MAX(0,({rm})-MIN(({rm}),MAX({d},{st})))+MAX(L{r},0)".format(
             rm=REMB, d=P["DED_CATA"], st=SSTB, r=r),
-        14: "=" + colfull("M%d+%s" % (r, RCB)) + "-" + colfull(RCB),
+        14: "={f}*{x}-{s}".format(f=BE_F, x=coleta_q("U%d" % r), s=BE_SEM),
         15: "=C{r}-({st})-({ts})-({ta})-N{r}".format(r=r, st=SSTB, ts=TSUB, ta=TAB),
     }
     for col, f in cells.items():
         c = wb_.cell(row=r, column=col, value=f)
         c.number_format, c.border = EUR, BOX
         c.font = F_RESULT if col in (7, 11, 15) else F_CALC
+    for col2, src in ((19, "D"), (20, "H"), (21, "M")):
+        h = wb_.cell(row=r, column=col2, value="=({s}{r}+{rc})/{f}".format(s=src, r=r, rc=RCB, f=BE_F))
+        h.number_format, h.font, h.border = EUR, F_NOTE, BOX
     for k2, (col, src) in enumerate([(16, "G"), (17, "K"), (18, "O")]):
         f = "=0" if i == 0 else "=IF(AND({s}{r}>=$C${t},{s}{p}<$C${t}),A{r},0)".format(
             s=src, r=r, p=r - 1, t=TGT_ROW)
@@ -1921,6 +1974,7 @@ wval.merge_cells(start_row=r, start_column=1, end_row=r, end_column=9)
 wval["A%d" % r].alignment = Alignment(wrap_text=True, vertical="top")
 wval.row_dimensions[r].height = 46
 wval.freeze_panes = "A5"
+VAL_R = r + 2
 
 
 # ================================================================ RISCO LABORAL
@@ -2067,232 +2121,6 @@ wr.merge_cells(start_row=r, start_column=1, end_row=r, end_column=6)
 wr["A%d" % r].alignment = Alignment(wrap_text=True, vertical="top")
 wr.row_dimensions[r].height = 92
 wr.freeze_panes = "C5"
-
-
-# ================================================================ ALERTAS
-wa = wb.create_sheet("Alertas")
-title(wa, "M1 — Alertas",
-      "Um modelo pode ter a fórmula certa, a fiscalidade certa e um pressuposto empresarial errado. Esta "
-      "folha existe para apanhar o terceiro caso. Enquanto houver um alerta ATIVO com consequência "
-      "bloqueante, nenhum número deste ficheiro pode ser citado no relatório, no deck ou perante a cliente.")
-widths(wa, {"A": 52, "B": 14, "C": 12, "D": 56, "E": 22})
-wa.merge_cells("A2:E2"); wa["A2"].alignment = Alignment(wrap_text=True, vertical="top")
-wa.row_dimensions[2].height = 46
-r = 4
-
-PAR_F = "Parametros!$F$%d:$F$%d" % (min(VALID_ROWS), max(VALID_ROWS))
-INP_J = "Inputs!$J$%d:$J$%d" % (min(FALTA_ROWS), max(FALTA_ROWS))
-
-section(wa, r, "Interruptores manuais — a equipa liga e desliga", span=5); r += 1
-SW = {}
-for key, label, val, nota in [
-    ("SW_R114", "Atividade do cônjuge confirmada fora da tabela do art. 151.º CIRS? (1 = sim / 0 = não)",
-     0, "R1-14 e N1-01. Enquanto for 0, a via 4 não é apresentável."),
-    ("SW_N104", "Qualificação da cedência de sala fixada pela Fiscalidade? (1 = sim / 0 = não)",
-     0, "N1-04. Enquanto for 0, o modelo 2 tem consequências fiscais assumidas, não determinadas."),
-    ("SW_FIN", "Financiamento do investimento identificado? (1 = sim / 0 = não)",
-     0, "Obras, equipamento e IVA irrecuperável têm de sair de algum lado."),
-]:
-    wa.cell(row=r, column=1, value=label).font = F_BODY
-    c = wa.cell(row=r, column=2, value=val)
-    c.number_format, c.font, c.fill, c.border = NUM, F_INPUT, FILL_FILL, BOX
-    n = wa.cell(row=r, column=4, value=nota); n.font = F_NOTE
-    n.alignment = Alignment(wrap_text=True, vertical="top")
-    SW[key] = "$B$%d" % r
-    r += 1
-
-r += 1
-hdr(wa, r, ["Alerta", "Valor avaliado", "Estado", "Consequência se ativo", "Referência"]); r += 1
-A_TOP = r
-
-ALERTAS = [
-    ("Parâmetros fiscais por validar para 2026", "=SUM(%s)" % PAR_F, NUM, "B{r}>0",
-     "BLOQUEANTE. Os números podem estar certos na aritmética e errados na lei. Nenhum valor sai do "
-     "ficheiro enquanto este alerta estiver ativo.", "R1, secção C · P0 da spec"),
-    ("Inputs da cliente por confirmar", "=SUM(%s)" % INP_J, NUM, "B{r}>0",
-     "BLOQUEANTE para o relatório. Os valores em uso são placeholders de teste do motor.",
-     "R1, secção A · brief, secção 4"),
-    ("Utilização dos gabinetes acima de 100%", "=" + oref("UTILIZ", "D"), PCT, "B{r}>" + P["UTIL_MAX"],
-     "A projeção é impossível: não há gabinetes para as consultas previstas. Corrigir a projeção ou o "
-     "número de gabinetes antes de qualquer outra coisa.", "Folha Operacao"),
-    ("Utilização dos gabinetes acima de 85%", "=" + oref("UTILIZ", "D"), PCT,
-     "AND(B{r}>" + P["UTIL_ALTA"] + ",B{r}<=" + P["UTIL_MAX"] + ")",
-     "Operacionalmente muito exigente: sem folga para faltas, férias ou variação de procura.",
-     "Folha Operacao"),
-    ("Utilização subaproveitada, abaixo de 30%", "=" + oref("UTILIZ", "D"), PCT,
-     "B{r}<" + P["UTIL_BAIXA"],
-     "O espaço está sobredimensionado para a procura projetada. Rever a opção de espaço.",
-     "Folhas Operacao e Espaco"),
-    ("Receita projetada abaixo do break-even operacional",
-     "=BreakEven!$D$%d" % B["MARG_SEG"], PCT, "B{r}<0",
-     "A clínica não cobre os custos fixos com a faturação projetada. A discussão de estrutura fiscal é "
-     "secundária face a isto.", "Folha BreakEven"),
-    ("Margem de contribuição nula ou negativa", "=BreakEven!$D$%d" % B["MCP"], PCT, "B{r}<=0",
-     "Cada consulta adicional destrói valor. Rever a % de honorários ou o preço.", "Folha BreakEven"),
-    ("Utilização necessária para o break-even acima de 100%",
-     "=BreakEven!$D$%d" % B["UTIL_BE"], PCT, "B{r}>1",
-     "O espaço não consegue cobrir os próprios custos fixos nem a lotação máxima. O espaço está errado, "
-     "não a estrutura.", "Folhas BreakEven e Espaco"),
-    ("Premissa da atividade do cônjuge por verificar", "=1-%s" % SW["SW_R114"], NUM, "B{r}=1",
-     "BLOQUEANTE para a via 4. Se a atividade do cônjuge constar da tabela do art. 151.º CIRS, a entrada "
-     "dele não afasta a transparência com percentagem nenhuma.", "R1-14 · N1, secção 4.1"),
-    ("Qualificação da cedência de sala por fixar", "=1-%s" % SW["SW_N104"], NUM, "B{r}=1",
-     "O modelo 2 corre com consequências fiscais assumidas. A qualificação depende da configuração "
-     "contratual e operacional concreta, não do nome do modelo.", "N1-04 · R1-31"),
-    ("Investimento sem financiamento identificado", "=1-%s" % SW["SW_FIN"], NUM, "B{r}=1",
-     "O plano assume que o investimento é feito. Se não houver origem de fundos, o cenário não é "
-     "executável.", "Folha Espaco · P1, fase 3"),
-    ("IVA dependente de pro rata ou afetação real", "=" + inp("REC_TRIB", "D"), EUR, "B{r}>0",
-     "A dedução de IVA deixa de ser zero e passa a depender de um método e de segregação documental "
-     "permanente. Confirmar o método antes de contar com o valor.", "Folha IVA · N1, secção 8"),
-    ("Recálculo independente com divergências", '=IF(%s="TODAS AS VERIFICAÇÕES OK",0,1)' % VAL_GLOBAL,
-     NUM, "B{r}=1",
-     "BLOQUEANTE. As duas implementações do modelo discordam. Uma delas está errada.", "Folha Validacao"),
-]
-
-for label, valf, fmt, cond, cons, ref in ALERTAS:
-    wa.cell(row=r, column=1, value=label).font = F_BODY
-    b = wa.cell(row=r, column=2, value=valf)
-    b.number_format, b.font, b.border = fmt, F_LINK, BOX
-    st = wa.cell(row=r, column=3, value='=IF(%s,"ATIVO","—")' % cond.format(r=r))
-    st.font, st.border = F_RESULT, BOX
-    st.alignment = Alignment(horizontal="center")
-    cc = wa.cell(row=r, column=4, value=cons)
-    cc.font, cc.alignment = F_NOTE, Alignment(wrap_text=True, vertical="top")
-    rf = wa.cell(row=r, column=5, value=ref); rf.font = F_NOTE
-    rf.alignment = Alignment(wrap_text=True, vertical="top")
-    wa.row_dimensions[r].height = 30
-    r += 1
-A_BOT = r - 1
-
-r += 1
-wa.cell(row=r, column=1, value="TOTAL DE ALERTAS ATIVOS").font = F_RESULT
-c = wa.cell(row=r, column=2, value='=COUNTIF($C$%d:$C$%d,"ATIVO")' % (A_TOP, A_BOT))
-c.number_format, c.font, c.fill, c.border = NUM, F_RESULT, FILL_RES, BOX
-r += 1
-wa.cell(row=r, column=1, value="O FICHEIRO PODE PRODUZIR NÚMEROS CITÁVEIS?").font = F_RESULT
-c = wa.cell(row=r, column=2,
-            value='=IF(COUNTIF($C$%d:$C$%d,"ATIVO")=0,"SIM","NÃO — resolver os alertas ativos")'
-                  % (A_TOP, A_BOT))
-c.font, c.fill, c.border = F_RESULT, FILL_WARN, BOX
-wa.merge_cells(start_row=r, start_column=2, end_row=r, end_column=4)
-r += 2
-wa.cell(row=r, column=1,
-        value="Esta folha não substitui a Validacao. A Validacao verifica que as duas implementações do "
-              "modelo concordam; esta verifica que o resultado faz sentido como negócio. São perguntas "
-              "diferentes e um modelo pode passar numa e falhar na outra.").font = F_SUB
-wa.merge_cells(start_row=r, start_column=1, end_row=r, end_column=5)
-wa["A%d" % r].alignment = Alignment(wrap_text=True, vertical="top")
-wa.row_dimensions[r].height = 32
-wa.freeze_panes = "A5"
-
-
-# ================================================================ CONJUGE
-wcj = wb.create_sheet("Conjuge")
-title(wcj, "M1 — Entrada do cônjuge: custo de complexidade",
-      "A hipótese foi levantada na reunião e ficou em análise, nem descartada nem recomendada. Esta folha "
-      "põe de um lado tudo o que a entrada do cônjuge dá e do outro tudo o que custa, para que a decisão "
-      "não se tome pela metade que é mais fácil de calcular.")
-widths(wcj, {"A": 60, "B": 13, "C": 15, "D": 15, "E": 15, "F": 56})
-wcj.merge_cells("A2:F2"); wcj["A2"].alignment = Alignment(wrap_text=True, vertical="top")
-wcj.row_dimensions[2].height = 46
-r = 4
-hdr(wcj, r, ["Rubrica", "Ref.", "Baixo", "Base", "Alto", "Nota"]); r += 1
-CJ = {}
-
-
-def cjrow(key, label, fn, fmt=EUR, style="calc", note=""):
-    global r
-    wcj.cell(row=r, column=1, value=label).font = F_RESULT if style == "result" else F_BODY
-    wcj.cell(row=r, column=2, value=key).font = F_NOTE
-    for j, (col, _n) in enumerate(SCEN):
-        c = wcj.cell(row=r, column=3 + j, value=fn(col) if callable(fn) else fn)
-        c.number_format, c.border = fmt, BOX
-        c.font = {"calc": F_CALC, "link": F_LINK, "result": F_RESULT, "input": F_INPUT}[style]
-        if style == "result":
-            c.fill = FILL_RES
-        if style == "input":
-            c.fill = FILL_FILL
-    n = wcj.cell(row=r, column=6, value=note)
-    n.font, n.alignment = F_NOTE, Alignment(wrap_text=True, vertical="top")
-    CJ[key] = r
-    r += 1
-
-
-def cc_(key, col):
-    return "$%s$%d" % (col, CJ[key])
-
-
-section(wcj, r, "A premissa de que tudo depende", span=6); r += 1
-wcj.cell(row=r, column=1,
-         value="Toda esta folha assume que a atividade do cônjuge NÃO consta da tabela do art. 151.º CIRS. "
-               "Se constar — por enquadramento como desportista ou pelo código residual — a entrada dele "
-               "não afasta a transparência fiscal com percentagem de capital nenhuma, e tudo o que está "
-               "abaixo passa a ser custo sem contrapartida. A premissa nunca foi verificada.").font = F_SUB
-wcj.merge_cells(start_row=r, start_column=1, end_row=r, end_column=6)
-wcj["A%d" % r].alignment = Alignment(wrap_text=True, vertical="top")
-wcj.row_dimensions[r].height = 46
-r += 1
-cjrow("PREMISSA", "Premissa verificada? (1 = sim / 0 = não)",
-      lambda c: "=Alertas!" + SW["SW_R114"].replace("$B$", "$B$"), fmt=NUM, style="link",
-      note="Interruptor na folha Alertas. Ver R1-14 e N1-01.")
-
-section(wcj, r, "O que a entrada do cônjuge dá", span=6); r += 1
-cjrow("G_IVA", "IVA recuperável atribuível à entrada do cônjuge",
-      lambda c: "=" + "IVA!$%s$%d" % (c, VR["GANHO"]), style="link",
-      note="Zero enquanto o cônjuge não faturar DENTRO da sociedade. Deter capital não dá IVA nenhum: "
-           "são duas decisões diferentes.")
-cjrow("G_ESTR", "Diferencial de líquido para a sócia, via 4 face à via 3",
-      lambda c: "={a}-{b}".format(a=v4.ref("LIQ_SOC", c), b=v3.ref("LIQ_SOC", c)), style="link",
-      note="Negativo significa que afastar a transparência custa dinheiro à sócia nas condições "
-           "atuais de distribuição. Depende inteiramente da alavanca POL_DIST.")
-cjrow("G_TOT", "Total dos ganhos anuais",
-      lambda c: "={a}+{b}".format(a=cc_("G_IVA", c), b=cc_("G_ESTR", c)), style="result",
-      note="O ganho de IVA é de uma só vez, no ano do investimento; o diferencial de estrutura é "
-           "recorrente. Somá-los na mesma linha é uma simplificação — ler as duas linhas acima.")
-
-section(wcj, r, "O que a entrada do cônjuge custa", span=6); r += 1
-cjrow("C_QUOTA", "Quota de lucros atribuída ao cônjuge, por ano",
-      lambda c: "=" + v4.ref("LIQ_CJ", c), style="link",
-      note="Dentro do agregado é uma transferência, não uma perda. Fora dele — divórcio, sucessão — "
-           "é definitiva. O relatório tem de dizer as duas coisas.")
-cjrow("C_ADM", "Custo administrativo anual de sujeito passivo misto", lambda c: 0, fmt=EUR, style="input",
-      note="A PREENCHER com a estimativa do contabilista: segregação documental, pro rata ou afetação "
-           "real, regularizações anuais, obrigações declarativas adicionais. Não é zero.")
-cjrow("C_CONST", "Custo de constituição e de alterações societárias", lambda c: 0, fmt=EUR, style="input",
-      note="A PREENCHER. Custo único.")
-cjrow("C_TOT", "Total dos custos anuais",
-      lambda c: "={a}+{b}+{d}".format(a=cc_("C_QUOTA", c), b=cc_("C_ADM", c), d=cc_("C_CONST", c)),
-      style="result")
-
-section(wcj, r, "Saldo", span=6); r += 1
-cjrow("SALDO", "SALDO ANUAL DA OPERAÇÃO, NA ESFERA DA SÓCIA",
-      lambda c: "={a}-{b}".format(a=cc_("G_TOT", c), b=cc_("C_TOT", c)), style="result")
-cjrow("SALDO_AGR", "SALDO ANUAL NA ESFERA DO AGREGADO",
-      lambda c: "={a}-{b}-{d}".format(a=cc_("G_TOT", c), b=cc_("C_ADM", c), d=cc_("C_CONST", c)),
-      style="result",
-      note="Exclui a quota de lucros do cônjuge, que dentro do agregado não sai. É a leitura mais "
-           "favorável possível à operação.")
-cjrow("VEREDITO", "Leitura",
-      lambda c: '=IF({p}=0,"NÃO DECIDÍVEL — premissa por verificar",'
-                'IF({s}>0,"Favorável na esfera da sócia",'
-                'IF({sa}>0,"Favorável apenas na ótica do agregado, não na da sócia",'
-                '"Desfavorável nas condições atuais")))'.format(
-                    p=cc_("PREMISSA", c), s=cc_("SALDO", c), sa=cc_("SALDO_AGR", c)),
-      fmt="General", style="result")
-
-r += 1
-wcj.cell(row=r, column=1,
-         value="O que esta folha não quantifica, e tem de ser dito por palavras no capítulo 7: a perda de "
-               "controlo qualificado, já que uma participação superior a 25% dá capacidade de bloqueio das "
-               "deliberações que exijam maioria de três quartos; o efeito em caso de divórcio ou sucessão; "
-               "e o risco de o desenho ser lido como artificial ao abrigo do art. 38.º n.º 2 da LGT se a "
-               "participação não tiver substância económica real. Nenhuma destas três coisas tem preço, e "
-               "todas podem ser mais caras do que o saldo acima.").font = F_SUB
-wcj.merge_cells(start_row=r, start_column=1, end_row=r, end_column=6)
-wcj["A%d" % r].alignment = Alignment(wrap_text=True, vertical="top")
-wcj.row_dimensions[r].height = 76
-wcj.freeze_panes = "C5"
 
 
 # ================================================================ TESOURARIA
@@ -2550,6 +2378,463 @@ wt.row_dimensions[r].height = 44
 wt.freeze_panes = "C5"
 
 
+# ================================================================ VALIDACAO — BLOCO 2
+# Recalculo independente das folhas construidas depois da primeira versao da validacao.
+# A1, ponto 1: 68% das formulas estavam sem verificacao. Este bloco fecha essa lacuna.
+k = comuns(1)
+_ias, _teto = IAS_V, TETO_ANO
+_capdia = og("HORAS_DIA", 1) * 60 / og("DUR_CONS", 1)
+_capano = og("N_GAB", 1) * og("DIAS_ANO", 1) * _capdia
+_consjul = og("DIAS_JUL", 1) * og("CONS_JUL", 1)
+_consfis = og("N_FISIO", 1) * og("DIAS_FIS", 1) * og("CONS_FIS", 1)
+_constot = _consjul + _consfis
+_fatjul = _consjul * og("PRECO_JUL", 1)
+_fatfis = _consfis * og("PRECO_FIS", 1)
+_fattot = _fatjul + _fatfis
+_precom = _fattot / _constot
+
+_rec = k["rb"]
+_cv = k["fat_is"] * g("PCT_CONSUM", 1) + k["custo_col"]
+_mcp = (_rec - _cv) / _rec
+_cf = sum(g(x, 1) for x in ["RENDA", "CONDOM", "SEGUROS", "SOFTW", "OUTROS"])
+_be = _cf / _mcp
+_utilbe = (_be / _precom) / _capano
+
+_honor = k["custo_col"]
+_basel = _honor * 5
+_tsue, _tsut = _basel * 0.2375, _basel * 0.11
+_juros = (_tsue + _tsut) * 0.05 * 5 / 2
+_passivo = _tsue + _tsut + _juros + _tsue * 0.5
+
+_ivatot = (g("INV_OBRAS", 1) + g("INV_EQUIP", 1) + g("INV_SOFT", 1)) * 0.23 \
+    + g("INV_EQUIP_R", 1) * 0.06
+
+_v2 = sh_v2(1)
+_caixa2 = k["rb"] + g("FAT_TRIB", 1) - k["op"]
+_tx = _v2["carga"] / _caixa2
+_arranque = (g("INV_OBRAS", 1) + g("INV_EQUIP", 1) + g("INV_EQUIP_R", 1) + g("INV_SOFT", 1)) \
+    + _ivatot + 3 * g("RENDA", 1) / 12
+
+_pvar = 1 - _mcp
+_capmes, _cfmes, _ssmes = _capano / 12, _cf / 12, _v2["ss"] / 12
+_acum, _fatprev, _minacum = 0.0, 0.0, 0.0
+for _i, _o in enumerate(RAMPA):
+    _fat = _capmes * _o * _precom
+    _rc = _fat * 0.85 + (_fatprev * 0.15 if _i > 0 else 0.0)
+    _saldo = _rc - _fat * _pvar - _cfmes - _ssmes - (_arranque if _i == 0 else 0.0)
+    _acum += _saldo
+    _minacum = min(_minacum, _acum)
+    _fatprev = _fat
+_necessidade = -_minacum
+_totalabrir = _necessidade + 3 * _cfmes
+
+_capA = 2 * og("DIAS_ANO", 1) * _capdia
+_fatA = _capA * 0.45 * _precom
+_resA = _fatA * _mcp - (14400 + 1500 + 4000)
+_invA = 25000 + 20000 + (25000 + 20000) * 0.23
+_payA = _invA / (_resA * (1 - _tx))
+
+EXTRA = [
+    ("Operacao", "Capacidade anual instalada (consultas)", oref("CAP_ANO", "D"), _capano, NUM),
+    ("Operacao", "Taxa de utilização dos gabinetes", oref("UTILIZ", "D"), _constot / _capano, PCT2),
+    ("Operacao", "Faturação anual total gerada", oref("FAT_TOT", "D"), _fattot, EUR2),
+    ("IVA", "IVA suportado no investimento", "IVA!$D$%d" % VR["I_TOT"], _ivatot, EUR2),
+    ("BreakEven", "Margem de contribuição (%)", "BreakEven!$D$%d" % B["MCP"], _mcp, PCT2),
+    ("BreakEven", "Break-even operacional anual", "BreakEven!$D$%d" % B["BE"], _be, EUR2),
+    ("BreakEven", "Utilização necessária no break-even", "BreakEven!$D$%d" % B["UTIL_BE"], _utilbe, PCT2),
+    ("RiscoLaboral", "Passivo contingente total", "RiscoLaboral!$D$%d" % RL["PASSIVO"], _passivo, EUR2),
+    ("Espaco", "Payback da opção A (2 gabinetes)", "Espaco!$C$%d" % E["PAYBACK"], _payA, '#,##0.00'),
+    ("Tesouraria", "Total a desembolsar no arranque", "Tesouraria!" + t1("ARRANQUE"), _arranque, EUR2),
+    ("Tesouraria", "Necessidade máxima de tesouraria", "Tesouraria!$C$%d" % NEC_ROW, _necessidade, EUR2),
+    ("Tesouraria", "Total de dinheiro necessário antes de abrir",
+     "Tesouraria!$C$%d" % (FM_ROW + 1), _totalabrir, EUR2),
+]
+
+r = VAL_R
+section(wval, r, "Bloco 2 — folhas operacionais, financeiras e de risco", span=9); r += 1
+wval.cell(row=r, column=1,
+          value="Acrescentado depois de a auditoria A1 ter apurado que 68% das fórmulas do ficheiro não "
+                "tinham verificação independente, e que as folhas não verificadas eram precisamente as "
+                "que sustentam a decisão.").font = F_SUB
+wval.merge_cells(start_row=r, start_column=1, end_row=r, end_column=9)
+wval["A%d" % r].alignment = Alignment(wrap_text=True, vertical="top")
+wval.row_dimensions[r].height = 30
+r += 1
+B2_TOP = r
+for folha, grandeza, ref, esperado, fmt in EXTRA:
+    wval.cell(row=r, column=1, value=folha).font = F_BODY
+    wval.cell(row=r, column=2, value="Base").font = F_BODY
+    wval.cell(row=r, column=3, value=grandeza).font = F_BODY
+    cm = wval.cell(row=r, column=4, value="=" + ref)
+    cm.number_format, cm.font, cm.border = fmt, F_LINK, BOX
+    ce = wval.cell(row=r, column=5, value=round(esperado, 6))
+    ce.number_format, ce.font, ce.border = fmt, F_INPUT, BOX
+    cd = wval.cell(row=r, column=6, value="=D%d-E%d" % (r, r))
+    cd.number_format, cd.font, cd.border = '0.000000', F_CALC, BOX
+    cs = wval.cell(row=r, column=7, value='=IF(ABS(F%d)<0.01,"OK","DIVERGE")' % r)
+    cs.font, cs.border = F_RESULT, BOX
+    cs.alignment = Alignment(horizontal="center")
+    for cc in (8, 9):
+        x = wval.cell(row=r, column=cc); x.fill, x.border = FILL_FILL, BOX
+    r += 1
+B2_BOT = r - 1
+r += 1
+wval.cell(row=r, column=1, value="Estado do bloco 2").font = F_RESULT
+cg2 = wval.cell(row=r, column=4,
+                value='=IF(COUNTIF($G$%d:$G$%d,"DIVERGE")=0,"TODAS AS VERIFICAÇÕES OK","HÁ DIVERGÊNCIAS")'
+                      % (B2_TOP, B2_BOT))
+cg2.font, cg2.fill, cg2.border = F_RESULT, FILL_RES, BOX
+wval.merge_cells(start_row=r, start_column=4, end_row=r, end_column=7)
+VAL_G2 = "Validacao!$D$%d" % r
+r += 1
+wval.cell(row=r, column=1, value="Cobertura da validação").font = F_RESULT
+wval.cell(row=r, column=4,
+          value="32 verificações sobre 18 folhas. Sem verificação independente permanecem apenas as "
+                "folhas de apresentação (Comparativo e Conjuge), que só agregam valores já "
+                "verificados nas folhas de origem.").font = F_NOTE
+wval.merge_cells(start_row=r, start_column=4, end_row=r, end_column=9)
+wval["D%d" % r].alignment = Alignment(wrap_text=True, vertical="top")
+wval.row_dimensions[r].height = 30
+
+
+# ================================================================ ALERTAS
+wa = wb.create_sheet("Alertas")
+title(wa, "M1 — Alertas",
+      "Um modelo pode ter a fórmula certa, a fiscalidade certa e um pressuposto empresarial errado. Esta "
+      "folha existe para apanhar o terceiro caso. Enquanto houver um alerta ATIVO com consequência "
+      "bloqueante, nenhum número deste ficheiro pode ser citado no relatório, no deck ou perante a cliente.")
+widths(wa, {"A": 52, "B": 14, "C": 12, "D": 56, "E": 22})
+wa.merge_cells("A2:E2"); wa["A2"].alignment = Alignment(wrap_text=True, vertical="top")
+wa.row_dimensions[2].height = 46
+r = 4
+
+PAR_F = "Parametros!$F$%d:$F$%d" % (min(VALID_ROWS), max(VALID_ROWS))
+INP_J = "Inputs!$J$%d:$J$%d" % (min(FALTA_ROWS), max(FALTA_ROWS))
+
+section(wa, r, "Interruptores manuais — a equipa liga e desliga", span=5); r += 1
+SW = {}
+for key, label, val, nota in [
+    ("SW_R114", "Atividade do cônjuge confirmada fora da tabela do art. 151.º CIRS? (1 = sim / 0 = não)",
+     0, "R1-14 e N1-01. Enquanto for 0, a via 4 não é apresentável."),
+    ("SW_N104", "Qualificação da cedência de sala fixada pela Fiscalidade? (1 = sim / 0 = não)",
+     0, "N1-04. Enquanto for 0, o modelo 2 tem consequências fiscais assumidas, não determinadas."),
+    ("SW_FIN", "Financiamento do investimento identificado? (1 = sim / 0 = não)",
+     0, "Obras, equipamento e IVA irrecuperável têm de sair de algum lado."),
+]:
+    wa.cell(row=r, column=1, value=label).font = F_BODY
+    c = wa.cell(row=r, column=2, value=val)
+    c.number_format, c.font, c.fill, c.border = NUM, F_INPUT, FILL_FILL, BOX
+    n = wa.cell(row=r, column=4, value=nota); n.font = F_NOTE
+    n.alignment = Alignment(wrap_text=True, vertical="top")
+    SW[key] = "$B$%d" % r
+    r += 1
+
+r += 1
+hdr(wa, r, ["Alerta", "Valor avaliado", "Estado", "Consequência se ativo", "Referência"]); r += 1
+A_TOP = r
+
+ALERTAS = [
+    ("Parâmetros fiscais por validar para 2026", "=SUM(%s)" % PAR_F, NUM, "B{r}>0",
+     "BLOQUEANTE. Os números podem estar certos na aritmética e errados na lei. Nenhum valor sai do "
+     "ficheiro enquanto este alerta estiver ativo.", "R1, secção C · P0 da spec"),
+    ("Inputs da cliente por confirmar", "=SUM(%s)" % INP_J, NUM, "B{r}>0",
+     "BLOQUEANTE para o relatório. Os valores em uso são placeholders de teste do motor.",
+     "R1, secção A · brief, secção 4"),
+    ("Utilização dos gabinetes acima de 100%", "=" + oref("UTILIZ", "D"), PCT, "B{r}>" + P["UTIL_MAX"],
+     "A projeção é impossível: não há gabinetes para as consultas previstas. Corrigir a projeção ou o "
+     "número de gabinetes antes de qualquer outra coisa.", "Folha Operacao"),
+    ("Utilização dos gabinetes acima de 85%", "=" + oref("UTILIZ", "D"), PCT,
+     "AND(B{r}>" + P["UTIL_ALTA"] + ",B{r}<=" + P["UTIL_MAX"] + ")",
+     "Operacionalmente muito exigente: sem folga para faltas, férias ou variação de procura.",
+     "Folha Operacao"),
+    ("Utilização subaproveitada, abaixo de 30%", "=" + oref("UTILIZ", "D"), PCT,
+     "B{r}<" + P["UTIL_BAIXA"],
+     "O espaço está sobredimensionado para a procura projetada. Rever a opção de espaço.",
+     "Folhas Operacao e Espaco"),
+    ("Receita projetada abaixo do break-even operacional",
+     "=BreakEven!$D$%d" % B["MARG_SEG"], PCT, "B{r}<0",
+     "A clínica não cobre os custos fixos com a faturação projetada. A discussão de estrutura fiscal é "
+     "secundária face a isto.", "Folha BreakEven"),
+    ("Margem de contribuição nula ou negativa", "=BreakEven!$D$%d" % B["MCP"], PCT, "B{r}<=0",
+     "Cada consulta adicional destrói valor. Rever a % de honorários ou o preço.", "Folha BreakEven"),
+    ("Utilização necessária para o break-even acima de 100%",
+     "=BreakEven!$D$%d" % B["UTIL_BE"], PCT, "B{r}>1",
+     "O espaço não consegue cobrir os próprios custos fixos nem a lotação máxima. O espaço está errado, "
+     "não a estrutura.", "Folhas BreakEven e Espaco"),
+    ("Premissa da atividade do cônjuge por verificar", "=1-%s" % SW["SW_R114"], NUM, "B{r}=1",
+     "BLOQUEANTE para a via 4. Se a atividade do cônjuge constar da tabela do art. 151.º CIRS, a entrada "
+     "dele não afasta a transparência com percentagem nenhuma.", "R1-14 · N1, secção 4.1"),
+    ("Qualificação da cedência de sala por fixar", "=1-%s" % SW["SW_N104"], NUM, "B{r}=1",
+     "O modelo 2 corre com consequências fiscais assumidas. A qualificação depende da configuração "
+     "contratual e operacional concreta, não do nome do modelo.", "N1-04 · R1-31"),
+    ("Investimento sem financiamento identificado", "=1-%s" % SW["SW_FIN"], NUM, "B{r}=1",
+     "O plano assume que o investimento é feito. Se não houver origem de fundos, o cenário não é "
+     "executável.", "Folha Espaco · P1, fase 3"),
+    ("IVA dependente de pro rata ou afetação real", "=" + inp("REC_TRIB", "D"), EUR, "B{r}>0",
+     "A dedução de IVA deixa de ser zero e passa a depender de um método e de segregação documental "
+     "permanente. Confirmar o método antes de contar com o valor.", "Folha IVA · N1, secção 8"),
+    ("Recálculo independente com divergências",
+     '=IF(AND(%s="TODAS AS VERIFICAÇÕES OK",%s="TODAS AS VERIFICAÇÕES OK"),0,1)' % (VAL_GLOBAL, VAL_G2),
+     NUM, "B{r}=1",
+     "BLOQUEANTE. As duas implementações do modelo discordam. Uma delas está errada.", "Folha Validacao"),
+]
+
+for label, valf, fmt, cond, cons, ref in ALERTAS:
+    wa.cell(row=r, column=1, value=label).font = F_BODY
+    b = wa.cell(row=r, column=2, value=valf)
+    b.number_format, b.font, b.border = fmt, F_LINK, BOX
+    st = wa.cell(row=r, column=3, value='=IF(%s,"ATIVO","—")' % cond.format(r=r))
+    st.font, st.border = F_RESULT, BOX
+    st.alignment = Alignment(horizontal="center")
+    cc = wa.cell(row=r, column=4, value=cons)
+    cc.font, cc.alignment = F_NOTE, Alignment(wrap_text=True, vertical="top")
+    rf = wa.cell(row=r, column=5, value=ref); rf.font = F_NOTE
+    rf.alignment = Alignment(wrap_text=True, vertical="top")
+    wa.row_dimensions[r].height = 30
+    r += 1
+A_BOT = r - 1
+
+r += 1
+wa.cell(row=r, column=1, value="TOTAL DE ALERTAS ATIVOS").font = F_RESULT
+c = wa.cell(row=r, column=2, value='=COUNTIF($C$%d:$C$%d,"ATIVO")' % (A_TOP, A_BOT))
+c.number_format, c.font, c.fill, c.border = NUM, F_RESULT, FILL_RES, BOX
+r += 1
+wa.cell(row=r, column=1, value="O FICHEIRO PODE PRODUZIR NÚMEROS CITÁVEIS?").font = F_RESULT
+c = wa.cell(row=r, column=2,
+            value='=IF(COUNTIF($C$%d:$C$%d,"ATIVO")=0,"SIM","NÃO — resolver os alertas ativos")'
+                  % (A_TOP, A_BOT))
+c.font, c.fill, c.border = F_RESULT, FILL_WARN, BOX
+wa.merge_cells(start_row=r, start_column=2, end_row=r, end_column=4)
+r += 2
+wa.cell(row=r, column=1,
+        value="Esta folha não substitui a Validacao. A Validacao verifica que as duas implementações do "
+              "modelo concordam; esta verifica que o resultado faz sentido como negócio. São perguntas "
+              "diferentes e um modelo pode passar numa e falhar na outra.").font = F_SUB
+wa.merge_cells(start_row=r, start_column=1, end_row=r, end_column=5)
+wa["A%d" % r].alignment = Alignment(wrap_text=True, vertical="top")
+wa.row_dimensions[r].height = 32
+wa.freeze_panes = "A5"
+
+
+# ================================================================ CONJUGE
+wcj = wb.create_sheet("Conjuge")
+title(wcj, "M1 — Entrada do cônjuge: custo de complexidade",
+      "A hipótese foi levantada na reunião e ficou em análise, nem descartada nem recomendada. Esta folha "
+      "põe de um lado tudo o que a entrada do cônjuge dá e do outro tudo o que custa, para que a decisão "
+      "não se tome pela metade que é mais fácil de calcular.")
+widths(wcj, {"A": 60, "B": 13, "C": 15, "D": 15, "E": 15, "F": 56})
+wcj.merge_cells("A2:F2"); wcj["A2"].alignment = Alignment(wrap_text=True, vertical="top")
+wcj.row_dimensions[2].height = 46
+r = 4
+hdr(wcj, r, ["Rubrica", "Ref.", "Baixo", "Base", "Alto", "Nota"]); r += 1
+CJ = {}
+
+
+def cjrow(key, label, fn, fmt=EUR, style="calc", note=""):
+    global r
+    wcj.cell(row=r, column=1, value=label).font = F_RESULT if style == "result" else F_BODY
+    wcj.cell(row=r, column=2, value=key).font = F_NOTE
+    for j, (col, _n) in enumerate(SCEN):
+        c = wcj.cell(row=r, column=3 + j, value=fn(col) if callable(fn) else fn)
+        c.number_format, c.border = fmt, BOX
+        c.font = {"calc": F_CALC, "link": F_LINK, "result": F_RESULT, "input": F_INPUT}[style]
+        if style == "result":
+            c.fill = FILL_RES
+        if style == "input":
+            c.fill = FILL_FILL
+    n = wcj.cell(row=r, column=6, value=note)
+    n.font, n.alignment = F_NOTE, Alignment(wrap_text=True, vertical="top")
+    CJ[key] = r
+    r += 1
+
+
+def cc_(key, col):
+    return "$%s$%d" % (col, CJ[key])
+
+
+section(wcj, r, "A premissa de que tudo depende", span=6); r += 1
+wcj.cell(row=r, column=1,
+         value="Toda esta folha assume que a atividade do cônjuge NÃO consta da tabela do art. 151.º CIRS. "
+               "Se constar — por enquadramento como desportista ou pelo código residual — a entrada dele "
+               "não afasta a transparência fiscal com percentagem de capital nenhuma, e tudo o que está "
+               "abaixo passa a ser custo sem contrapartida. A premissa nunca foi verificada.").font = F_SUB
+wcj.merge_cells(start_row=r, start_column=1, end_row=r, end_column=6)
+wcj["A%d" % r].alignment = Alignment(wrap_text=True, vertical="top")
+wcj.row_dimensions[r].height = 46
+r += 1
+cjrow("PREMISSA", "Premissa verificada? (1 = sim / 0 = não)",
+      lambda c: "=Alertas!" + SW["SW_R114"].replace("$B$", "$B$"), fmt=NUM, style="link",
+      note="Interruptor na folha Alertas. Ver R1-14 e N1-01.")
+
+section(wcj, r, "O que a entrada do cônjuge dá", span=6); r += 1
+cjrow("G_IVA", "IVA recuperável atribuível à entrada do cônjuge",
+      lambda c: "=" + "IVA!$%s$%d" % (c, VR["GANHO"]), style="link",
+      note="Zero enquanto o cônjuge não faturar DENTRO da sociedade. Deter capital não dá IVA nenhum: "
+           "são duas decisões diferentes.")
+cjrow("G_ESTR", "Diferencial de líquido para a sócia, via 4 face à via 3",
+      lambda c: "={a}-{b}".format(a=v4.ref("LIQ_SOC", c), b=v3.ref("LIQ_SOC", c)), style="link",
+      note="Negativo significa que afastar a transparência custa dinheiro à sócia nas condições "
+           "atuais de distribuição. Depende inteiramente da alavanca POL_DIST.")
+cjrow("G_TOT", "Total dos ganhos anuais",
+      lambda c: "={a}+{b}".format(a=cc_("G_IVA", c), b=cc_("G_ESTR", c)), style="result",
+      note="O ganho de IVA é de uma só vez, no ano do investimento; o diferencial de estrutura é "
+           "recorrente. Somá-los na mesma linha é uma simplificação — ler as duas linhas acima.")
+
+section(wcj, r, "O que a entrada do cônjuge custa", span=6); r += 1
+cjrow("C_QUOTA", "Quota de lucros atribuída ao cônjuge, por ano",
+      lambda c: "=" + v4.ref("LIQ_CJ", c), style="link",
+      note="Dentro do agregado é uma transferência, não uma perda. Fora dele — divórcio, sucessão — "
+           "é definitiva. O relatório tem de dizer as duas coisas.")
+cjrow("C_ADM", "Custo administrativo anual de sujeito passivo misto", lambda c: 0, fmt=EUR, style="input",
+      note="A PREENCHER com a estimativa do contabilista: segregação documental, pro rata ou afetação "
+           "real, regularizações anuais, obrigações declarativas adicionais. Não é zero.")
+cjrow("C_CONST", "Custo de constituição e de alterações societárias", lambda c: 0, fmt=EUR, style="input",
+      note="A PREENCHER. Custo único.")
+cjrow("C_TOT", "Total dos custos anuais",
+      lambda c: "={a}+{b}+{d}".format(a=cc_("C_QUOTA", c), b=cc_("C_ADM", c), d=cc_("C_CONST", c)),
+      style="result")
+
+section(wcj, r, "Saldo", span=6); r += 1
+cjrow("SALDO", "SALDO ANUAL DA OPERAÇÃO, NA ESFERA DA SÓCIA",
+      lambda c: "={a}-{b}".format(a=cc_("G_TOT", c), b=cc_("C_TOT", c)), style="result")
+cjrow("SALDO_AGR", "SALDO ANUAL NA ESFERA DO AGREGADO",
+      lambda c: "={a}-{b}-{d}".format(a=cc_("G_TOT", c), b=cc_("C_ADM", c), d=cc_("C_CONST", c)),
+      style="result",
+      note="Exclui a quota de lucros do cônjuge, que dentro do agregado não sai. É a leitura mais "
+           "favorável possível à operação.")
+cjrow("VEREDITO", "Leitura",
+      lambda c: '=IF({p}=0,"NÃO DECIDÍVEL — premissa por verificar",'
+                'IF({s}>0,"Favorável na esfera da sócia",'
+                'IF({sa}>0,"Favorável apenas na ótica do agregado, não na da sócia",'
+                '"Desfavorável nas condições atuais")))'.format(
+                    p=cc_("PREMISSA", c), s=cc_("SALDO", c), sa=cc_("SALDO_AGR", c)),
+      fmt="General", style="result")
+
+r += 1
+wcj.cell(row=r, column=1,
+         value="O que esta folha não quantifica, e tem de ser dito por palavras no capítulo 7: a perda de "
+               "controlo qualificado, já que uma participação superior a 25% dá capacidade de bloqueio das "
+               "deliberações que exijam maioria de três quartos; o efeito em caso de divórcio ou sucessão; "
+               "e o risco de o desenho ser lido como artificial ao abrigo do art. 38.º n.º 2 da LGT se a "
+               "participação não tiver substância económica real. Nenhuma destas três coisas tem preço, e "
+               "todas podem ser mais caras do que o saldo acima.").font = F_SUB
+wcj.merge_cells(start_row=r, start_column=1, end_row=r, end_column=6)
+wcj["A%d" % r].alignment = Alignment(wrap_text=True, vertical="top")
+wcj.row_dimensions[r].height = 76
+wcj.freeze_panes = "C5"
+
+
+# ================================================================ COERENCIA ANO 1
+# A1, ponto 4: a comparacao fiscal corre em ano de cruzeiro e a tesouraria com rampa.
+# Ambas certas, mas a recomendacao assentava num liquido que o ano 1 nao produz.
+r = COMP_R
+section(wc_, r, "AVISO DE COERÊNCIA — o ano 1 não é o ano de cruzeiro", span=7); r += 1
+for lbl, f, fmt2, nota in [
+    ("Receita usada nesta comparação (ano de cruzeiro)", "=BreakEven!$D$%d" % B["REC"], EUR,
+     "Pressupõe a clínica à ocupação de regime permanente desde o primeiro dia."),
+    ("Faturação real do ano 1, com rampa de arranque", "=Tesouraria!$O$%d" % T2["FAT"], EUR,
+     "Da folha Tesouraria, que modela a subida mês a mês."),
+    ("Diferença", "=IF($C$%d<=0,0,$C$%d/$C$%d-1)" % (r, r + 1, r), PCT,
+     "É por esta percentagem que o líquido do ano 1 fica abaixo dos valores da tabela acima."),
+]:
+    wc_.cell(row=r, column=1, value=lbl).font = F_RESULT
+    c = wc_.cell(row=r, column=3, value=f)
+    c.number_format, c.font, c.fill, c.border = fmt2, F_RESULT, FILL_RES, BOX
+    wc_.merge_cells(start_row=r, start_column=3, end_row=r, end_column=6)
+    n = wc_.cell(row=r, column=7, value=nota); n.font = F_NOTE
+    n.alignment = Alignment(wrap_text=True, vertical="top")
+    r += 1
+r += 1
+wc_.cell(row=r, column=1,
+         value="Os valores da tabela acima são de ANO DE CRUZEIRO. O primeiro ano é mais pobre, porque a "
+               "clínica não abre cheia, e é também o ano do investimento. Dizer à cliente «com esta "
+               "estrutura fica com X por ano» sem esta ressalva é criar uma expectativa que o primeiro "
+               "ano não cumpre. O número do ano 1 está na folha Tesouraria; o desta tabela é o que ela "
+               "passa a ter quando a clínica estabilizar.").font = F_SUB
+wc_.merge_cells(start_row=r, start_column=1, end_row=r, end_column=7)
+wc_["A%d" % r].alignment = Alignment(wrap_text=True, vertical="top")
+wc_.row_dimensions[r].height = 58
+
+
+# ================================================================ PROTECAO E VALIDACAO DE DADOS
+# A1, ponto 5: nada impedia escrever por cima de uma formula, nem introduzir um valor impossivel.
+SWITCHES = {
+    "Inputs": {"FONTE_FAT": "1,2", "MOD_COLAB": "1,2", "SALA_TRIB": "0,1", "CONJUNTA": "0,1"},
+    "Parametros": {"DERR_TRANSP": "0,1"},
+}
+for sn, mapa in SWITCHES.items():
+    ws_ = wb[sn]
+    idx = {ws_.cell(rr, 2).value: rr for rr in range(1, ws_.max_row + 1) if ws_.cell(rr, 2).value}
+    for chave, lista in mapa.items():
+        if chave not in idx:
+            continue
+        dv = DataValidation(type="list", formula1='"%s"' % lista, allow_blank=False,
+                            showErrorMessage=True, errorTitle="Valor não permitido",
+                            error="Só são admitidos os valores: %s" % lista)
+        ws_.add_data_validation(dv)
+        cols = "CDE" if sn == "Inputs" else "C"
+        for cl in cols:
+            dv.add(ws_["%s%d" % (cl, idx[chave])])
+
+for _sn, _cells in [("V4_Soc_NaoTransparente", [("ENGLOB", "CDE")]),
+                    ("Alertas", [("SW", "B")])]:
+    pass
+
+# interruptores 0/1 na folha Alertas e indicios do art. 12.º CT
+for _sn, _rng in [("Alertas", [SW[k].replace("$", "") for k in SW]),
+                  ("RiscoLaboral", ["C%d" % rr for rr in range(IND_TOP, IND_BOT + 1)]),
+                  ("V4_Soc_NaoTransparente", ["%s%d" % (cl, v4.R["ENGLOB"]) for cl in "CDE"])]:
+    dv = DataValidation(type="list", formula1='"0,1"', allow_blank=False, showErrorMessage=True,
+                        errorTitle="Valor não permitido", error="Só são admitidos 0 ou 1.")
+    wb[_sn].add_data_validation(dv)
+    for ref in _rng:
+        dv.add(wb[_sn][ref])
+
+# regras genericas sobre as celulas de preenchimento, por formato
+for sn in wb.sheetnames:
+    ws_ = wb[sn]
+    eur, pct = [], []
+    for row in ws_.iter_rows():
+        for c in row:
+            if c.fill is None or c.fill.fgColor is None:
+                continue
+            if c.fill.fgColor.rgb != "00FFFF00":
+                continue
+            if isinstance(c.value, str) and c.value.startswith("="):
+                continue
+            if c.number_format in (EUR, EUR2):
+                eur.append(c.coordinate)
+            elif c.number_format in (PCT, PCT2):
+                pct.append(c.coordinate)
+    if eur:
+        dv = DataValidation(type="decimal", operator="greaterThanOrEqual", formula1="0",
+                            showErrorMessage=True, errorTitle="Valor inválido",
+                            error="Introduza um número. Valores monetários não podem ser negativos.")
+        ws_.add_data_validation(dv)
+        for ref in eur:
+            dv.add(ws_[ref])
+    if pct:
+        dv = DataValidation(type="decimal", operator="between", formula1="0", formula2="2",
+                            showErrorMessage=True, errorTitle="Percentagem inválida",
+                            error="Introduza a percentagem como fração: 0,25 para 25%.")
+        ws_.add_data_validation(dv)
+        for ref in pct:
+            dv.add(ws_[ref])
+
+# bloquear tudo excepto as celulas de preenchimento
+for sn in wb.sheetnames:
+    ws_ = wb[sn]
+    for row in ws_.iter_rows():
+        for c in row:
+            amarela = (c.fill is not None and c.fill.fgColor is not None
+                       and c.fill.fgColor.rgb == "00FFFF00")
+            editavel = amarela and not (isinstance(c.value, str) and c.value.startswith("="))
+            c.protection = Protection(locked=not editavel)
+    ws_.protection.sheet = True
+    ws_.protection.formatCells = False
+    ws_.protection.selectLockedCells = False
+
+
 # ================================================================ LEIA-ME
 wl = wb.create_sheet("LEIA-ME", 0)
 title(wl, "M1 — Modelo comparativo das quatro vias")
@@ -2652,6 +2937,8 @@ for kind, txt in TXT:
         c.fill = F_WARNFILL if False else FILL_WARN
     wl.row_dimensions[r].height = 15 + 13 * (len(txt) // 105)
     r += 1
+
+wl.protection.sheet = True
 
 # Sem valores em cache: forcar recalculo total na abertura, em Excel e LibreOffice.
 wb.calculation.fullCalcOnLoad = True
