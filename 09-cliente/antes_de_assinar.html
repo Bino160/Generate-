@@ -1,0 +1,495 @@
+<title>Antes de Assinar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&display=swap">
+
+<style>
+:root{
+  --ground:#F7F8FA; --surface:#FFFFFF; --surface-2:#F0F2F6;
+  --ink:#16202B; --ink-soft:#52616F; --ink-faint:#8592A0;
+  --rule:#DCE1E8; --rule-soft:#E9ECF1;
+  --cobalt:#24507E; --cobalt-soft:#E7EDF5;
+  --oxide:#9B4034; --oxide-soft:#F7EAE8;
+  --sand:#8A6D22; --sand-soft:#F6F0DE;
+  --shadow:0 1px 2px rgba(22,32,43,.05),0 8px 24px -12px rgba(22,32,43,.12);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#11161C; --surface:#181F27; --surface-2:#1F2831;
+    --ink:#E4EAF1; --ink-soft:#9EAAB8; --ink-faint:#6B7885;
+    --rule:#2A343F; --rule-soft:#232C36;
+    --cobalt:#8DB2DD; --cobalt-soft:#1B2A3B;
+    --oxide:#DD9284; --oxide-soft:#33211E;
+    --sand:#D6B463; --sand-soft:#2C2617;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#11161C; --surface:#181F27; --surface-2:#1F2831;
+  --ink:#E4EAF1; --ink-soft:#9EAAB8; --ink-faint:#6B7885;
+  --rule:#2A343F; --rule-soft:#232C36;
+  --cobalt:#8DB2DD; --cobalt-soft:#1B2A3B;
+  --oxide:#DD9284; --oxide-soft:#33211E;
+  --sand:#D6B463; --sand-soft:#2C2617;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:17px; line-height:1.62; -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{font-family:"IBM Plex Serif",Georgia,"Times New Roman",serif; text-wrap:balance; margin:0}
+p{margin:0}
+a{color:var(--cobalt)}
+:focus-visible{outline:2px solid var(--cobalt); outline-offset:3px; border-radius:2px}
+
+/* ---------- barra ---------- */
+.bar{
+  position:sticky; top:0; z-index:20; background:var(--ground);
+  background:color-mix(in srgb,var(--ground) 88%,transparent);
+  backdrop-filter:blur(10px); border-bottom:1px solid var(--rule);
+}
+.bar-in{max-width:1180px; margin:0 auto; padding:.6rem 1.5rem; display:flex; align-items:center; gap:1.5rem}
+.mark{font-family:"IBM Plex Mono",monospace; font-size:.66rem; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--ink-faint); white-space:nowrap}
+.navlinks{display:flex; gap:.15rem; overflow-x:auto; scrollbar-width:none; margin-left:auto}
+.navlinks::-webkit-scrollbar{display:none}
+.navlinks a{
+  font-size:.78rem; color:var(--ink-soft); text-decoration:none; padding:.3rem .55rem;
+  border-radius:3px; white-space:nowrap; transition:color .15s,background .15s;
+}
+.navlinks a:hover{color:var(--ink); background:var(--surface-2)}
+.navlinks a[aria-current="true"]{color:var(--cobalt); background:var(--cobalt-soft); font-weight:500}
+
+/* ---------- estrutura ---------- */
+.wrap{max-width:1180px; margin:0 auto; padding:0 1.5rem}
+.head{padding:5rem 0 3.5rem; border-bottom:1px solid var(--rule)}
+.eyebrow{font-family:"IBM Plex Mono",monospace; font-size:.7rem; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--cobalt); margin-bottom:1.4rem}
+h1{font-size:clamp(2.4rem,6vw,3.9rem); line-height:1.04; font-weight:600; letter-spacing:-.02em; max-width:16ch}
+.head .standfirst{margin-top:1.6rem; font-size:1.16rem; color:var(--ink-soft); max-width:60ch; line-height:1.58}
+.meta{margin-top:2.6rem; display:flex; flex-wrap:wrap; gap:.5rem 2.2rem;
+  font-family:"IBM Plex Mono",monospace; font-size:.72rem; color:var(--ink-faint)}
+.meta b{color:var(--ink-soft); font-weight:500}
+
+section{padding:4rem 0; border-bottom:1px solid var(--rule-soft)}
+.sec-grid{display:grid; grid-template-columns:8.5rem minmax(0,1fr); gap:2.5rem}
+.rail{position:sticky; top:4.2rem; align-self:start; font-family:"IBM Plex Mono",monospace;
+  font-size:.7rem; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-faint); line-height:1.5}
+.rail .n{display:block; color:var(--cobalt); font-size:1.5rem; letter-spacing:0; margin-bottom:.35rem;
+  font-family:"IBM Plex Serif",serif}
+.body{max-width:66ch}
+h2{font-size:clamp(1.5rem,3vw,1.95rem); font-weight:600; letter-spacing:-.012em; line-height:1.2}
+h3{font-size:1.02rem; font-weight:600; margin:2.2rem 0 .6rem; letter-spacing:-.005em}
+.body > p + p{margin-top:1rem}
+.body > h2 + p{margin-top:1.1rem}
+.lede{font-size:1.09rem; color:var(--ink-soft)}
+strong{font-weight:600}
+
+/* ---------- componentes ---------- */
+.chip{display:inline-flex; align-items:center; gap:.35rem; font-family:"IBM Plex Mono",monospace;
+  font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; padding:.2rem .5rem;
+  border-radius:2px; white-space:nowrap; font-weight:500}
+.chip.fact{background:var(--cobalt-soft); color:var(--cobalt)}
+.chip.pend{background:var(--sand-soft); color:var(--sand)}
+.chip.irr{background:var(--oxide-soft); color:var(--oxide)}
+
+.slot{font-family:"IBM Plex Mono",monospace; font-size:.8rem; color:var(--sand);
+  border-bottom:1.5px dashed var(--sand); padding-bottom:1px}
+
+.callout{margin:1.8rem 0; padding:1.25rem 1.4rem; background:var(--surface); border:1px solid var(--rule);
+  border-left:3px solid var(--cobalt); box-shadow:var(--shadow)}
+.callout.warn{border-left-color:var(--oxide)}
+.callout.pending{border-left-color:var(--sand)}
+.callout .lbl{font-family:"IBM Plex Mono",monospace; font-size:.65rem; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--ink-faint); margin-bottom:.5rem}
+.callout p{font-size:.97rem}
+.callout p + p{margin-top:.7rem}
+
+.deflist{margin:1.6rem 0 0; display:grid; gap:0; border-top:1px solid var(--rule)}
+.def{padding:1.15rem 0; border-bottom:1px solid var(--rule-soft); display:grid;
+  grid-template-columns:13rem minmax(0,1fr); gap:1.5rem}
+.def dt{font-weight:600; font-size:.97rem}
+.def dd{margin:0; color:var(--ink-soft); font-size:.97rem}
+.def dd em{font-style:normal; color:var(--ink); display:block; margin-top:.35rem; font-size:.9rem}
+
+.steps{list-style:none; margin:1.8rem 0 0; padding:0; counter-reset:s}
+.steps li{counter-increment:s; padding:1.4rem 0 1.4rem 3.2rem; position:relative;
+  border-top:1px solid var(--rule-soft)}
+.steps li:first-child{border-top:1px solid var(--rule)}
+.steps li::before{content:counter(s); position:absolute; left:0; top:1.35rem;
+  font-family:"IBM Plex Serif",serif; font-size:1.35rem; color:var(--cobalt); line-height:1}
+.steps h3{margin:0 0 .4rem}
+.steps p{color:var(--ink-soft); font-size:.97rem}
+.steps .ans{margin-top:.6rem; font-size:.9rem; color:var(--ink)}
+.steps .ans b{font-family:"IBM Plex Mono",monospace; font-size:.72rem; letter-spacing:.08em;
+  text-transform:uppercase; color:var(--ink-faint); font-weight:500; display:block; margin-bottom:.15rem}
+
+.tablewrap{overflow-x:auto; margin:1.8rem 0 0; border:1px solid var(--rule); background:var(--surface)}
+table{border-collapse:collapse; width:100%; min-width:34rem; font-size:.92rem}
+th,td{text-align:left; padding:.75rem .95rem; border-bottom:1px solid var(--rule-soft); vertical-align:top}
+thead th{font-family:"IBM Plex Mono",monospace; font-size:.65rem; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--ink-faint); font-weight:500; background:var(--surface-2); border-bottom:1px solid var(--rule)}
+tbody tr:last-child td{border-bottom:0}
+td.num{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; white-space:nowrap}
+td b{font-weight:600}
+
+.ask{margin:1.8rem 0 0; display:grid; gap:0; border-top:1px solid var(--rule)}
+.ask-item{padding:1.3rem 0; border-bottom:1px solid var(--rule-soft)}
+.ask-top{display:flex; align-items:baseline; gap:.75rem; flex-wrap:wrap}
+.ask-top h3{margin:0; font-size:1rem}
+.ask-item p{margin-top:.45rem; color:var(--ink-soft); font-size:.95rem}
+.ask-item ul{margin:.55rem 0 0; padding-left:1.1rem; color:var(--ink-soft); font-size:.95rem}
+.ask-item li{margin-top:.2rem}
+
+.foot{padding:3.5rem 0 5rem}
+.foot p{color:var(--ink-faint); font-size:.85rem; max-width:62ch}
+.foot p + p{margin-top:.8rem}
+
+@media (max-width:820px){
+  body{font-size:16px}
+  .sec-grid{grid-template-columns:1fr; gap:1rem}
+  .rail{position:static; display:flex; align-items:baseline; gap:.6rem}
+  .rail .n{margin:0; font-size:1.1rem}
+  .def{grid-template-columns:1fr; gap:.35rem}
+  .head{padding:3.5rem 0 2.5rem}
+  .navlinks{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important; transition:none!important}}
+html{scroll-behavior:smooth; scroll-padding-top:4.5rem}
+</style>
+
+<header class="bar">
+  <div class="bar-in">
+    <div class="mark">Gerir Saúde · Assessoria</div>
+    <nav class="navlinks" aria-label="Secções">
+      <a href="#causa">O que está em causa</a>
+      <a href="#palavras">Cinco palavras</a>
+      <a href="#ordem">A ordem das perguntas</a>
+      <a href="#irreversivel">O que não se desfaz</a>
+      <a href="#risco">O risco maior</a>
+      <a href="#datas">Duas datas</a>
+      <a href="#pedido">O que precisamos</a>
+      <a href="#limites">O que não sabemos</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="head">
+    <div class="eyebrow">Documento de enquadramento · 22 de agosto de 2026</div>
+    <h1>Antes de assinar</h1>
+    <p class="standfirst">A Dra. Júlia está a decidir sobre o espaço, sobre quem vai trabalhar consigo e sobre a estrutura da clínica. Este documento não traz números — traz a ordem pela qual as perguntas têm de ser feitas, e o que fica irreversível a partir do momento em que assinar.</p>
+    <div class="meta">
+      <span><b>Para</b> Dra. Júlia Best, fisioterapeuta</span>
+      <span><b>Origem</b> reunião de 18 de agosto de 2026</span>
+      <span><b>Segue-se</b> relatório com os números, após receção dos elementos</span>
+    </div>
+  </div>
+
+  <!-- 1 -->
+  <section id="causa">
+    <div class="sec-grid">
+      <div class="rail"><span class="n">01</span>O que está em causa</div>
+      <div class="body">
+        <h2>A decisão não é sobretudo fiscal. É por isso que começamos por outro lado.</h2>
+        <p class="lede">Chegou até nós com uma pergunta: continuar como está, passar a contabilidade organizada, ou constituir sociedade? É a pergunta certa, mas não é a primeira.</p>
+        <p>Na sua atividade existe uma particularidade que muda tudo. Se constituir uma sociedade de que seja a única dona, a lei trata o lucro dessa sociedade como se fosse rendimento seu, tributado no seu IRS, quer o levante quer não. Chama-se transparência fiscal e está no artigo 6.º do Código do IRC.</p>
+        <p>A consequência prática: entre manter-se em nome individual com contabilidade organizada e constituir sociedade, <strong>a diferença de imposto é pequena</strong>. Não é zero, e vamos calculá-la ao cêntimo. Mas não é ela que decide.</p>
+        <div class="callout">
+          <div class="lbl">O que a sociedade dá, e o que não dá</div>
+          <p><strong>Não dá</strong> a possibilidade de deduzir os custos reais. Isso consegue-se em nome individual, optando por contabilidade organizada, sem constituir sociedade nenhuma.</p>
+          <p><strong>Dá</strong> separação entre o seu património pessoal e o da clínica, formalização da relação com quem trabalhar consigo, e capacidade de crescer — entrada de sócios, transmissão, sucessão.</p>
+        </div>
+        <p>Feita essa arrumação, o que realmente decide o sucesso desta operação são três coisas, e nenhuma delas é fiscal:</p>
+        <div class="deflist">
+          <dl class="def"><dt>Se os gabinetes enchem</dt><dd>Dois ou três gabinetes não é uma questão de renda. É uma questão de quantos doentes espera atender por dia. Abaixo de um certo número, o terceiro gabinete é renda e obras sem receita a acompanhar.<em>Calculamos o número exato a partir do qual compensa.</em></dd></dl>
+          <dl class="def"><dt>Quanto sobra de cada sessão</dt><dd>Quando um fisioterapeuta seu recebe uma percentagem da sessão, a clínica fica com o resto para pagar renda, luz e seguros. Faturar muito e ganhar pouco é o cenário mais comum deste tipo de clínica.<em>É o ponto que a reunião de agosto já sinalizou.</em></dd></dl>
+          <dl class="def"><dt>Se tem dinheiro para chegar ao fim do primeiro ano</dt><dd>O investimento paga-se todo no início. A receita sobe devagar. Um negócio pode ser rentável e ainda assim ficar sem dinheiro ao quarto mês.<em>Vamos dizer-lhe de quanto precisa antes de abrir.</em></dd></dl>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section id="palavras">
+    <div class="sec-grid">
+      <div class="rail"><span class="n">02</span>Cinco palavras</div>
+      <div class="body">
+        <h2>Cinco expressões que vai ouvir na próxima reunião</h2>
+        <p class="lede">Não são jargão para impressionar. São as cinco coisas que precisa de conseguir explicar a outra pessoa para decidir com segurança.</p>
+        <div class="deflist">
+          <dl class="def"><dt>Custos fixos</dt><dd>O que paga todos os meses, haja ou não doentes. A renda é o exemplo maior. Não descem quando a agenda está vazia.</dd></dl>
+          <dl class="def"><dt>Margem de contribuição</dt><dd>De cada sessão que faz, quanto sobra depois de pagar o que <em style="display:inline">essa</em> sessão custou — o material e, se for o caso, o honorário do colega. É o que fica para pagar os custos fixos.</dd></dl>
+          <dl class="def"><dt>Break-even</dt><dd>Quantos doentes por mês precisa para as contas darem zero. Abaixo disso está a pagar para trabalhar.</dd></dl>
+          <dl class="def"><dt>Taxa de utilização</dt><dd>Que percentagem do tempo os gabinetes estão realmente ocupados. Serve para saber se uma previsão é possível: acima de 100% não é ambiciosa, é impossível.</dd></dl>
+          <dl class="def"><dt>Regime fiscal</dt><dd>A forma como o Estado calcula o que paga. Não muda o dinheiro que entra na clínica. Muda a fatia que sai.</dd></dl>
+        </div>
+        <div class="callout">
+          <div class="lbl">Como vamos falar consigo</div>
+          <p>Todas as conclusões vão terminar em unidades que controla: <strong>doentes por dia</strong> e <strong>euros por mês</strong>. Nunca só em faturação anual ou em percentagens. Se em algum momento não perceber um número, o problema é da nossa explicação.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section id="ordem">
+    <div class="sec-grid">
+      <div class="rail"><span class="n">03</span>A ordem das perguntas</div>
+      <div class="body">
+        <h2>Quatro perguntas, por esta ordem</h2>
+        <p class="lede">Cada uma só faz sentido depois de a anterior estar respondida. É esta a sequência que vamos percorrer consigo na reunião de apresentação, e é a mesma que sustenta a recomendação.</p>
+        <ol class="steps">
+          <li>
+            <h3>O regime atual ainda serve?</h3>
+            <p>Hoje é tributada sobre 75% do que fatura, independentemente do que gasta — é o coeficiente do regime simplificado. Enquanto os custos reais forem baixos, isso é bom negócio. A partir de certo nível de custos, deixa de ser.</p>
+            <p class="ans"><b>Responde-se com</b>Os seus custos reais projetados, comparados com o ponto exato em que a conta se inverte.</p>
+          </li>
+          <li>
+            <h3>Nome individual ou sociedade?</h3>
+            <p>Se o regime atual deixou de servir, há duas formas de passar a deduzir os custos reais: manter o nome individual e optar por contabilidade organizada, ou constituir sociedade. Fiscalmente são próximas. Decide-se por proteção do património, formalização e crescimento.</p>
+            <p class="ans"><b>Responde-se com</b>Uma decisão sua sobre risco e ambição, informada pela diferença de custo entre as duas.</p>
+          </li>
+          <li>
+            <h3>Quanto precisa de levantar por ano?</h3>
+            <p>É a pergunta com maior efeito na recomendação, e a única que não se responde com um documento. Se levantar todo o lucro, algumas estruturas deixam de compensar. Se deixar dinheiro na empresa, mudam.</p>
+            <p class="ans"><b>Responde-se com</b>Um valor anual seu. Não há resposta certa — há a sua.</p>
+          </li>
+          <li>
+            <h3>O seu marido entra na sociedade?</h3>
+            <p>Foi levantado em agosto e ficou em análise. Antes de qualquer conta, há um dado a confirmar: a atividade dele consta ou não de uma lista específica do Código do IRS. Se constar, a entrada dele não produz o efeito que se pretendia — com percentagem de capital nenhuma.</p>
+            <p class="ans"><b>Responde-se com</b>O código de atividade que ele declarou nas Finanças. É o primeiro elemento que lhe pedimos.</p>
+          </li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section id="irreversivel">
+    <div class="sec-grid">
+      <div class="rail"><span class="n">04</span>O que não se desfaz</div>
+      <div class="body">
+        <h2>O que fica irreversível, e a partir de quando</h2>
+        <p class="lede">Esta é a página mais importante deste documento. Quase tudo o que vamos discutir é reversível. Estas seis coisas não são, ou não são sem custo.</p>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>Compromisso</th><th>Fica preso a</th><th>Deixa de ser reversível</th></tr></thead>
+            <tbody>
+              <tr><td><b>Contrato de arrendamento</b></td><td>A duração que contratar</td><td class="num">À assinatura</td></tr>
+              <tr><td><b>Obras de adaptação</b></td><td>Investimento perdido se sair</td><td class="num">Ao início da obra</td></tr>
+              <tr><td><b>Opção por contabilidade organizada</b></td><td class="num">3 anos</td><td class="num">À submissão</td></tr>
+              <tr><td><b>Constituição de sociedade</b></td><td>Custo e tempo de dissolução</td><td class="num">Ao ato notarial</td></tr>
+              <tr><td><b>Quota do cônjuge no capital</b></td><td>Cedência definitiva de direitos</td><td class="num">À transmissão</td></tr>
+              <tr><td><b>Integrar fisioterapeutas</b></td><td class="num">5 anos de exposição</td><td class="num">Ao primeiro pagamento</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout warn">
+          <div class="lbl">A linha que costuma passar despercebida</div>
+          <p>A opção por contabilidade organizada <strong>vincula por três anos</strong>. Não é um teste que se faz um ano e se desfaz no seguinte. Se essa vier a ser a via recomendada, é uma decisão a três anos e vamos dizer-lho em voz alta, não em rodapé.</p>
+        </div>
+        <p>A quota do cônjuge merece a mesma franqueza. Uma participação superior a 25% do capital dá-lhe direito a mais de um quarto dos lucros <strong>em definitivo</strong>, e capacidade de bloquear decisões que exijam maioria qualificada. Dentro do casamento é uma transferência. Fora dele — divórcio, sucessão — não é.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section id="risco">
+    <div class="sec-grid">
+      <div class="rail"><span class="n">05</span>O risco maior</div>
+      <div class="body">
+        <h2>O risco que raramente se explica a quem abre a primeira clínica</h2>
+        <p class="lede">Se contratar fisioterapeutas a recibo verde e a relação funcionar, na prática, como um emprego, a Segurança Social pode requalificá-la como contrato de trabalho — e cobrar as contribuições em falta, com juros e coima, até cinco anos para trás.</p>
+        <p>A lei enumera cinco sinais. Bastam alguns para se presumir que existe contrato de trabalho. E há dois que, numa clínica, se verificam desde o primeiro dia e <strong>não são evitáveis</strong>:</p>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th style="width:52%">Sinal previsto na lei</th><th>Numa clínica</th></tr></thead>
+            <tbody>
+              <tr><td>O local de trabalho pertence a quem beneficia da atividade</td><td><span class="chip irr">Inevitável</span></td></tr>
+              <tr><td>Os equipamentos pertencem a quem beneficia da atividade</td><td><span class="chip irr">Inevitável</span></td></tr>
+              <tr><td>O horário de início e de fim é determinado por si</td><td><span class="chip fact">Depende de si</span></td></tr>
+              <tr><td>É paga uma quantia certa, com regularidade</td><td><span class="chip fact">Depende de si</span></td></tr>
+              <tr><td>A pessoa exerce funções de chefia na sua estrutura</td><td><span class="chip fact">Improvável</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>O espaço é seu e o equipamento é seu. Não há como não ser. <strong>Toda a margem de manobra está nos dois sinais do meio</strong>: quem define o horário, e como se paga. É aí, e só aí, que o contrato e sobretudo a prática diária têm de trabalhar.</p>
+        <div class="callout warn">
+          <div class="lbl">A ordem de grandeza</div>
+          <p>As contribuições em causa são <span class="chip fact">23,75% a cargo da clínica</span> mais <span class="chip fact">11% a cargo do profissional</span>, sobre tudo o que lhe tiver pago, até <span class="chip fact">5 anos</span> para trás, com juros e coima.</p>
+          <p>No modelo que construímos, isto costuma corresponder a <strong>dois a três anos de resultado líquido da clínica</strong>. O valor no seu caso está calculado e sai com o relatório.</p>
+        </div>
+        <p>Uma nota sobre o que este documento não faz: identificamos e quantificamos o risco. A redação dos contratos e o parecer de direito laboral são de advogado, e não estão no nosso âmbito.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 -->
+  <section id="datas">
+    <div class="sec-grid">
+      <div class="rail"><span class="n">06</span>Duas datas</div>
+      <div class="body">
+        <h2>Duas datas no calendário que não se recuperam</h2>
+        <p class="lede">Não dependem de nós nem de si. Se passarem, perdem-se por um ano inteiro.</p>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th style="width:30%">Data</th><th>O que se perde</th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="num"><b>31 de março</b></td>
+                <td>Prazo para optar por contabilidade organizada mantendo o nome individual. Se essa for a via recomendada e o prazo passar, fica no regime atual mais um exercício completo — que, com a estrutura de custos que projeta ter, é o cenário mais caro em cima da mesa.</td>
+              </tr>
+              <tr>
+                <td class="num"><b>30 de junho</b></td>
+                <td>Só relevante se constituir sociedade e quiser afastar a transparência fiscal. A composição do capital tem de estar montada há mais de 183 dias do ano para produzir efeito nesse ano. Uma sociedade constituída depois do verão é transparente nesse exercício, seja qual for a composição.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout">
+          <div class="lbl">Consequência prática</div>
+          <p>O nosso prazo conta a partir do momento em que recebermos os elementos, e suspende-se enquanto faltar informação. Quanto mais tarde chegarem, mais perto do primeiro trimestre nos colocamos — e a recomendação deixa de ser «qual estrutura» e passa a ser «qual estrutura este ano, e qual no seguinte», que é uma recomendação diferente.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 -->
+  <section id="pedido">
+    <div class="sec-grid">
+      <div class="rail"><span class="n">07</span>O que precisamos</div>
+      <div class="body">
+        <h2>O que precisamos de si, por ordem de utilidade</h2>
+        <p class="lede">O primeiro é o mais importante e é o mais rápido de obter. Se só conseguir responder a um, que seja esse.</p>
+        <div class="ask">
+          <div class="ask-item">
+            <div class="ask-top"><h3>Código de atividade do seu marido</h3><span class="chip irr">Dois minutos</span></div>
+            <p>O código que consta da declaração de início ou de alterações de atividade dele, nas Finanças. Serve uma fotografia do documento.</p>
+            <p><strong>Porquê primeiro:</strong> toda a hipótese de o integrar na sociedade depende de saber se a atividade dele está ou não numa lista específica do Código do IRS. Se estiver, a hipótese não funciona, seja qual for a percentagem. É o elemento mais barato de obter e o que mais pode mudar a recomendação.</p>
+          </div>
+          <div class="ask-item">
+            <div class="ask-top"><h3>Como trabalha, em números</h3><span class="chip pend">Estimativa serve</span></div>
+            <p>Não lhe pedimos uma previsão de faturação. Pedimos os números do seu dia:</p>
+            <ul>
+              <li>Quantos dias por ano tenciona atender, descontando férias e feriados</li>
+              <li>Quantas consultas por dia consegue fazer, num dia normal</li>
+              <li>Quanto dura uma sessão, em média</li>
+              <li>Que horas o espaço estará aberto</li>
+              <li>O mesmo para cada fisioterapeuta que pretende integrar</li>
+            </ul>
+            <p><strong>Porquê assim:</strong> uma previsão de faturação é um palpite que ninguém consegue verificar. Estes números, não — com eles calculamos a faturação e confirmamos se ela cabe no espaço.</p>
+          </div>
+          <div class="ask-item">
+            <div class="ask-top"><h3>Tabela de preços</h3><span class="chip pend">Ainda que provisória</span></div>
+            <p>Preço e duração por tipo de sessão. A reunião de agosto registou que ainda não existe formalizada — é um ponto a fechar de qualquer modo.</p>
+          </div>
+          <div class="ask-item">
+            <div class="ask-top"><h3>Os dois espaços, com detalhe</h3><span class="chip pend">Para os dois</span></div>
+            <ul>
+              <li>Renda mensal e duração proposta do contrato</li>
+              <li>Condomínio e outros encargos fixos</li>
+              <li>Concelho onde se situa</li>
+              <li>Número de gabinetes utilizáveis para consulta</li>
+              <li>Caução exigida</li>
+            </ul>
+            <p><strong>Porquê o concelho:</strong> a taxa de derrama municipal varia de município para município, e alguns isentam volumes de negócio reduzidos.</p>
+          </div>
+          <div class="ask-item">
+            <div class="ask-top"><h3>Orçamento de obras e equipamento</h3><span class="chip pend">Item a item</span></div>
+            <p>Com o valor sem IVA, a taxa aplicada e o total, discriminados por item no equipamento clínico.</p>
+            <p><strong>Porquê item a item:</strong> a fisioterapia é isenta de IVA, o que significa que o IVA que suporta nas obras e no equipamento <strong>não é recuperável</strong> e passa a ser custo definitivo. Há equipamento que pode beneficiar de taxa reduzida, e essa verificação só se faz olhando para cada linha. É uma poupança que só existe antes de comprar.</p>
+          </div>
+          <div class="ask-item">
+            <div class="ask-top"><h3>Condições com os fisioterapeutas</h3><span class="chip irr">Determina o risco</span></div>
+            <ul>
+              <li>Valor acordado ou pretendido, e forma de cálculo</li>
+              <li>Se trabalha em exclusividade para si ou também noutros locais</li>
+              <li>Se usa equipamento próprio ou o da clínica</li>
+              <li>Quem marca as consultas e define os horários</li>
+              <li>Se ele lhe fatura a si, ou se lhe paga a si pelo uso do espaço</li>
+            </ul>
+            <p><strong>Porquê tantas perguntas:</strong> as três últimas são exatamente as que determinam o risco de a relação vir a ser lida como contrato de trabalho. É o risco mais caro desta operação.</p>
+          </div>
+          <div class="ask-item">
+            <div class="ask-top"><h3>Rendimentos do agregado</h3><span class="chip pend">Necessário para o IRS</span></div>
+            <p>Rendimento anual de cada um, número de dependentes, se apresentam declaração conjunta ou separada, e a atividade e enquadramento fiscal do seu marido.</p>
+            <p><strong>Porquê:</strong> em qualquer das vias, o resultado da clínica é tributado na sua esfera pessoal, às taxas progressivas do IRS. O rendimento do agregado determina a taxa que lhe é aplicada — sem ele, calculamos o efeito teórico, não o real.</p>
+          </div>
+          <div class="ask-item">
+            <div class="ask-top"><h3>Quanto precisa de levantar por ano</h3><span class="chip irr">Só a Dra. Júlia responde</span></div>
+            <p>Um valor anual indicativo do que precisa de retirar da clínica para as suas despesas pessoais.</p>
+            <p><strong>Porquê:</strong> é a pergunta desta lista com maior efeito sobre a recomendação final, e a única que não se responde com um documento.</p>
+          </div>
+          <div class="ask-item">
+            <div class="ask-top"><h3>Proposta do investidor</h3><span class="chip pend">Se existir</span></div>
+            <p>A proposta escrita, ou os termos discutidos. Se não houver nada de concreto, basta dizer-nos.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 -->
+  <section id="limites">
+    <div class="sec-grid">
+      <div class="rail"><span class="n">08</span>O que não sabemos</div>
+      <div class="body">
+        <h2>O que ainda não sabemos, e não vamos fingir que sabemos</h2>
+        <p class="lede">O modelo de cálculo está construído e verificado. Está a correr com dados de teste, porque ainda não temos os seus.</p>
+        <div class="callout pending">
+          <div class="lbl">Estado do trabalho</div>
+          <p><strong>Feito:</strong> o motor de cálculo das quatro vias, a análise da questão da transparência fiscal, o plano de implementação, o registo de pressupostos e o modelo de tesouraria. Trinta e duas verificações independentes, todas conformes.</p>
+          <p><strong>Em falta:</strong> os seus elementos, e a confirmação das taxas e escalões em vigor para 2026 pela nossa equipa de fiscalidade.</p>
+        </div>
+        <p>Enquanto isso não estiver resolvido, há coisas que não lhe vamos dizer:</p>
+        <div class="deflist">
+          <dl class="def"><dt>Quanto poupa</dt><dd><span class="slot">aguarda os seus dados</span> — qualquer valor que déssemos hoje seria sobre números de teste, e um número errado é pior do que nenhum.</dd></dl>
+          <dl class="def"><dt>Dois ou três gabinetes</dt><dd><span class="slot">aguarda os seus dados</span> — sabemos calcular o ponto exato a partir do qual o terceiro compensa. Falta saber a sua procura.</dd></dl>
+          <dl class="def"><dt>Quanto precisa antes de abrir</dt><dd><span class="slot">aguarda os seus dados</span> — o cálculo inclui investimento, caução e o dinheiro para aguentar até a receita chegar.</dd></dl>
+          <dl class="def"><dt>Se o seu marido deve entrar</dt><dd><span class="slot">aguarda o código de atividade</span> — sem esse dado, qualquer recomendação assentaria numa suposição.</dd></dl>
+        </div>
+        <div class="callout">
+          <div class="lbl">O que se segue</div>
+          <p>Com os elementos recebidos, entregamos o relatório completo com os números, o plano de execução por fases e uma sessão de apresentação. O relatório chega-lhe <strong>antes</strong> da reunião, com tempo para o ler.</p>
+          <p>Se preferir, começamos por uma chamada de quinze minutos para o código de atividade e para os números do seu dia. É o suficiente para desbloquear a parte mais incerta da análise.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <p>Documento de enquadramento preparado por Gerir Saúde no âmbito da assessoria fiscal à Dra. Júlia Best, na sequência da reunião de 18 de agosto de 2026. Não contém recomendação nem valores apurados.</p>
+    <p>As referências normativas mencionadas — artigo 6.º do Código do IRC, artigos 28.º e 31.º do Código do IRS, artigo 9.º do Código do IVA, artigo 12.º do Código do Trabalho — constam desenvolvidas no relatório final, com indicação de norma para cada afirmação com efeito fiscal.</p>
+    <p>Rui Gomes · Porto</p>
+  </footer>
+
+</main>
+
+<script>
+(function(){
+  var links = Array.prototype.slice.call(document.querySelectorAll('.navlinks a'));
+  var map = {};
+  links.forEach(function(a){
+    var el = document.querySelector(a.getAttribute('href'));
+    if (el) map[el.id] = a;
+  });
+  if (!('IntersectionObserver' in window)) return;
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if (!e.isIntersecting) return;
+      links.forEach(function(a){ a.removeAttribute('aria-current'); });
+      var a = map[e.target.id];
+      if (a) a.setAttribute('aria-current','true');
+    });
+  }, { rootMargin: '-15% 0px -70% 0px' });
+  Object.keys(map).forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) io.observe(el);
+  });
+})();
+</script>
