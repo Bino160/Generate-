@@ -1,0 +1,824 @@
+<title>Simulador da Clínica</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@400;600&display=swap">
+<style>
+:root{
+  --ground:#F7F8FA; --surface:#FFFFFF; --surface-2:#F0F2F6; --surface-3:#E8ECF2;
+  --ink:#16202B; --ink-soft:#52616F; --ink-faint:#8592A0;
+  --rule:#DCE1E8; --rule-soft:#E9ECF1;
+  --cobalt:#24507E; --cobalt-soft:#E7EDF5;
+  --oxide:#9B4034; --oxide-soft:#F7EAE8;
+  --sand:#8A6D22; --sand-soft:#F6F0DE;
+  --d-blue:#1F6FB2; --d-blue-mute:#A9C8E2; --d-red:#C0442F; --d-gold:#B8791A;
+  --grid:#E4E8EE;
+  --shadow:0 1px 2px rgba(22,32,43,.05),0 8px 24px -14px rgba(22,32,43,.16);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#11161C; --surface:#181F27; --surface-2:#1F2831; --surface-3:#28323D;
+  --ink:#E4EAF1; --ink-soft:#9EAAB8; --ink-faint:#6B7885;
+  --rule:#2A343F; --rule-soft:#232C36;
+  --cobalt:#8DB2DD; --cobalt-soft:#1B2A3B;
+  --oxide:#DD9284; --oxide-soft:#33211E;
+  --sand:#D6B463; --sand-soft:#2C2617;
+  --d-blue:#4A93CC; --d-blue-mute:#33556F; --d-red:#D06550; --d-gold:#BE8A2E;
+  --grid:#28323D;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -14px rgba(0,0,0,.7);
+}}
+:root[data-theme="dark"]{
+  --ground:#11161C; --surface:#181F27; --surface-2:#1F2831; --surface-3:#28323D;
+  --ink:#E4EAF1; --ink-soft:#9EAAB8; --ink-faint:#6B7885;
+  --rule:#2A343F; --rule-soft:#232C36;
+  --cobalt:#8DB2DD; --cobalt-soft:#1B2A3B;
+  --oxide:#DD9284; --oxide-soft:#33211E;
+  --sand:#D6B463; --sand-soft:#2C2617;
+  --d-blue:#4A93CC; --d-blue-mute:#33556F; --d-red:#D06550; --d-gold:#BE8A2E;
+  --grid:#28323D;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -14px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);
+  font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:"IBM Plex Serif",Georgia,serif;text-wrap:balance;margin:0}
+p{margin:0}
+:focus-visible{outline:2px solid var(--d-blue);outline-offset:2px;border-radius:3px}
+.mono{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+
+/* ---- topo ---- */
+.top{position:sticky;top:0;z-index:30;background:var(--ground);border-bottom:1px solid var(--rule)}
+.top-in{max-width:1440px;margin:0 auto;padding:.7rem 1.5rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+.top h1{font-size:1.05rem;font-weight:600;letter-spacing:-.01em}
+.tag{font-family:"IBM Plex Mono",monospace;font-size:.62rem;letter-spacing:.13em;text-transform:uppercase;
+  padding:.22rem .5rem;border-radius:2px;background:var(--sand-soft);color:var(--sand);font-weight:500}
+.reset{margin-left:auto;font-family:"IBM Plex Mono",monospace;font-size:.68rem;letter-spacing:.08em;
+  text-transform:uppercase;background:none;border:1px solid var(--rule);color:var(--ink-soft);
+  padding:.4rem .7rem;border-radius:3px;cursor:pointer}
+.reset:hover{background:var(--surface-2);color:var(--ink)}
+
+.banner{background:var(--sand-soft);border-bottom:1px solid var(--rule)}
+.banner-in{max-width:1440px;margin:0 auto;padding:.65rem 1.5rem;font-size:.83rem;color:var(--ink-soft)}
+.banner-in b{color:var(--ink);font-weight:600}
+
+/* ---- grelha ---- */
+.app{max-width:1440px;margin:0 auto;padding:1.5rem;display:grid;
+  grid-template-columns:clamp(19rem,25%,23rem) minmax(0,1fr);gap:1.5rem;align-items:start}
+.panel{background:var(--surface);border:1px solid var(--rule);box-shadow:var(--shadow)}
+.controls{position:sticky;top:5.6rem;max-height:calc(100vh - 7rem);overflow-y:auto}
+.cgroup{padding:1.1rem 1.2rem;border-bottom:1px solid var(--rule-soft)}
+.cgroup:last-child{border-bottom:0}
+.cgroup h3{font-family:"IBM Plex Mono",monospace;font-size:.64rem;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--ink-faint);font-weight:500;margin-bottom:.9rem}
+.ctl{margin-bottom:1.05rem}
+.ctl:last-child{margin-bottom:0}
+.ctl-top{display:flex;justify-content:space-between;align-items:baseline;gap:.5rem;margin-bottom:.35rem}
+.ctl label{font-size:.87rem;color:var(--ink-soft);line-height:1.3}
+.ctl output{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;
+  font-size:.92rem;font-weight:600;color:var(--ink);white-space:nowrap}
+input[type=range]:disabled{opacity:.35;cursor:not-allowed}
+.seg button:disabled{opacity:.35;cursor:not-allowed}
+input[type=range]{width:100%;height:22px;-webkit-appearance:none;appearance:none;background:none;cursor:pointer;margin:0}
+input[type=range]::-webkit-slider-runnable-track{height:3px;background:var(--surface-3);border-radius:2px}
+input[type=range]::-moz-range-track{height:3px;background:var(--surface-3);border-radius:2px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;
+  background:var(--d-blue);border:2px solid var(--surface);margin-top:-6.5px;box-shadow:0 0 0 1px var(--d-blue)}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--d-blue);
+  border:2px solid var(--surface);box-shadow:0 0 0 1px var(--d-blue)}
+.seg{display:flex;gap:2px;background:var(--surface-2);padding:2px;border-radius:3px}
+.seg button{flex:1;font-family:inherit;font-size:.82rem;padding:.4rem .3rem;border:0;border-radius:2px;
+  background:none;color:var(--ink-soft);cursor:pointer;transition:background .12s,color .12s}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);font-weight:600;box-shadow:var(--shadow)}
+.hint{font-size:.76rem;color:var(--ink-faint);margin-top:.3rem;line-height:1.4}
+
+/* ---- resultados ---- */
+.results{display:flex;flex-direction:column;gap:1.5rem;min-width:0}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(13rem,1fr));gap:1px;background:var(--rule);
+  border:1px solid var(--rule);box-shadow:var(--shadow)}
+.tile{background:var(--surface);padding:1.1rem 1.2rem}
+.tile .k{font-family:"IBM Plex Mono",monospace;font-size:.62rem;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--ink-faint);margin-bottom:.5rem}
+.tile .v{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;font-size:1.75rem;
+  font-weight:600;line-height:1.05;letter-spacing:-.02em}
+.tile .s{font-size:.8rem;color:var(--ink-soft);margin-top:.35rem;line-height:1.35}
+.pill{display:inline-flex;align-items:center;gap:.32rem;font-family:"IBM Plex Mono",monospace;font-size:.62rem;
+  letter-spacing:.09em;text-transform:uppercase;padding:.18rem .45rem;border-radius:2px;font-weight:500;margin-top:.5rem}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
+.pill.ok{background:var(--cobalt-soft);color:var(--cobalt)}
+.pill.warn{background:var(--sand-soft);color:var(--sand)}
+.pill.bad{background:var(--oxide-soft);color:var(--oxide)}
+
+.card{padding:1.3rem 1.4rem}
+.card h2{font-size:1.05rem;font-weight:600;letter-spacing:-.008em}
+.card .sub{font-size:.85rem;color:var(--ink-soft);margin-top:.3rem}
+.chart{margin-top:1rem;position:relative}
+svg{display:block;width:100%;height:auto;overflow:visible}
+.legend{display:flex;gap:1.1rem;flex-wrap:wrap;margin-top:.8rem;font-size:.78rem;color:var(--ink-soft)}
+.legend span{display:inline-flex;align-items:center;gap:.4rem}
+.swatch{width:11px;height:11px;border-radius:2px;flex:none}
+.swatch.line{height:3px;border-radius:2px}
+
+.tip{position:absolute;pointer-events:none;opacity:0;transform:translate(-50%,-115%);
+  background:var(--ink);color:var(--ground);padding:.42rem .6rem;border-radius:3px;font-size:.76rem;
+  white-space:nowrap;transition:opacity .1s;z-index:5;line-height:1.35}
+.tip b{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+
+.reading{background:var(--cobalt-soft);border:1px solid var(--rule);padding:1.2rem 1.4rem;box-shadow:var(--shadow)}
+.reading .k{font-family:"IBM Plex Mono",monospace;font-size:.62rem;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--cobalt);margin-bottom:.6rem;font-weight:500}
+.reading p{font-size:.97rem;line-height:1.6}
+.reading p + p{margin-top:.6rem}
+.reading b{font-weight:600}
+
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(19rem,1fr));gap:1.5rem}
+.kv{display:grid;grid-template-columns:1fr auto;gap:.5rem 1rem;margin-top:.9rem;font-size:.89rem}
+.kv dt{color:var(--ink-soft)}
+.kv dd{margin:0;font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;font-weight:500;text-align:right}
+.kv dd.em{color:var(--d-red)}
+
+details{border-top:1px solid var(--rule-soft);margin-top:1rem;padding-top:.8rem}
+summary{cursor:pointer;font-size:.83rem;color:var(--ink-soft);list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"▸ ";color:var(--ink-faint)}
+details[open] summary::before{content:"▾ "}
+.tablewrap{overflow-x:auto;margin-top:.9rem}
+table{border-collapse:collapse;width:100%;font-size:.83rem;min-width:26rem}
+th,td{text-align:left;padding:.45rem .6rem;border-bottom:1px solid var(--rule-soft)}
+thead th{font-family:"IBM Plex Mono",monospace;font-size:.6rem;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--ink-faint);font-weight:500}
+td.n{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;text-align:right}
+
+footer{max-width:1440px;margin:0 auto;padding:1rem 1.5rem 3rem;color:var(--ink-faint);font-size:.78rem;max-width:76ch}
+footer p + p{margin-top:.5rem}
+
+@media (max-width:1000px){
+  .app{grid-template-columns:1fr}
+  .controls{position:static;max-height:none}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<header class="top">
+  <div class="top-in">
+    <h1>Simulador da Clínica</h1>
+    <span class="tag">Instrumento de trabalho</span>
+    <button class="reset" id="reset" type="button">Repor valores</button>
+  </div>
+</header>
+<div class="banner"><div class="banner-in">
+  <b>Não são os números da Dra. Júlia.</b> Mova os controlos para os valores reais e tudo se recalcula.
+  As taxas de IRS e Segurança Social carregadas são as de 2025 e estão por confirmar para 2026 — os resultados
+  são ordens de grandeza, não valores para decidir.
+</div></div>
+
+<div class="app">
+
+  <!-- ================= controlos ================= -->
+  <form class="panel controls" id="ctl" aria-label="Parâmetros da simulação">
+    <div class="cgroup">
+      <h3>A sua agenda</h3>
+      <div class="ctl">
+        <div class="ctl-top"><label for="consDiaJulia">Consultas que faz por dia</label><output id="o-consDiaJulia"></output></div>
+        <input type="range" id="consDiaJulia" min="2" max="14" step="1">
+      </div>
+      <div class="ctl">
+        <div class="ctl-top"><label for="diasJulia">Dias por ano que atende</label><output id="o-diasJulia"></output></div>
+        <input type="range" id="diasJulia" min="120" max="240" step="5">
+        <p class="hint">220 dias é uma semana de 5 dias com férias e feriados.</p>
+      </div>
+      <div class="ctl">
+        <div class="ctl-top"><label for="precoJulia">Preço médio da sessão</label><output id="o-precoJulia"></output></div>
+        <input type="range" id="precoJulia" min="25" max="90" step="1">
+      </div>
+      <div class="ctl">
+        <div class="ctl-top"><label for="durCons">Duração da sessão</label><output id="o-durCons"></output></div>
+        <input type="range" id="durCons" min="30" max="90" step="5">
+        <p class="hint">Determina quantas consultas cabem num gabinete por dia.</p>
+      </div>
+    </div>
+
+    <div class="cgroup">
+      <h3>Quem trabalha consigo</h3>
+      <div class="ctl">
+        <div class="ctl-top"><label id="l-nFisio">Fisioterapeutas a integrar</label></div>
+        <div class="seg" role="group" aria-labelledby="l-nFisio" id="seg-nFisio">
+          <button type="button" data-v="0">Nenhum</button><button type="button" data-v="1">1</button><button type="button" data-v="2">2</button>
+        </div>
+      </div>
+      <div class="ctl">
+        <div class="ctl-top"><label for="consDiaFisio">Consultas por dia, cada um</label><output id="o-consDiaFisio"></output></div>
+        <input type="range" id="consDiaFisio" min="0" max="12" step="1">
+        <p class="hint">Assume-se que trabalham 10% menos dias por ano do que a Dra. Júlia.</p>
+      </div>
+      <div class="ctl" id="wrap-semcolab" hidden>
+        <p class="hint">Sem colaboradores, a clínica vive só da sua agenda — e não há risco de requalificação laboral.</p>
+      </div>
+      <div class="ctl">
+        <div class="ctl-top"><label id="l-modColab">Como se organizam</label></div>
+        <div class="seg" role="group" aria-labelledby="l-modColab" id="seg-modColab">
+          <button type="button" data-v="1">Recebem honorários</button><button type="button" data-v="2">Pagam-lhe a sala</button>
+        </div>
+      </div>
+      <div class="ctl" id="wrap-pctHonor">
+        <div class="ctl-top"><label for="pctHonor">Por cada 100 € de sessão, quanto fica para o fisioterapeuta</label><output id="o-pctHonor"></output></div>
+        <input type="range" id="pctHonor" min="0.30" max="0.85" step="0.05">
+      </div>
+      <div class="ctl" id="wrap-pctSala" hidden>
+        <div class="ctl-top"><label for="pctSala">Por cada 100 € que ele fatura, quanto lhe paga a si</label><output id="o-pctSala"></output></div>
+        <input type="range" id="pctSala" min="0.10" max="0.60" step="0.05">
+      </div>
+    </div>
+
+    <div class="cgroup">
+      <h3>O espaço</h3>
+      <div class="ctl">
+        <div class="ctl-top"><label id="l-nGab">Gabinetes</label></div>
+        <div class="seg" role="group" aria-labelledby="l-nGab" id="seg-nGab">
+          <button type="button" data-v="2">2 gabinetes</button><button type="button" data-v="3">3 gabinetes</button>
+        </div>
+      </div>
+      <div class="ctl">
+        <div class="ctl-top"><label for="rendaMes">Renda mensal</label><output id="o-rendaMes"></output></div>
+        <input type="range" id="rendaMes" min="400" max="3000" step="50">
+      </div>
+      <div class="ctl">
+        <div class="ctl-top"><label for="invObras">Obras de adaptação</label><output id="o-invObras"></output></div>
+        <input type="range" id="invObras" min="0" max="80000" step="1000">
+      </div>
+      <div class="ctl">
+        <div class="ctl-top"><label for="invEquip">Equipamento clínico</label><output id="o-invEquip"></output></div>
+        <input type="range" id="invEquip" min="0" max="60000" step="1000">
+      </div>
+    </div>
+  </form>
+
+  <!-- ================= resultados ================= -->
+  <div class="results">
+
+    <div class="tiles">
+      <div class="tile">
+        <div class="k">Ocupação dos gabinetes</div>
+        <div class="v" id="t-util"></div>
+        <div id="t-util-pill"></div>
+        <div class="s" id="t-util-s"></div>
+      </div>
+      <div class="tile">
+        <div class="k">Doentes por dia para pagar as contas</div>
+        <div class="v" id="t-be"></div>
+        <div class="s" id="t-be-s"></div>
+      </div>
+      <div class="tile">
+        <div class="k">Dinheiro necessário antes de abrir</div>
+        <div class="v" id="t-cash"></div>
+        <div class="s" id="t-cash-s"></div>
+      </div>
+    </div>
+
+    <div class="reading">
+      <div class="k">Leitura</div>
+      <div id="reading"></div>
+    </div>
+
+    <div class="panel card">
+      <h2>Quanto lhe fica no bolso, por estrutura</h2>
+      <p class="sub">Depois de pagar tudo — custos, IRS e Segurança Social — num ano em que a clínica já esteja a funcionar em pleno.</p>
+      <div class="chart"><svg id="ch-vias" viewBox="0 0 640 190" role="img" aria-labelledby="vias-t"><title id="vias-t">Líquido anual por estrutura</title></svg><div class="tip" id="tip-vias"></div></div>
+      <details><summary>Ver os números</summary><div class="tablewrap"><table id="tb-vias">
+        <thead><tr><th>Estrutura</th><th style="text-align:right">IRS</th><th style="text-align:right">Seg. Social</th><th style="text-align:right">Fica-lhe</th></tr></thead>
+        <tbody></tbody></table></div></details>
+    </div>
+
+    <div class="panel card">
+      <h2>O dinheiro ao longo do primeiro ano</h2>
+      <p class="sub">Quanto tem em caixa, mês a mês, contando com o investimento no início e com a agenda a encher devagar.</p>
+      <div class="chart"><svg id="ch-cash" viewBox="0 0 640 240" role="img" aria-labelledby="cash-t"><title id="cash-t">Saldo de tesouraria acumulado no ano 1</title></svg><div class="tip" id="tip-cash"></div></div>
+      <div class="legend">
+        <span><i class="swatch line" style="background:var(--d-blue)"></i>Saldo acumulado</span>
+        <span><i class="swatch" style="background:var(--d-red);opacity:.25"></i>Quanto falta para chegar a zero</span>
+      </div>
+      <details><summary>Ver os números</summary><div class="tablewrap"><table id="tb-cash">
+        <thead><tr><th>Mês</th><th style="text-align:right">Ocupação</th><th style="text-align:right">Faturação</th><th style="text-align:right">Saldo do mês</th><th style="text-align:right">Acumulado</th></tr></thead>
+        <tbody></tbody></table></div></details>
+    </div>
+
+    <div class="two">
+      <div class="panel card">
+        <h2>O terceiro gabinete</h2>
+        <p class="sub">Custa mais renda todos os meses. Só se paga a partir de um certo número de doentes.</p>
+        <div class="chart"><svg id="ch-gab" viewBox="0 0 400 120" role="img" aria-labelledby="gab-t"><title id="gab-t">Doentes por dia previstos face ao ponto em que o terceiro gabinete compensa</title></svg></div>
+        <dl class="kv" id="kv-gab"></dl>
+      </div>
+      <div class="panel card">
+        <h2>Se os contratos correrem mal</h2>
+        <p class="sub">Se a relação com os fisioterapeutas for lida como um emprego, a Segurança Social cobra até cinco anos para trás.</p>
+        <dl class="kv" id="kv-risco"></dl>
+        <p class="sub" style="margin-top:.9rem">Dois dos cinco sinais previstos na lei — o espaço ser seu e o equipamento ser seu — verificam-se sempre numa clínica. A margem está no horário e na forma de pagar.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  <p>Simulador construído sobre o mesmo motor de cálculo do modelo M1. As vinte e duas grandezas que produz foram confrontadas com a folha de cálculo e coincidem ao cêntimo.</p>
+  <p>Não substitui o relatório. Serve para ver o efeito de cada decisão enquanto se conversa, e para perceber que perguntas fazer. Gerir Saúde · Rui Gomes.</p>
+</footer>
+
+<script>
+/* Motor de cálculo do simulador — projeto Dra. Júlia Best / Gerir Saúde.
+ *
+ * TERCEIRA implementação das mesmas regras. As outras duas são as fórmulas do
+ * M1_modelo_comparativo.xlsx e o recálculo independente em Python que valida a
+ * folha `Validacao`. Este ficheiro só pode ser publicado depois de
+ * `testa_motor.mjs` confirmar que reproduz os valores do Excel ao cêntimo.
+ *
+ * Nenhuma taxa é escrita fora de PARAM, pela mesma razão que na folha Parâmetros.
+ */
+const PARAM = {
+  // Segurança Social
+  IAS: 522.50, SS_TI_PCT: 0.70, SS_TI_TAXA: 0.214, SS_TI_TETO: 12, SS_TI_MIN: 20,
+  SS_MOE_ENT: 0.2375, SS_MOE_BEN: 0.11, SS_MOE_MIN: 1,
+  TSU_ENT: 0.2375, TSU_TRAB: 0.11, PRESCR: 5, JUROS_MORA: 0.05, COIMA_PCT: 0.50,
+  // IRS categoria B
+  COEF: 0.75, COEF_SALA: 0.35, LIM_JUST: 0.15, DED_ESP: 4104, LIM_CONTRIB: 0.10,
+  DED_CATA: 4104,
+  // Amortizações
+  AM_OBRAS: 0.10, AM_EQUIP: 0.20, AM_SOFT: 0.3333,
+  // IVA
+  IVA_NORM: 0.23, IVA_RED: 0.06,
+  // Escalões de IRS 2025 — POR ATUALIZAR PARA 2026 (R1-10)
+  ESCALOES: [[0, 0.1250], [8059, 0.1600], [12160, 0.2150], [17233, 0.2440],
+             [22306, 0.3140], [28400, 0.3490], [41629, 0.4310], [44987, 0.4460],
+             [83696, 0.4800]],
+  SOLID: [[80000, 0.025], [250000, 0.05]],
+  ANO_PARAMETROS: 2025,
+};
+
+function escala(x, tabela) {
+  let total = 0, anterior = 0;
+  for (const [inf, taxa] of tabela) {
+    if (x > inf) total += (x - inf) * (taxa - anterior);
+    anterior = taxa;
+  }
+  return total;
+}
+const coleta = x => escala(x, PARAM.ESCALOES);
+const solidariedade = x => escala(x, PARAM.SOLID);
+
+/** Coleta de IRS do agregado, com quociente conjugal (art. 69.º CIRS). */
+function irsAgregado(rc, conjunta) {
+  if (conjunta) { const h = rc / 2; return 2 * (coleta(h) + solidariedade(h)); }
+  return coleta(rc) + solidariedade(rc);
+}
+
+const RAMPA_PADRAO = [0.15, 0.20, 0.25, 0.30, 0.33, 0.36, 0.39, 0.41, 0.43, 0.44, 0.45, 0.45];
+
+const INPUTS_PADRAO = {
+  nGab: 2, diasAno: 220, horasDia: 8, durCons: 45,
+  diasJulia: 200, consDiaJulia: 6, precoJulia: 48,
+  nFisio: 1, diasFisio: 180, consDiaFisio: 5, precoFisio: 48,
+  modColab: 1, pctHonor: 0.70, pctSala: 0.30,
+  renda: 14400, condominio: 1500, seguros: 1100, software: 900, outros: 2000,
+  pctConsumiveis: 0.03,
+  invObras: 25000, invEquip: 20000, invEquipReduzido: 0, invSoftware: 2000,
+  remGerencia: 16800, tribAutonomas: 800,
+  rendimentoConjuge: 18000, tributacaoConjunta: 1,
+  mesesCaucao: 3, pctRecebidoNoMes: 0.85, mesesMargemSeguranca: 3,
+  rampa: RAMPA_PADRAO,
+  // Comparação de espaços
+  rendaB: 19200, condominioB: 2000, obrasB: 38000, equipB: 26000, nGabB: 3,
+};
+
+function calcular(entrada) {
+  const i = Object.assign({}, INPUTS_PADRAO, entrada || {});
+  const P = PARAM;
+  const tetoAnual = P.IAS * P.SS_TI_TETO * 12;
+  const minAnual = P.SS_TI_MIN * 12;
+
+  // ---- capacidade e procura
+  const capDia = i.horasDia * 60 / i.durCons;
+  const capAno = i.nGab * i.diasAno * capDia;
+  const consJulia = i.diasJulia * i.consDiaJulia;
+  const consFisio = i.nFisio * i.diasFisio * i.consDiaFisio;
+  const consTotal = consJulia + consFisio;
+  const utilizacao = capAno > 0 ? consTotal / capAno : 0;
+  const fatJulia = consJulia * i.precoJulia;
+  const fatFisio = consFisio * i.precoFisio;
+  const fatTotal = fatJulia + fatFisio;
+  const precoMedio = consTotal > 0 ? fatTotal / consTotal : 0;
+
+  // ---- modelo de colaboração
+  const prestacao = i.modColab === 1;
+  const fatIsenta = fatJulia + (prestacao ? fatFisio : 0);
+  const recNaoProf = prestacao ? 0 : fatFisio * i.pctSala;
+  const custoColab = prestacao ? fatFisio * i.pctHonor : 0;
+  const margemColab = prestacao ? fatFisio * (1 - i.pctHonor) : fatFisio * i.pctSala;
+
+  const consumiveis = fatIsenta * i.pctConsumiveis;
+  const receita = fatIsenta + recNaoProf;
+  const custosFixos = i.renda + i.condominio + i.seguros + i.software + i.outros;
+  const custosOpSemColab = custosFixos + consumiveis;
+  const custosOp = custosOpSemColab + custoColab;
+  const caixa = receita - custosOp;
+
+  const investimento = i.invObras + i.invEquip + i.invEquipReduzido + i.invSoftware;
+  const amortizacoes = i.invObras * P.AM_OBRAS
+    + (i.invEquip + i.invEquipReduzido) * P.AM_EQUIP + i.invSoftware * P.AM_SOFT;
+
+  const irsSem = irsAgregado(i.rendimentoConjuge, i.tributacaoConjunta === 1);
+  const irsCom = rj => irsAgregado(rj + i.rendimentoConjuge, i.tributacaoConjunta === 1) - irsSem;
+
+  // ---- via 1: ENI simplificado
+  const despesasJustificadas = P.DED_ESP + custosOpSemColab + custoColab + investimento;
+  const rtCoef = fatIsenta * P.COEF + recNaoProf * P.COEF_SALA;
+  const rbCatB = rtCoef + Math.max(0, receita * P.LIM_JUST - despesasJustificadas);
+  const ss1 = Math.max(Math.min(receita * P.SS_TI_PCT, tetoAnual) * P.SS_TI_TAXA, minAnual);
+  const rlCatB = rbCatB - Math.max(0, ss1 - receita * P.LIM_CONTRIB);
+  const irs1 = irsCom(rlCatB);
+  const v1 = { irs: irs1, ss: ss1, carga: irs1 + ss1, liquido: caixa - irs1 - ss1 };
+
+  // ---- via 2: ENI com contabilidade organizada
+  const lt2Antes = receita - custosOpSemColab - custoColab - amortizacoes;
+  const ss2 = Math.max(Math.min(Math.max(lt2Antes, 0), tetoAnual) * P.SS_TI_TAXA, minAnual);
+  const lt2 = Math.max(0, lt2Antes - ss2);
+  const irs2 = irsCom(lt2);
+  const v2 = { irs: irs2, ss: ss2, carga: irs2 + ss2, liquido: caixa - irs2 - ss2 };
+
+  // ---- via 3: sociedade com transparência fiscal
+  const baseMoe = Math.max(i.remGerencia, P.IAS * P.SS_MOE_MIN * 12);
+  const tsuEntidade = baseMoe * P.SS_MOE_ENT;
+  const ssSocia = baseMoe * P.SS_MOE_BEN;
+  const lt3 = receita - custosOpSemColab - custoColab - amortizacoes - i.remGerencia - tsuEntidade;
+  const deducaoCatA = Math.min(i.remGerencia, Math.max(P.DED_CATA, ssSocia));
+  const liquidoCatA = Math.max(0, i.remGerencia - deducaoCatA);
+  const irs3 = irsCom(liquidoCatA + Math.max(lt3, 0));
+  const carga3 = irs3 + ssSocia + tsuEntidade + i.tribAutonomas;
+  const v3 = { irs: irs3, ss: ssSocia + tsuEntidade, carga: carga3, liquido: caixa - carga3 };
+
+  // ---- break-even operacional
+  const custosVariaveis = consumiveis + custoColab;
+  const margemContribuicao = receita - custosVariaveis;
+  const mcPct = receita > 0 ? margemContribuicao / receita : 0;
+  const breakEven = mcPct > 0 ? custosFixos / mcPct : Infinity;
+  const consultasBreakEven = precoMedio > 0 ? breakEven / precoMedio : Infinity;
+
+  // ---- IVA e tesouraria
+  const ivaIrrecuperavel = (i.invObras + i.invEquip + i.invSoftware) * P.IVA_NORM
+    + i.invEquipReduzido * P.IVA_RED;
+  const caucao = i.mesesCaucao * i.renda / 12;
+  const arranque = investimento + ivaIrrecuperavel + caucao;
+
+  const capMes = capAno / 12, cfMes = custosFixos / 12, ssMes = ss2 / 12;
+  const pctVar = 1 - mcPct;
+  let acumulado = 0, minimo = 0, fatAnterior = 0, mesMinimo = 1, mesPositivo = 0;
+  const meses = [];
+  i.rampa.forEach((ocup, m) => {
+    const fat = capMes * ocup * precoMedio;
+    const recebido = fat * i.pctRecebidoNoMes + (m > 0 ? fatAnterior * (1 - i.pctRecebidoNoMes) : 0);
+    const saldo = recebido - fat * pctVar - cfMes - ssMes - (m === 0 ? arranque : 0);
+    const anterior = acumulado;
+    acumulado += saldo;
+    if (acumulado < minimo) { minimo = acumulado; mesMinimo = m + 1; }
+    if (anterior < 0 && acumulado >= 0 && !mesPositivo) mesPositivo = m + 1;
+    meses.push({ mes: m + 1, ocupacao: ocup, faturacao: fat, saldo, acumulado });
+    fatAnterior = fat;
+  });
+  const necessidade = -minimo;
+  const margemSeguranca = i.mesesMargemSeguranca * cfMes;
+  const tesouraria = {
+    arranque, ivaIrrecuperavel, caucao, necessidade, margemSeguranca,
+    totalAntesDeAbrir: necessidade + margemSeguranca,
+    mesMinimo, mesPositivo, meses,
+    faturacaoAno1: meses.reduce((s, m) => s + m.faturacao, 0),
+  };
+
+  // ---- passivo contingente da requalificação laboral
+  const baseRetro = custoColab * P.PRESCR;
+  const tsuE = baseRetro * P.TSU_ENT, tsuT = baseRetro * P.TSU_TRAB;
+  const juros = (tsuE + tsuT) * P.JUROS_MORA * P.PRESCR / 2;
+  const coima = tsuE * P.COIMA_PCT;
+  const passivo = tsuE + tsuT + juros + coima;
+  const riscoLaboral = {
+    base: baseRetro, tsuEntidade: tsuE, tsuTrabalhador: tsuT, juros, coima, passivo,
+    anosDeResultado: v2.liquido > 0 ? passivo / v2.liquido : null,
+  };
+
+  // ---- terceiro gabinete: a partir de que procura compensa
+  const capA = 2 * i.diasAno * capDia;
+  const capB = i.nGabB * i.diasAno * capDia;
+  const cfA = i.renda + i.condominio + i.seguros + i.software + i.outros;
+  const cfB = i.rendaB + i.condominioB + i.seguros + i.software + i.outros;
+  const deltaCF = cfB - cfA;
+  const ganhoPorConsulta = precoMedio * mcPct;
+  const espaco = {
+    capacidadeA: capA, capacidadeB: capB, custoDegrau: deltaCF,
+    investimentoAdicional: (i.obrasB + i.equipB) * (1 + P.IVA_NORM)
+      - (i.invObras + i.invEquip) * (1 + P.IVA_NORM),
+    consultasViragem: ganhoPorConsulta > 0 ? capA + deltaCF / ganhoPorConsulta : Infinity,
+  };
+  espaco.consultasDiaViragem = espaco.consultasViragem / i.diasAno;
+  espaco.utilizacaoViragemEmA = capA > 0 ? espaco.consultasViragem / capA : Infinity;
+
+  return {
+    operacao: { capDia, capAno, consJulia, consFisio, consTotal, utilizacao,
+                fatJulia, fatFisio, fatTotal, precoMedio },
+    colaboracao: { fatIsenta, recNaoProf, custoColab, margemColab },
+    economia: { receita, custosFixos, custosVariaveis, custosOp, caixa,
+                margemContribuicao, mcPct, breakEven, breakEvenMes: breakEven / 12,
+                consultasBreakEven, consultasDiaBreakEven: consultasBreakEven / i.diasAno,
+                utilizacaoBreakEven: capAno > 0 ? consultasBreakEven / capAno : Infinity,
+                investimento, amortizacoes },
+    vias: { v1, v2, v3 },
+    tesouraria, riscoLaboral, espaco,
+  };
+}
+
+const MOTOR = { PARAM, calcular, coleta, solidariedade, irsAgregado,
+                INPUTS_PADRAO, RAMPA_PADRAO };
+if (typeof module !== 'undefined' && module.exports) module.exports = MOTOR;
+
+/* ============================ estado e formatação ============================ */
+const nf0 = new Intl.NumberFormat('pt-PT',{maximumFractionDigits:0});
+const nf1 = new Intl.NumberFormat('pt-PT',{maximumFractionDigits:1});
+const eur = v => (isFinite(v) ? nf0.format(Math.round(v)) + ' €' : '—');
+const eur1 = v => (isFinite(v) ? nf1.format(v) + ' €' : '—');
+const pct = v => (isFinite(v) ? nf0.format(v*100) + '%' : '—');
+
+const BASE = {
+  consDiaJulia:6, diasJulia:200, precoJulia:48, durCons:45,
+  nFisio:1, consDiaFisio:5, modColab:1, pctHonor:0.70, pctSala:0.30,
+  nGab:2, rendaMes:1200, invObras:25000, invEquip:20000,
+};
+let S = Object.assign({}, BASE);
+
+const RANGES = ['consDiaJulia','diasJulia','precoJulia','durCons','consDiaFisio','pctHonor','pctSala','rendaMes','invObras','invEquip'];
+const SEGS = { 'seg-nFisio':'nFisio', 'seg-modColab':'modColab', 'seg-nGab':'nGab' };
+const LABELS = {
+  consDiaJulia:v=>nf0.format(v), diasJulia:v=>nf0.format(v)+' dias', precoJulia:v=>eur(v),
+  durCons:v=>nf0.format(v)+' min', consDiaFisio:v=>nf0.format(v), pctHonor:v=>pct(v),
+  pctSala:v=>pct(v), rendaMes:v=>eur(v)+'/mês', invObras:v=>eur(v), invEquip:v=>eur(v),
+};
+
+function entrada(){
+  return {
+    nGab:S.nGab, durCons:S.durCons,
+    diasJulia:S.diasJulia, consDiaJulia:S.consDiaJulia, precoJulia:S.precoJulia,
+    nFisio:S.nFisio, diasFisio:Math.round(S.diasJulia*0.9), consDiaFisio:S.consDiaFisio,
+    precoFisio:S.precoJulia,
+    modColab:S.modColab, pctHonor:S.pctHonor, pctSala:S.pctSala,
+    renda:S.rendaMes*12, invObras:S.invObras, invEquip:S.invEquip,
+    rendaB:S.rendaMes*12*1.33, obrasB:S.invObras*1.5, equipB:S.invEquip*1.3,
+  };
+}
+
+/* ============================ desenho ============================ */
+const NS = 'http://www.w3.org/2000/svg';
+function el(t,a){const n=document.createElementNS(NS,t);for(const k in a)n.setAttribute(k,a[k]);return n;}
+function clear(s){while(s.lastChild&&s.lastChild.nodeName!=='title')s.removeChild(s.lastChild);}
+function txt(x,y,s,cls,anchor,size,weight){
+  const n=el('text',{x:x,y:y,'text-anchor':anchor||'start','font-size':size||11,
+    'font-weight':weight||400,fill:'currentColor'});
+  n.setAttribute('class',cls||''); n.textContent=s; return n;
+}
+
+function grafVias(r){
+  const svg=document.getElementById('ch-vias'); clear(svg);
+  const dados=[
+    {n:'Como está hoje',        s:'Nome individual, regime simplificado', v:r.vias.v1.liquido},
+    {n:'Contabilidade organizada', s:'Nome individual, custos reais',     v:r.vias.v2.liquido},
+    {n:'Sociedade',             s:'Detida a 100% pela Dra. Júlia',        v:r.vias.v3.liquido},
+  ];
+  const max=Math.max(...dados.map(d=>Math.max(d.v,0)),1);
+  const melhor=dados.reduce((a,b)=>b.v>a.v?b:a);
+  const x0=176,x1=584,H=44;
+  dados.forEach((d,i)=>{
+    const y=22+i*H, w=Math.max(2,(Math.max(d.v,0)/max)*(x1-x0)), top=melhor===d;
+    const lab=txt(x0-12,y+13,d.n,'',"end",12.5,top?600:400);
+    lab.setAttribute('fill','var(--ink)'); svg.appendChild(lab);
+    const sub=txt(x0-12,y+27,d.s,'',"end",10.5); sub.setAttribute('fill','var(--ink-faint)'); svg.appendChild(sub);
+    svg.appendChild(el('rect',{x:x0,y:y,width:x1-x0,height:20,rx:3,fill:'var(--surface-2)'}));
+    const bar=el('rect',{x:x0,y:y,width:w,height:20,rx:3,
+      fill:top?'var(--d-blue)':'var(--d-blue-mute)'});
+    bar.dataset.n=d.n; bar.dataset.v=d.v; bar.setAttribute('class','mk-via'); svg.appendChild(bar);
+    const val=txt(x0+w+8,y+14,eur(d.v),'mono',"start",12.5,600);
+    val.setAttribute('fill',top?'var(--d-blue)':'var(--ink-soft)'); svg.appendChild(val);
+  });
+  const tip=document.getElementById('tip-vias');
+  svg.querySelectorAll('.mk-via').forEach(b=>{
+    b.addEventListener('mouseenter',ev=>{
+      const rc=svg.getBoundingClientRect(), br=b.getBoundingClientRect();
+      tip.innerHTML=b.dataset.n+' · <b>'+eur(+b.dataset.v)+'</b> por ano';
+      tip.style.left=(br.left-rc.left+br.width/2)+'px';
+      tip.style.top=(br.top-rc.top)+'px'; tip.style.opacity=1;
+    });
+    b.addEventListener('mouseleave',()=>tip.style.opacity=0);
+  });
+  const tb=document.querySelector('#tb-vias tbody'); tb.innerHTML='';
+  [['Como está hoje',r.vias.v1],['Contabilidade organizada',r.vias.v2],['Sociedade',r.vias.v3]]
+    .forEach(([n,v])=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML='<td>'+n+'</td><td class="n">'+eur(v.irs)+'</td><td class="n">'+eur(v.ss)+
+        '</td><td class="n"><b>'+eur(v.liquido)+'</b></td>';
+      tb.appendChild(tr);
+    });
+}
+
+function grafCaixa(r){
+  const svg=document.getElementById('ch-cash'); clear(svg);
+  const m=r.tesouraria.meses, W=640,H=240, L=64,R=14,T=14,B=30;
+  const vals=m.map(d=>d.acumulado).concat([0]);
+  const lo=Math.min(...vals), hi=Math.max(...vals), span=(hi-lo)||1;
+  const X=i=>L+(i/(m.length-1))*(W-L-R);
+  const Y=v=>T+(1-(v-lo)/span)*(H-T-B);
+  const y0=Y(0);
+  // area entre a curva e o zero: vermelha abaixo, azul acima
+  const area=m.map((p,i)=>(i?'L':'M')+X(i)+' '+Y(p.acumulado)).join(' ')
+    +' L'+X(m.length-1)+' '+y0+' L'+X(0)+' '+y0+' Z';
+  const abaixo=m.every(p=>p.acumulado<=0);
+  svg.appendChild(el('path',{d:area,fill:abaixo?'var(--d-red)':'var(--d-blue)',
+    'fill-opacity':.14,stroke:'none'}));
+  // grelha
+  for(let g=0;g<=4;g++){
+    const v=lo+span*g/4, y=Y(v);
+    svg.appendChild(el('line',{x1:L,x2:W-R,y1:y,y2:y,stroke:'var(--grid)','stroke-width':1}));
+    const t=txt(L-9,y+4,eur(v),'mono','end',10); t.setAttribute('fill','var(--ink-faint)'); svg.appendChild(t);
+  }
+  svg.appendChild(el('line',{x1:L,x2:W-R,y1:y0,y2:y0,stroke:'var(--ink-soft)','stroke-width':1.5}));
+  const z=txt(W-R+2,y0+4,'0','mono','start',10); z.setAttribute('fill','var(--ink-soft)'); svg.appendChild(z);
+  // linha
+  const d=m.map((p,i)=>(i?'L':'M')+X(i)+' '+Y(p.acumulado)).join(' ');
+  svg.appendChild(el('path',{d:d,fill:'none',stroke:'var(--d-blue)','stroke-width':2.5,
+    'stroke-linejoin':'round','stroke-linecap':'round'}));
+  m.forEach((p,i)=>{
+    svg.appendChild(el('circle',{cx:X(i),cy:Y(p.acumulado),r:4,fill:'var(--surface)',
+      stroke:'var(--d-blue)','stroke-width':2}));
+    if(i%2===0||i===m.length-1){
+      const t=txt(X(i),H-10,'M'+p.mes,'mono','middle',10);
+      t.setAttribute('fill','var(--ink-faint)'); svg.appendChild(t);
+    }
+  });
+  const iMin=m.reduce((a,p,i)=>m[a].acumulado<=p.acumulado?a:i,0);
+  svg.appendChild(el('circle',{cx:X(iMin),cy:Y(m[iMin].acumulado),r:5.5,fill:'var(--d-red)',
+    stroke:'var(--surface)','stroke-width':2}));
+  // camada de hover
+  const tip=document.getElementById('tip-cash');
+  m.forEach((p,i)=>{
+    const hit=el('rect',{x:X(i)-((W-L-R)/(m.length-1))/2,y:T,
+      width:(W-L-R)/(m.length-1),height:H-T-B,fill:'transparent'});
+    hit.style.cursor='crosshair';
+    hit.addEventListener('mouseenter',()=>{
+      const rc=svg.getBoundingClientRect();
+      tip.innerHTML='Mês '+p.mes+' · ocupação '+pct(p.ocupacao)+'<br>acumulado <b>'+eur(p.acumulado)+'</b>';
+      tip.style.left=(X(i)/W*rc.width)+'px';
+      tip.style.top=(Y(p.acumulado)/H*rc.height)+'px'; tip.style.opacity=1;
+    });
+    hit.addEventListener('mouseleave',()=>tip.style.opacity=0);
+    svg.appendChild(hit);
+  });
+  const tb=document.querySelector('#tb-cash tbody'); tb.innerHTML='';
+  m.forEach(p=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML='<td>Mês '+p.mes+'</td><td class="n">'+pct(p.ocupacao)+'</td><td class="n">'+
+      eur(p.faturacao)+'</td><td class="n">'+eur(p.saldo)+'</td><td class="n">'+eur(p.acumulado)+'</td>';
+    tb.appendChild(tr);
+  });
+}
+
+function grafGabinete(r){
+  const svg=document.getElementById('ch-gab'); clear(svg);
+  const prev=r.operacao.consTotal/S.diasJulia;
+  const alvo=r.espaco.consultasDiaViragem;
+  const max=Math.max(prev,alvo)*1.25||1;
+  const W=400,L=8,Rr=8,y=44,h=22;
+  const X=v=>L+(v/max)*(W-L-Rr);
+  svg.appendChild(el('rect',{x:L,y:y,width:W-L-Rr,height:h,rx:3,fill:'var(--surface-2)'}));
+  svg.appendChild(el('rect',{x:L,y:y,width:Math.max(2,X(prev)-L),height:h,rx:3,fill:'var(--d-blue)'}));
+  if(isFinite(alvo)){
+    svg.appendChild(el('rect',{x:X(alvo)-1.5,y:y-9,width:3,height:h+18,rx:1.5,fill:'var(--d-gold)'}));
+    const t=txt(Math.min(X(alvo),W-Rr-4),y-14,'compensa a partir de '+nf1.format(alvo),'','middle',10.5,500);
+    t.setAttribute('fill','var(--d-gold)'); svg.appendChild(t);
+  }
+  const a=txt(L,y+h+18,'previstos: '+nf1.format(prev)+' doentes por dia','','start',11.5,600);
+  a.setAttribute('fill','var(--d-blue)'); svg.appendChild(a);
+  const dl=document.getElementById('kv-gab');
+  const compensa=prev>=alvo;
+  dl.innerHTML=
+    '<dt>Doentes por dia previstos</dt><dd>'+nf1.format(prev)+'</dd>'+
+    '<dt>A partir de quantos compensa</dt><dd>'+(isFinite(alvo)?nf1.format(alvo):'—')+'</dd>'+
+    '<dt>Renda a mais, por ano</dt><dd class="em">'+eur(r.espaco.custoDegrau)+'</dd>'+
+    '<dt>Veredito</dt><dd>'+(compensa?'compensa':'não compensa')+'</dd>';
+}
+
+function painelRisco(r){
+  const x=r.riscoLaboral;
+  document.getElementById('kv-risco').innerHTML=
+    '<dt>Honorários pagos por ano</dt><dd>'+eur(x.base/MOTOR.PARAM.PRESCR)+'</dd>'+
+    '<dt>Contribuições em falta, 5 anos</dt><dd>'+eur(x.tsuEntidade+x.tsuTrabalhador)+'</dd>'+
+    '<dt>Juros e coima</dt><dd>'+eur(x.juros+x.coima)+'</dd>'+
+    '<dt>Total que teria de pagar</dt><dd class="em">'+eur(x.passivo)+'</dd>'+
+    '<dt>Anos de trabalho que isso vale</dt><dd>'+
+      (x.anosDeResultado&&isFinite(x.anosDeResultado)?nf1.format(x.anosDeResultado):'—')+'</dd>';
+}
+
+/* ============================ leitura em português ============================ */
+function leitura(r){
+  const u=r.operacao.utilizacao, prev=r.operacao.consTotal/S.diasJulia;
+  const beDia=r.economia.consultasDiaBreakEven;
+  const melhor=[['como está hoje',r.vias.v1],['contabilidade organizada',r.vias.v2],['sociedade',r.vias.v3]]
+    .reduce((a,b)=>b[1].liquido>a[1].liquido?b:a);
+  const dif=melhor[1].liquido-r.vias.v1.liquido;
+  const p=[];
+
+  if(u>1) p.push('<b>Esta agenda não cabe no espaço.</b> Precisaria de '+pct(u)+
+    ' de ocupação dos gabinetes, e o máximo é 100%. Ou reduz as consultas, ou precisa de mais um gabinete.');
+  else if(u>0.85) p.push('Com estes números os gabinetes ficam a <b>'+pct(u)+
+    '</b> de ocupação. É possível, mas não sobra folga nenhuma para faltas, férias ou um mês fraco.');
+  else if(u<0.3) p.push('Os gabinetes ficariam a <b>'+pct(u)+
+    '</b> de ocupação. O espaço é grande de mais para esta agenda — está a pagar renda por salas vazias.');
+  else p.push('Os gabinetes ficam a <b>'+pct(u)+'</b> de ocupação. É um número plausível, com folga para imprevistos.');
+
+  p.push('Para pagar as contas precisa de <b>'+nf1.format(beDia)+' doentes por dia</b>. Prevê '+
+    nf1.format(prev)+'. '+(prev>beDia*1.5?'Tem uma margem confortável.':
+      prev>beDia?'A margem é apertada — um mês fraco põe as contas no vermelho.':
+      '<b>Não chega.</b> Com esta agenda a clínica não cobre os próprios custos.'));
+
+  p.push('A estrutura que lhe deixa mais dinheiro é <b>'+melhor[0]+'</b>'+
+    (dif>200?', com mais '+eur(dif)+' por ano do que ficar como está.':
+     '. A diferença face às outras é pequena, e por isso a decisão joga-se noutro lado: proteção do seu património e capacidade de crescer.'));
+
+  const t=r.tesouraria;
+  p.push('Antes de abrir precisa de ter <b>'+eur(t.totalAntesDeAbrir)+'</b> disponíveis — investimento, caução e dinheiro para aguentar até a receita chegar. '+
+    (t.mesPositivo?'A caixa volta a ficar positiva no mês '+t.mesPositivo+'.':
+     'A caixa <b>não recupera dentro do primeiro ano</b>, o que é normal quando há investimento à cabeça, mas obriga a ter o dinheiro à partida.'));
+
+  if(S.nFisio>0&&S.modColab===1){
+    p.push('Como paga honorários, de cada 100 € de sessão dos seus colegas ficam-lhe '+
+      eur(100*(1-S.pctHonor))+' para pagar renda, luz e seguros. '+
+      (S.pctHonor>0.7?'A esta percentagem, sobra pouco: faturar mais não resolve, porque a margem quase não cresce.':''));
+  }
+  document.getElementById('reading').innerHTML=p.map(x=>'<p>'+x+'</p>').join('');
+}
+
+/* ============================ atualização ============================ */
+function render(){
+  const r=MOTOR.calcular(entrada());
+  const u=r.operacao.utilizacao;
+  document.getElementById('t-util').textContent=pct(u);
+  const pill=document.getElementById('t-util-pill');
+  let c='ok',t='plausível';
+  if(u>1){c='bad';t='impossível';} else if(u>0.85){c='warn';t='sem folga';}
+  else if(u<0.3){c='warn';t='subaproveitado';}
+  pill.innerHTML='<span class="pill '+c+'">'+t+'</span>';
+  document.getElementById('t-util-s').textContent=
+    nf0.format(r.operacao.consTotal)+' consultas por ano em '+S.nGab+' gabinetes';
+
+  document.getElementById('t-be').textContent=nf1.format(r.economia.consultasDiaBreakEven);
+  document.getElementById('t-be-s').textContent='ou '+eur(r.economia.breakEvenMes)+' de faturação por mês';
+
+  document.getElementById('t-cash').textContent=eur(r.tesouraria.totalAntesDeAbrir);
+  document.getElementById('t-cash-s').textContent='inclui '+eur(r.tesouraria.ivaIrrecuperavel)+
+    ' de IVA que não recupera';
+
+  grafVias(r); grafCaixa(r); grafGabinete(r); painelRisco(r); leitura(r);
+}
+
+function sincronizaControlos(){
+  RANGES.forEach(k=>{
+    const inp=document.getElementById(k); if(!inp)return;
+    inp.value=S[k];
+    const o=document.getElementById('o-'+k); if(o)o.textContent=LABELS[k](S[k]);
+  });
+  Object.entries(SEGS).forEach(([id,k])=>{
+    document.querySelectorAll('#'+id+' button').forEach(b=>
+      b.setAttribute('aria-pressed', String(+b.dataset.v===S[k])));
+  });
+  document.getElementById('wrap-pctHonor').hidden = S.modColab!==1 || S.nFisio===0;
+  document.getElementById('wrap-pctSala').hidden  = S.modColab!==2 || S.nFisio===0;
+  const semColab = S.nFisio===0;
+  document.getElementById('consDiaFisio').disabled = semColab;
+  document.getElementById('seg-modColab').querySelectorAll('button')
+    .forEach(b=>{ b.disabled = semColab; });
+  document.getElementById('wrap-semcolab').hidden = !semColab;
+}
+
+RANGES.forEach(k=>{
+  const inp=document.getElementById(k); if(!inp)return;
+  inp.addEventListener('input',()=>{
+    S[k]=parseFloat(inp.value);
+    document.getElementById('o-'+k).textContent=LABELS[k](S[k]);
+    render();
+  });
+});
+Object.entries(SEGS).forEach(([id,k])=>{
+  document.getElementById(id).addEventListener('click',e=>{
+    const b=e.target.closest('button'); if(!b)return;
+    S[k]=+b.dataset.v; sincronizaControlos(); render();
+  });
+});
+document.getElementById('reset').addEventListener('click',()=>{
+  S=Object.assign({},BASE); sincronizaControlos(); render();
+});
+document.getElementById('ctl').addEventListener('submit',e=>e.preventDefault());
+
+sincronizaControlos();
+render();
+</script>
