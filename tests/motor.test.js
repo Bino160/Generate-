@@ -342,3 +342,89 @@ test('prejuizo fiscal nao e imputado aos socios nem gera ganho fantasma', () => 
   eq(r.corrigido.irsTotal, r.atual.irsTotal);
   assert.ok(r.avisos.some((a) => a.nivel === 'erro' && /prejuízo fiscal não é imputado/.test(a.texto)));
 });
+
+/* ==================================================================== *
+ * Consolidação de vários exercícios
+ * ==================================================================== */
+
+const Estado = require('../assets/js/estado.js');
+
+const multiplo = (anos = [2022, 2023, 2024], referencia = '2026-08-20') => ({
+  exercicios: anos.map((ano) => ({
+    sociedade: {
+      exercicio: ano, resultadoContabilistico: 120000, correcoesFiscais: 0,
+      materiaColetavel: 120000, ircLiquidado: 24450, derramaMunicipal: 1800,
+      derramaEstadual: 0, tributacoesAutonomas: 2500, pagamentosPorConta: 15000, retencoes: 500
+    },
+    socios: [
+      { nome: 'A', participacao: 60, rendimentosA: 30000, tributacao: 'separada', dependentes: 1 },
+      { nome: 'B', participacao: 40, rendimentosA: 20000, tributacao: 'separada', dependentes: 0 }
+    ]
+  })),
+  parametros: { dataReferencia: referencia, cenarioIRC: 'parcial' }
+});
+
+test('consolidar soma os exercicios e nao se limita a repetir um', () => {
+  const c = Motor.consolidar(multiplo());
+  assert.strictEqual(c.exercicios.length, 3);
+  const somaManual = c.exercicios.reduce((a, x) => a + x.exposicaoLiquida, 0);
+  eq(c.totais.exposicaoLiquida, somaManual);
+  // Tres exercicios pesam substancialmente mais do que um.
+  assert.ok(c.totais.exposicaoLiquida > c.exercicios[0].exposicaoLiquida * 2.5);
+});
+
+test('cada exercicio traz o seu proprio prazo de caducidade e juros', () => {
+  const c = Motor.consolidar(multiplo());
+  assert.deepStrictEqual(c.exercicios.map((x) => x.caducidade),
+    ['2026-12-31', '2027-12-31', '2028-12-31']);
+  // Quanto mais antigo o exercicio, mais juros acumulou.
+  assert.ok(c.exercicios[0].juros > c.exercicios[2].juros);
+});
+
+test('a ordem de tratamento segue o prazo, nao o montante', () => {
+  const c = Motor.consolidar(multiplo());
+  assert.deepStrictEqual(c.ordemUrgencia, [2022, 2023, 2024]);
+});
+
+test('prazo a terminar dentro de seis meses gera erro', () => {
+  const c = Motor.consolidar(multiplo());
+  assert.ok(c.avisos.some((a) => a.nivel === 'erro' && /2022/.test(a.texto) && /seis meses/.test(a.texto)));
+  assert.ok(c.exercicios[0].diasAteCaducidade < 183);
+});
+
+test('exercicio ja caducado fica fora do total consolidado', () => {
+  const c = Motor.consolidar(multiplo([2020, 2024]));
+  const caducado = c.exercicios.find((x) => x.exercicio === 2020);
+  assert.strictEqual(caducado.caducado, true);
+  assert.strictEqual(c.totais.abertos, 1);
+  eq(c.totais.exposicaoLiquida, c.exercicios.find((x) => x.exercicio === 2024).exposicaoLiquida);
+  assert.ok(c.totais.exposicaoTodos > c.totais.exposicaoLiquida);
+  assert.ok(c.avisos.some((a) => /fora do prazo de caducidade/.test(a.texto)));
+});
+
+test('um ficheiro guardado no formato antigo continua a abrir', () => {
+  const antigo = {
+    versao: 1,
+    sociedade: { exercicio: 2021, materiaColetavel: 90000, ircLiquidado: 18000 },
+    socios: [{ nome: 'Único', participacao: 100, rendimentosA: 30000 }],
+    parametros: { cenarioIRC: 'integral' }
+  };
+  const migrado = Estado.normalizar(antigo);
+  assert.strictEqual(migrado.versao, Estado.VERSAO_DADOS);
+  assert.strictEqual(migrado.exercicios.length, 1);
+  assert.strictEqual(migrado.exercicios[0].sociedade.exercicio, 2021);
+  eq(migrado.exercicios[0].sociedade.materiaColetavel, 90000);
+  assert.strictEqual(migrado.parametros.cenarioIRC, 'integral');
+  // E continua a poder ser consolidado.
+  assert.strictEqual(Motor.consolidar(migrado).exercicios.length, 1);
+});
+
+test('acrescentar exercicio copia os socios do ano mais recente', () => {
+  const d = Estado.normalizar(multiplo([2022]));
+  Estado.adicionarExercicio(d);
+  assert.strictEqual(d.exercicios.length, 2);
+  assert.strictEqual(d.exercicios[1].sociedade.exercicio, 2023);
+  assert.strictEqual(d.exercicios[1].socios[0].nome, 'A');
+  // Os valores da sociedade nao sao copiados: sao proprios de cada ano.
+  eq(d.exercicios[1].sociedade.materiaColetavel, 0);
+});

@@ -11,8 +11,12 @@
   var Estado = window.Estado;
 
   var dados = Estado.ler() || Estado.novo();
-  var resultado = null;
+  var resultado = null;      // simulação do exercício ativo
+  var consolidado = null;    // todos os exercícios
   var ecraAtual = 1;
+
+  /** O exercício que está a ser editado. */
+  function ex() { return Estado.ativo(dados); }
 
   /* ================================================================== *
    * Esquemas de formulário
@@ -228,8 +232,8 @@
 
   /** Marca cada passo como completo quando tem o que precisa para calcular. */
   function atualizarProgresso() {
-    var mc = F.numeroBruto(dados.sociedade.materiaColetavel) > 0;
-    var soma = dados.socios.reduce(function (a, x) { return a + F.numeroBruto(x.participacao); }, 0);
+    var mc = dados.exercicios.every(function (e) { return F.numeroBruto(e.sociedade.materiaColetavel) > 0; });
+    var soma = ex().socios.reduce(function (a, x) { return a + F.numeroBruto(x.participacao); }, 0);
     var estados = { 1: mc, 2: Math.abs(soma - 100) < 0.01, 3: true, 4: mc };
     $$('.passo').forEach(function (b) {
       var n = Number(b.dataset.ecra);
@@ -255,16 +259,69 @@
    * Ecrã 1
    * ================================================================== */
 
+  /**
+   * Barra de exercícios. Um enquadramento incorreto abrange vários anos e
+   * cada um tem prazo próprio, por isso a lista de exercícios acompanha o
+   * utilizador nos ecrãs onde ele introduz e lê dados.
+   */
+  function renderBarraExercicios() {
+    $$('.exercicios').forEach(function (barra) {
+      barra.innerHTML = '';
+      dados.exercicios.forEach(function (item, indice) {
+        var ano = F.numeroBruto(item.sociedade.exercicio);
+        var preenchido = F.numeroBruto(item.sociedade.materiaColetavel) > 0;
+        barra.appendChild(el('button', {
+          type: 'button',
+          class: 'exercicio' + (indice === dados.ativo ? ' exercicio--ativo' : '') +
+            (preenchido ? ' exercicio--preenchido' : ''),
+          'aria-current': indice === dados.ativo,
+          texto: String(ano),
+          onclick: function () {
+            dados.ativo = indice;
+            Estado.guardar(dados);
+            renderTudo();
+            if (ecraAtual === 4) simular();
+          }
+        }));
+      });
+
+      barra.appendChild(el('button', {
+        type: 'button', class: 'exercicio exercicio--novo', texto: '+ exercício',
+        title: 'Acrescenta o ano seguinte, copiando os sócios',
+        onclick: function () {
+          Estado.adicionarExercicio(dados);
+          Estado.guardar(dados);
+          renderTudo();
+          irPara(1);
+        }
+      }));
+
+      if (dados.exercicios.length > 1) {
+        barra.appendChild(el('button', {
+          type: 'button', class: 'exercicio exercicio--remover',
+          texto: 'remover ' + F.numeroBruto(ex().sociedade.exercicio),
+          onclick: function () {
+            if (!confirm('Remover o exercício de ' + F.numeroBruto(ex().sociedade.exercicio) + '?')) return;
+            Estado.removerExercicio(dados, dados.ativo);
+            Estado.guardar(dados);
+            renderTudo();
+          }
+        }));
+      }
+    });
+  }
+
   function renderSociedade() {
+    renderBarraExercicios();
     renderFormulario('#form-sociedade', CAMPOS_SOCIEDADE,
-      function (c) { return dados.sociedade[c.chave]; },
-      function (c, v) { dados.sociedade[c.chave] = v; },
-      dados.sociedade, 'Reconciliação e valores já pagos');
+      function (c) { return ex().sociedade[c.chave]; },
+      function (c, v) { ex().sociedade[c.chave] = v; },
+      ex().sociedade, 'Reconciliação e valores já pagos');
     verificarCoerencia();
   }
 
   function verificarCoerencia() {
-    var s = dados.sociedade;
+    var s = ex().sociedade;
     var lista = $('#coerencia-sociedade');
     if (!lista) return;
     var notas = [];
@@ -300,14 +357,17 @@
    * ================================================================== */
 
   function renderSocios() {
+    renderBarraExercicios();
     var alvo = $('#lista-socios');
     alvo.innerHTML = '';
 
     // Consequência de cada sócio, para o cartão não ser só um formulário.
     var previa = null;
-    try { previa = Motor.simular(dados).socios; } catch (e) { previa = null; }
+    try {
+      previa = Motor.simular({ sociedade: ex().sociedade, socios: ex().socios, parametros: dados.parametros }).socios;
+    } catch (e) { previa = null; }
 
-    dados.socios.forEach(function (socio, indice) {
+    ex().socios.forEach(function (socio, indice) {
       var cartao = el('div', { class: 'cartao socio' });
       var p = previa && previa[indice];
       var cabeca = el('div', { class: 'socio__cabeca' }, [
@@ -323,8 +383,8 @@
         el('button', {
           type: 'button', class: 'btn btn--fantasma btn--pequeno btn--perigo', texto: 'Remover',
           onclick: function () {
-            dados.socios.splice(indice, 1);
-            if (!dados.socios.length) dados.socios.push(Estado.socioVazio(1));
+            ex().socios.splice(indice, 1);
+            if (!ex().socios.length) ex().socios.push(Estado.socioVazio(1));
             Estado.guardar(dados); renderSocios();
           }
         })
@@ -346,7 +406,7 @@
   }
 
   function atualizarSomaParticipacoes() {
-    var soma = dados.socios.reduce(function (a, s) { return a + F.numeroBruto(s.participacao); }, 0);
+    var soma = ex().socios.reduce(function (a, s) { return a + F.numeroBruto(s.participacao); }, 0);
     var no = $('#soma-participacoes');
     if (!no) return;
     var ok = Math.abs(soma - 100) < 0.01;
@@ -371,7 +431,7 @@
   }
 
   function tabelaEscaloesAtual() {
-    var ano = F.numeroBruto(dados.sociedade.exercicio);
+    var ano = F.numeroBruto(ex().sociedade.exercicio);
     var p = Motor.mesclarParametros(dados.parametros);
     return { ano: ano, tabela: Parametros.tabelaDoExercicio(p, ano) };
   }
@@ -441,7 +501,8 @@
    * ================================================================== */
 
   function simular() {
-    var vazio = F.numeroBruto(dados.sociedade.materiaColetavel) <= 0;
+    renderBarraExercicios();
+    var vazio = F.numeroBruto(ex().sociedade.materiaColetavel) <= 0;
     $('#ecra-4').classList.toggle('resultado--vazio', vazio);
     $('#vazio').hidden = !vazio;
     if (vazio) {
@@ -455,13 +516,16 @@
       return;
     }
     try {
-      resultado = Motor.simular(dados);
+      resultado = Motor.simular({ sociedade: ex().sociedade, socios: ex().socios, parametros: dados.parametros });
+      consolidado = Motor.consolidar(dados);
     } catch (erro) {
       $('#avisos').innerHTML = '';
       $('#avisos').appendChild(el('div', { class: 'aviso-caixa aviso-caixa--erro', texto: 'Não foi possível simular: ' + erro.message }));
       return;
     }
     window.__resultado = resultado;
+    window.__consolidado = consolidado;
+    renderConsolidado();
     renderHeroi();
     renderAvisos();
     renderConfianca();
@@ -483,6 +547,84 @@
       .forEach(function (a) {
         alvo.appendChild(el('div', { class: 'aviso-caixa aviso-caixa--erro', texto: a.texto }));
       });
+  }
+
+  /**
+   * Consolidado. Quando há mais do que um exercício, a primeira coisa a ler
+   * é o total e a ordem por que os anos têm de ser tratados — não o detalhe
+   * de um deles.
+   */
+  function renderConsolidado() {
+    var alvo = $('#consolidado');
+    alvo.innerHTML = '';
+    var visivel = consolidado && consolidado.exercicios.length > 1;
+    alvo.hidden = !visivel;
+    if (!visivel) return;
+
+    var t = consolidado.totais;
+
+    alvo.appendChild(el('div', { class: 'consolidado__topo' }, [
+      el('div', {}, [
+        el('div', { class: 'consolidado__rotulo',
+          texto: 'Exposição consolidada · ' + t.abertos + ' de ' + t.exercicios + ' exercícios dentro do prazo' }),
+        el('div', { class: 'consolidado__valor', texto: F.euro(t.exposicaoLiquida) })
+      ]),
+      el('div', { class: 'consolidado__resumo' }, [
+        el('div', { texto: 'IRS adicional ' + F.euro(t.irsAdicional) }),
+        el('div', { texto: 'Juros ' + F.euro(t.juros) }),
+        el('div', { texto: 'Coimas ' + F.euro(t.coimas) }),
+        el('div', { texto: 'IRC recuperável −' + F.euro(t.ircRecuperavel) })
+      ])
+    ]));
+
+    consolidado.avisos.forEach(function (a) {
+      alvo.appendChild(el('div', { class: 'aviso-caixa aviso-caixa--' + a.nivel, texto: a.texto }));
+    });
+
+    var tabela = el('table', { class: 'tabela tabela--exercicios' }, [
+      el('thead', {}, [el('tr', {}, [
+        el('th', { texto: 'Exercício' }),
+        el('th', { texto: 'Exposição líquida' }),
+        el('th', { texto: 'Caducidade' }),
+        el('th', { texto: 'Prazo' }),
+        el('th', { texto: 'Confiança' })
+      ])])
+    ]);
+    var corpo = el('tbody');
+
+    consolidado.exercicios.forEach(function (item) {
+      var indice = dados.exercicios.findIndex(function (e) {
+        return F.numeroBruto(e.sociedade.exercicio) === item.exercicio;
+      });
+      var urgente = !item.caducado && item.diasAteCaducidade !== null && item.diasAteCaducidade <= 183;
+      var linha = el('tr', {
+        class: (indice === dados.ativo ? 'destaque ' : '') + (item.caducado ? 'caducado' : ''),
+        tabindex: '0',
+        title: 'Abrir o exercício de ' + item.exercicio,
+        onclick: function () { dados.ativo = indice; Estado.guardar(dados); renderTudo(); simular(); },
+        onkeydown: function (ev) { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); ev.target.click(); } }
+      }, [
+        el('td', { texto: String(item.exercicio) + (item.erros ? ' ⚠' : '') }),
+        el('td', { class: item.favoravel ? 'desceu' : 'subiu',
+          texto: (item.favoravel ? '−' : '') + F.euro(Math.abs(item.exposicaoLiquida)) }),
+        el('td', { texto: F.data(item.caducidade) }),
+        el('td', { class: urgente ? 'subiu' : '',
+          texto: item.caducado ? 'caducado'
+            : (item.diasAteCaducidade !== null ? item.diasAteCaducidade + ' dias' : '—') }),
+        el('td', { texto: item.confianca + '%' })
+      ]);
+      corpo.appendChild(linha);
+    });
+
+    tabela.appendChild(corpo);
+    alvo.appendChild(el('div', { class: 'tabela-scroll' }, [tabela]));
+
+    if (consolidado.ordemUrgencia.length > 1) {
+      alvo.appendChild(el('p', { class: 'ajuda',
+        texto: 'Ordem de tratamento pelo prazo, não pelo montante: ' +
+          consolidado.ordemUrgencia.join(' → ') +
+          '. Um exercício que caduca perde-se, independentemente do valor que representa.' }));
+    }
   }
 
   /**
@@ -795,9 +937,13 @@
   }
 
   function nomeFicheiro(extensao) {
-    var base = (dados.sociedade.designacao || 'simulacao').toLowerCase()
+    var base = (ex().sociedade.designacao || 'simulacao').toLowerCase()
       .normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-    return 'transparencia-fiscal-' + base + '-' + dados.sociedade.exercicio + '.' + extensao;
+    var anos = dados.exercicios.map(function (e) { return F.numeroBruto(e.sociedade.exercicio); });
+    var intervalo = anos.length > 1
+      ? Math.min.apply(null, anos) + '-' + Math.max.apply(null, anos)
+      : anos[0];
+    return 'transparencia-fiscal-' + base + '-' + intervalo + '.' + extensao;
   }
 
   var ACOES = {
@@ -808,7 +954,8 @@
       irPara(1);
     },
     limpar: function () {
-      if (!confirm('Limpar todos os dados introduzidos?')) return;
+      if (!confirm('Apagar deste dispositivo todos os dados introduzidos, incluindo nomes e ' +
+        'rendimentos dos sócios? Esta ação não é reversível. Guarde primeiro em JSON se quiser conservar a simulação.')) return;
       Estado.apagar();
       dados = Estado.novo();
       renderTudo();
@@ -816,10 +963,12 @@
     },
     guardar: function () { descarregar(nomeFicheiro('json'), JSON.stringify(dados, null, 2), 'application/json'); },
     'exportar-json': function () {
-      descarregar(nomeFicheiro('resultado.json'), JSON.stringify({ dados: dados, resultado: resultado }, null, 2), 'application/json');
+      descarregar(nomeFicheiro('resultado.json'),
+        JSON.stringify({ dados: dados, resultado: resultado, consolidado: consolidado }, null, 2),
+        'application/json');
     },
     'adicionar-socio': function () {
-      dados.socios.push(Estado.socioVazio(dados.socios.length + 1));
+      ex().socios.push(Estado.socioVazio(ex().socios.length + 1));
       Estado.guardar(dados);
       renderSocios();
     },
@@ -831,18 +980,20 @@
       renderEscaloes();
     },
     'repor-escaloes': function () {
-      var ano = F.numeroBruto(dados.sociedade.exercicio);
+      var ano = F.numeroBruto(ex().sociedade.exercicio);
       if (dados.parametros.escaloesIRS) delete dados.parametros.escaloesIRS[ano];
       Estado.guardar(dados);
       renderEscaloes();
     },
     relatorio: function () {
       if (!resultado) simular();
-      window.Relatorio.abrir(dados, resultado);
+      window.Relatorio.abrir({ sociedade: ex().sociedade, socios: ex().socios, parametros: dados.parametros },
+        resultado, consolidado);
     }
   };
 
   function renderTudo() {
+    renderBarraExercicios();
     renderSociedade();
     renderSocios();
     renderParametros();

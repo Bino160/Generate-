@@ -507,6 +507,66 @@ input:focus-visible, select:focus-visible {
   .heroi { padding: 1.2rem 1.1rem 1rem; }
 }
 
+/* ===================================================================== *
+ * Exercícios: um enquadramento incorreto abrange vários anos.
+ * ===================================================================== */
+.exercicios {
+  display: flex; flex-wrap: wrap; gap: .35rem; margin-bottom: 1rem;
+  padding-bottom: .7rem; border-bottom: 1px solid var(--linha);
+}
+.exercicio {
+  font: inherit; font-family: var(--titulo); font-size: .82rem; font-weight: 600;
+  padding: .4rem .8rem; min-height: 2.2rem; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--linha-forte); background: var(--superficie); color: var(--tinta-suave);
+}
+.exercicio:hover { border-color: var(--ouro); color: var(--tinta); }
+.exercicio--preenchido { border-color: var(--positivo); }
+.exercicio--ativo {
+  background: var(--marca); border-color: var(--marca); color: var(--superficie);
+}
+:root[data-theme="dark"] .exercicio--ativo,
+.exercicio--ativo { color: var(--fundo); }
+.exercicio--novo, .exercicio--remover {
+  font-weight: 500; border-style: dashed; color: var(--tinta-tenue); background: transparent;
+}
+.exercicio--remover { margin-left: auto; }
+.exercicio--remover:hover { border-color: var(--alerta); color: var(--alerta); }
+
+/* --------------------------- Consolidado ---------------------------- */
+.consolidado {
+  background: var(--superficie); border: 1px solid var(--linha);
+  border-top: 3px solid var(--marca); border-radius: var(--raio);
+  box-shadow: var(--sombra); padding: 1.3rem 1.4rem 1.1rem;
+  margin-bottom: .9rem; display: flex; flex-direction: column; gap: .9rem;
+}
+.consolidado[hidden] { display: none; }
+.consolidado__topo {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  gap: 1.2rem; flex-wrap: wrap;
+}
+.consolidado__rotulo {
+  font-family: var(--titulo); font-size: .72rem; font-weight: 600;
+  letter-spacing: .12em; text-transform: uppercase; color: var(--tinta-tenue);
+}
+.consolidado__valor {
+  font-family: var(--titulo); font-size: clamp(1.9rem, 6vw, 2.6rem); font-weight: 700;
+  line-height: 1.05; letter-spacing: -.02em; font-variant-numeric: tabular-nums;
+  color: var(--alerta); margin-top: .15rem;
+}
+.consolidado__resumo {
+  display: grid; gap: .15rem; font-size: .82rem; color: var(--tinta-suave);
+  font-variant-numeric: tabular-nums; text-align: right;
+}
+.tabela--exercicios tbody tr { cursor: pointer; }
+.tabela--exercicios tbody tr:hover td { background: var(--marca-clara); }
+.tabela--exercicios tbody tr:focus-visible { outline: 2px solid var(--ouro); outline-offset: -2px; }
+.tabela--exercicios td:first-child { font-family: var(--titulo); font-weight: 600; }
+.tabela--exercicios tr.caducado td { opacity: .55; text-decoration: line-through; }
+@media (max-width: 640px) {
+  .consolidado__resumo { text-align: left; }
+  .exercicio--remover { margin-left: 0; }
+}
+
 </style>
 <text y='.9em' font-size='90'>⚖️</text></svg>">
 
@@ -521,7 +581,7 @@ input:focus-visible, select:focus-visible {
     <button type="button" class="btn btn--fantasma" data-acao="exemplo">Carregar exemplo</button>
     <button type="button" class="btn btn--fantasma" data-acao="guardar">Guardar JSON</button>
     <label class="btn btn--fantasma" for="ficheiro">Abrir JSON<input id="ficheiro" type="file" accept="application/json" hidden></label>
-    <button type="button" class="btn btn--fantasma" data-acao="limpar">Limpar</button>
+    <button type="button" class="btn btn--fantasma" data-acao="limpar">Apagar dados</button>
   </div>
 </header>
 
@@ -537,8 +597,9 @@ input:focus-visible, select:focus-visible {
   <section class="ecra" id="ecra-1" hidden>
     <div class="ecra__cabeca">
       <h2>Ecrã 1 · Dados da sociedade</h2>
-      <p>Valores efetivamente declarados no exercício em análise. Retire-os da Modelo 22 e da demonstração de resultados.</p>
+      <p>Valores efetivamente declarados no exercício em análise. Retire-os da Modelo 22 e da demonstração de resultados. Acrescente um exercício por cada ano em risco — cada um tem o seu próprio prazo.</p>
     </div>
+    <nav class="exercicios" aria-label="Exercícios em análise"></nav>
     <div class="cartao">
       <div id="form-sociedade"></div>
     </div>
@@ -558,6 +619,7 @@ input:focus-visible, select:focus-visible {
       <h2>Ecrã 2 · Dados dos sócios</h2>
       <p>A matéria coletável é imputada a cada sócio na proporção da participação e tributada em IRS como rendimento líquido da categoria B (artigo 20.º do CIRS).</p>
     </div>
+    <nav class="exercicios" aria-label="Exercícios em análise"></nav>
     <div id="lista-socios"></div>
     <div class="barra-socios">
       <button type="button" class="btn btn--secundario" data-acao="adicionar-socio">+ Adicionar sócio</button>
@@ -630,6 +692,10 @@ input:focus-visible, select:focus-visible {
     </div>
 
     <div id="vazio" class="vazio" hidden></div>
+
+    <section class="consolidado" id="consolidado" aria-label="Exposição consolidada" hidden></section>
+
+    <nav class="exercicios" aria-label="Exercícios em análise"></nav>
 
     <section class="heroi" id="heroi" aria-label="Exposição fiscal líquida"></section>
 
@@ -704,7 +770,7 @@ input:focus-visible, select:focus-visible {
 
 <footer class="rodape">
   <p><strong>Aviso.</strong> Ferramenta de apoio à decisão. Os valores apresentados são estimativas construídas sobre parâmetros configuráveis e não substituem a liquidação da Autoridade Tributária nem parecer jurídico-fiscal. Este simulador pressupõe que a elegibilidade para o artigo 6.º do CIRC já foi previamente determinada.</p>
-  <p class="rodape__meta">Cálculo local no navegador. Nenhum dado é enviado para servidores. <span id="versao-regras"></span></p>
+  <p class="rodape__meta"><strong>Dados guardados neste dispositivo.</strong> Para não perder o trabalho entre sessões, a simulação — incluindo nomes e rendimentos dos sócios — fica no armazenamento local deste navegador até ser apagada. Nada é enviado para servidores. Num computador partilhado, use <em>Apagar dados</em> no fim de cada cliente. <span id="versao-regras"></span></p>
   <p class="rodape__assinatura">VC Level · Strategic Leadership. Fractional Impact.</p>
 </footer>
 
@@ -1817,6 +1883,119 @@ input:focus-visible, select:focus-visible {
     };
   }
 
+  /* ================================================================== *
+   * 11. Consolidacao de varios exercicios
+   *
+   * Um enquadramento incorrecto instala-se ao longo de anos. Cada exercicio
+   * tem o seu proprio prazo de caducidade, o seu proprio periodo de juros e
+   * pode ter sinal diferente: ha anos em que regularizar custa e anos em que
+   * compensa. Consolidar nao e somar — e ordenar por urgencia e por sinal.
+   * ================================================================== */
+
+  function consolidar(dados) {
+    var exercicios = (dados.exercicios || []).map(function (ex) {
+      var resultado = simular({
+        sociedade: ex.sociedade,
+        socios: ex.socios,
+        parametros: dados.parametros
+      });
+      var caducidade = resultado.timeline.filter(function (e) {
+        return /caducidade/i.test(e.titulo);
+      })[0];
+      var revisao = resultado.timeline.filter(function (e) {
+        return /revis/i.test(e.titulo);
+      })[0];
+      var ref = data(dados.parametros && dados.parametros.dataReferencia);
+      var diasAteCaducidade = caducidade ? dias(ref, caducidade.data) : null;
+
+      return {
+        exercicio: resultado.meta.exercicio,
+        resultado: resultado,
+        exposicaoLiquida: resultado.indicadores.exposicaoLiquida,
+        irsAdicional: resultado.indicadores.irsAdicional,
+        juros: resultado.indicadores.juros,
+        coimas: resultado.indicadores.coimas,
+        ircRecuperavel: resultado.indicadores.ircRecuperavel,
+        favoravel: resultado.indicadores.exposicaoLiquida < 0,
+        confianca: resultado.qualidade.indice,
+        caducidade: caducidade ? caducidade.data : null,
+        diasAteCaducidade: diasAteCaducidade,
+        caducado: diasAteCaducidade !== null && diasAteCaducidade <= 0,
+        revisao: revisao ? revisao.data : null,
+        erros: resultado.avisos.filter(function (a) { return a.nivel === 'erro'; }).length
+      };
+    });
+
+    exercicios.sort(function (a, b) { return a.exercicio - b.exercicio; });
+
+    var soma = function (campo) {
+      return arred(exercicios.reduce(function (a, x) { return a + x[campo]; }, 0));
+    };
+    var abertos = exercicios.filter(function (x) { return !x.caducado; });
+
+    // Ordem de tratamento: primeiro o que caduca mais cedo. E o prazo, e nao o
+    // montante, que define a urgencia — um exercicio que caduca perde-se.
+    var urgencia = abertos.slice().sort(function (a, b) {
+      if (a.diasAteCaducidade === null) return 1;
+      if (b.diasAteCaducidade === null) return -1;
+      return a.diasAteCaducidade - b.diasAteCaducidade;
+    });
+
+    var avisos = [];
+    var aExpirar = abertos.filter(function (x) {
+      return x.diasAteCaducidade !== null && x.diasAteCaducidade <= 183;
+    });
+    if (aExpirar.length) {
+      avisos.push({
+        nivel: 'erro',
+        texto: 'Exercício(s) de ' + aExpirar.map(function (x) { return x.exercicio; }).join(', ') +
+          ' com prazo de caducidade a terminar dentro de seis meses. ' +
+          'A decisão sobre esse(s) ano(s) não pode ser adiada: passado o prazo, ' +
+          'nem a Autoridade Tributária pode liquidar nem faz sentido regularizar voluntariamente.'
+      });
+    }
+    var caducados = exercicios.filter(function (x) { return x.caducado; });
+    if (caducados.length) {
+      avisos.push({
+        nivel: 'info',
+        texto: 'Exercício(s) de ' + caducados.map(function (x) { return x.exercicio; }).join(', ') +
+          ' já fora do prazo de caducidade à data de referência. Ficam fora do total consolidado.'
+      });
+    }
+    var favoraveis = exercicios.filter(function (x) { return x.favoravel && !x.caducado; });
+    if (favoraveis.length && favoraveis.length < exercicios.length) {
+      avisos.push({
+        nivel: 'aviso',
+        texto: 'Em ' + favoraveis.map(function (x) { return x.exercicio; }).join(', ') +
+          ' a reclassificação é favorável ao contribuinte. Regularizar apenas os anos favoráveis ' +
+          'não é uma opção autónoma: expor o enquadramento traz consigo os exercícios desfavoráveis ainda abertos.'
+      });
+    }
+
+    var somaAbertos = function (campo) {
+      return arred(abertos.reduce(function (a, x) { return a + x[campo]; }, 0));
+    };
+
+    return {
+      exercicios: exercicios,
+      ordemUrgencia: urgencia.map(function (x) { return x.exercicio; }),
+      totais: {
+        exercicios: exercicios.length,
+        abertos: abertos.length,
+        irsAdicional: somaAbertos('irsAdicional'),
+        juros: somaAbertos('juros'),
+        coimas: somaAbertos('coimas'),
+        ircRecuperavel: somaAbertos('ircRecuperavel'),
+        exposicaoLiquida: somaAbertos('exposicaoLiquida'),
+        exposicaoTodos: soma('exposicaoLiquida'),
+        confiancaMinima: exercicios.length
+          ? Math.min.apply(null, exercicios.map(function (x) { return x.confianca; }))
+          : 0
+      },
+      avisos: avisos
+    };
+  }
+
   /** Funde parametros do utilizador sobre os valores por omissao. */
   function mesclarParametros(personalizados) {
     var base = Parametros.porOmissao();
@@ -1836,6 +2015,7 @@ input:focus-visible, select:focus-visible {
 
   return {
     simular: simular,
+    consolidar: consolidar,
     avaliarQualidade: avaliarQualidade,
     liquidarIRS: liquidarIRS,
     coletaProgressiva: coletaProgressiva,
@@ -1910,6 +2090,7 @@ input:focus-visible, select:focus-visible {
   'use strict';
 
   var CHAVE = 'simulador-transparencia-fiscal/v1';
+  var VERSAO_DADOS = 2;
 
   function socioVazio(n) {
     return {
@@ -1927,13 +2108,12 @@ input:focus-visible, select:focus-visible {
     };
   }
 
-  function novo() {
-    var anoCorrente = new Date().getFullYear();
+  /** Um exercício: os dados da sociedade nesse ano e os sócios desse ano. */
+  function exercicioVazio(ano) {
     return {
-      versao: 1,
       sociedade: {
         designacao: '',
-        exercicio: anoCorrente - 2,
+        exercicio: ano,
         resultadoContabilistico: 0,
         correcoesFiscais: 0,
         materiaColetavel: 0,
@@ -1944,7 +2124,16 @@ input:focus-visible, select:focus-visible {
         pagamentosPorConta: 0,
         retencoes: 0
       },
-      socios: [socioVazio(1), socioVazio(2)],
+      socios: [socioVazio(1), socioVazio(2)]
+    };
+  }
+
+  function novo() {
+    var anoCorrente = new Date().getFullYear();
+    return {
+      versao: VERSAO_DADOS,
+      exercicios: [exercicioVazio(anoCorrente - 2)],
+      ativo: 0,
       parametros: {
         dataReferencia: new Date().toISOString().slice(0, 10),
         dataInicioJuros: '',
@@ -1957,46 +2146,116 @@ input:focus-visible, select:focus-visible {
     };
   }
 
+  /** Caso de exemplo com três exercícios, que é como o problema aparece. */
   function exemplo() {
     var d = novo();
-    d.sociedade = {
-      designacao: 'Clínica Exemplo, Unipessoal Lda.',
-      exercicio: 2024,
-      resultadoContabilistico: 148000,
-      correcoesFiscais: 2000,
-      materiaColetavel: 150000,
-      ircLiquidado: 28500,
-      derramaMunicipal: 2250,
-      derramaEstadual: 0,
-      tributacoesAutonomas: 3400,
-      pagamentosPorConta: 18000,
-      retencoes: 850
-    };
-    d.socios = [
-      {
-        nome: 'Dra. Sócia maioritária', participacao: 70, rendimentosA: 42000, rendimentosB: 0,
-        categoriaBJaLiquida: false, outrosRendimentos: 0, tributacao: 'conjunta',
-        rendimentosConjuge: 28000, dependentes: 2, outrasDeducoesColeta: 0, irsPagoDistribuicoes: 0
-      },
-      {
-        nome: 'Dr. Sócio minoritário', participacao: 30, rendimentosA: 24000, rendimentosB: 6000,
-        categoriaBJaLiquida: false, outrosRendimentos: 0, tributacao: 'separada',
-        rendimentosConjuge: 0, dependentes: 0, outrasDeducoesColeta: 0, irsPagoDistribuicoes: 0
-      }
+    var anos = [
+      { ano: 2022, mc: 132000, irc: 24900, derrama: 1980, ta: 2900, ppc: 15000, ret: 700 },
+      { ano: 2023, mc: 141000, irc: 26700, derrama: 2115, ta: 3100, ppc: 16500, ret: 780 },
+      { ano: 2024, mc: 150000, irc: 28500, derrama: 2250, ta: 3400, ppc: 18000, ret: 850 }
     ];
+
+    d.exercicios = anos.map(function (a) {
+      var ex = exercicioVazio(a.ano);
+      ex.sociedade = {
+        designacao: 'Clínica Exemplo, Unipessoal Lda.',
+        exercicio: a.ano,
+        resultadoContabilistico: a.mc - 2000,
+        correcoesFiscais: 2000,
+        materiaColetavel: a.mc,
+        ircLiquidado: a.irc,
+        derramaMunicipal: a.derrama,
+        derramaEstadual: 0,
+        tributacoesAutonomas: a.ta,
+        pagamentosPorConta: a.ppc,
+        retencoes: a.ret
+      };
+      ex.socios = [
+        {
+          nome: 'Dra. Sócia maioritária', participacao: 70,
+          rendimentosA: 42000, rendimentosB: 0, categoriaBJaLiquida: false,
+          outrosRendimentos: 0, tributacao: 'conjunta', rendimentosConjuge: 28000,
+          dependentes: 2, outrasDeducoesColeta: 0, irsPagoDistribuicoes: 0
+        },
+        {
+          nome: 'Dr. Sócio minoritário', participacao: 30,
+          rendimentosA: 24000, rendimentosB: 6000, categoriaBJaLiquida: false,
+          outrosRendimentos: 0, tributacao: 'separada', rendimentosConjuge: 0,
+          dependentes: 0, outrasDeducoesColeta: 0, irsPagoDistribuicoes: 0
+        }
+      ];
+      return ex;
+    });
+    d.ativo = 0;
     d.parametros.dataReferencia = new Date().toISOString().slice(0, 10);
     return d;
   }
 
+  function normalizarExercicio(ex, ano) {
+    var base = exercicioVazio(ano);
+    if (!ex || typeof ex !== 'object') return base;
+    base.sociedade = Object.assign(base.sociedade, ex.sociedade || {});
+    if (Array.isArray(ex.socios) && ex.socios.length) {
+      base.socios = ex.socios.map(function (x, i) { return Object.assign(socioVazio(i + 1), x); });
+    }
+    return base;
+  }
+
+  /**
+   * Aceita o formato de um só exercício (versão 1) e o de vários (versão 2).
+   * Um ficheiro guardado antes desta alteração continua a abrir.
+   */
   function normalizar(dados) {
     var base = novo();
     if (!dados || typeof dados !== 'object') return base;
-    base.sociedade = Object.assign(base.sociedade, dados.sociedade || {});
     base.parametros = Object.assign(base.parametros, dados.parametros || {});
-    if (Array.isArray(dados.socios) && dados.socios.length) {
-      base.socios = dados.socios.map(function (s, i) { return Object.assign(socioVazio(i + 1), s); });
+
+    if (Array.isArray(dados.exercicios) && dados.exercicios.length) {
+      base.exercicios = dados.exercicios.map(function (ex, i) {
+        return normalizarExercicio(ex, (ex && ex.sociedade && ex.sociedade.exercicio) || (2024 + i));
+      });
+    } else if (dados.sociedade || dados.socios) {
+      // Formato antigo: um exercício solto.
+      base.exercicios = [normalizarExercicio(dados, (dados.sociedade && dados.sociedade.exercicio) || 2024)];
     }
+
+    base.exercicios.sort(function (a, b) { return a.sociedade.exercicio - b.sociedade.exercicio; });
+    base.ativo = Math.min(Math.max(0, parseInt(dados.ativo, 10) || 0), base.exercicios.length - 1);
+    base.versao = VERSAO_DADOS;
     return base;
+  }
+
+  /** O exercício que está a ser editado. */
+  function ativo(dados) {
+    return dados.exercicios[dados.ativo] || dados.exercicios[0];
+  }
+
+  /**
+   * Acrescenta um exercício. Por omissão copia os sócios do ano mais recente:
+   * a composição societária raramente muda de um ano para o outro, e obrigar
+   * a reintroduzi-la seria a forma mais rápida de ninguém usar o multi-exercício.
+   */
+  function adicionarExercicio(dados, ano) {
+    var anos = dados.exercicios.map(function (e) { return Number(e.sociedade.exercicio); });
+    var novoAno = ano || (Math.max.apply(null, anos.concat([0])) + 1);
+    var ex = exercicioVazio(novoAno);
+
+    var modelo = dados.exercicios[dados.exercicios.length - 1];
+    if (modelo) {
+      ex.sociedade.designacao = modelo.sociedade.designacao;
+      ex.socios = JSON.parse(JSON.stringify(modelo.socios));
+    }
+    dados.exercicios.push(ex);
+    dados.exercicios.sort(function (a, b) { return a.sociedade.exercicio - b.sociedade.exercicio; });
+    dados.ativo = dados.exercicios.findIndex(function (e) { return e === ex; });
+    return ex;
+  }
+
+  function removerExercicio(dados, indice) {
+    if (dados.exercicios.length <= 1) return false;
+    dados.exercicios.splice(indice, 1);
+    dados.ativo = Math.min(dados.ativo, dados.exercicios.length - 1);
+    return true;
   }
 
   function guardar(dados) {
@@ -2017,10 +2276,15 @@ input:focus-visible, select:focus-visible {
 
   return {
     CHAVE: CHAVE,
+    VERSAO_DADOS: VERSAO_DADOS,
     novo: novo,
     exemplo: exemplo,
     socioVazio: socioVazio,
+    exercicioVazio: exercicioVazio,
     normalizar: normalizar,
+    ativo: ativo,
+    adicionarExercicio: adicionarExercicio,
+    removerExercicio: removerExercicio,
     guardar: guardar,
     ler: ler,
     apagar: apagar
@@ -2102,11 +2366,48 @@ input:focus-visible, select:focus-visible {
     return '<table><thead><tr>' + th + '</tr></thead><tbody>' + tr + '</tbody></table>';
   }
 
+  /** Quadro consolidado: só aparece quando a análise abrange vários anos. */
+  function consolidadoSeccao(c) {
+    if (!c || !c.exercicios || c.exercicios.length < 2) return '';
+    var t = c.totais;
+    var linhas = c.exercicios.map(function (x) {
+      return {
+        celulas: [
+          String(x.exercicio) + (x.caducado ? ' (caducado)' : ''),
+          (x.favoravel ? '−' : '') + F.euro(Math.abs(x.exposicaoLiquida)),
+          F.data(x.caducidade),
+          x.caducado ? '—' : x.diasAteCaducidade + ' dias',
+          x.confianca + '%'
+        ]
+      };
+    }).concat([{
+      celulas: ['Total dos exercícios dentro do prazo', F.euro(t.exposicaoLiquida), '', '', t.confiancaMinima + '%'],
+      total: true
+    }]);
+
+    return [
+      '<h2>1. Exposição consolidada</h2>',
+      '<div class="destaque-caixa">',
+      '<span class="numero-grande">' + esc(F.euro(t.exposicaoLiquida)) + '</span>',
+      '<strong>Exposição consolidada</strong> de ' + esc(t.abertos) + ' exercício(s) dentro do prazo de caducidade, ',
+      'num total de ' + esc(t.exercicios) + ' analisado(s).',
+      '</div>',
+      tabela(['Exercício', 'Exposição líquida', 'Caducidade', 'Prazo restante', 'Confiança'], linhas),
+      '<p>Ordem de tratamento pelo prazo e não pelo montante: <strong>' + esc(c.ordemUrgencia.join(' → ')) +
+      '</strong>. Um exercício cujo prazo termine deixa de ser recuperável e deixa de ser exigível, ' +
+      'pelo que a decisão sobre ele não se adia.</p>',
+      c.avisos.map(function (a) {
+        return a.nivel === 'erro' ? '<div class="aviso">' + esc(a.texto) + '</div>'
+          : '<p class="nota">' + esc(a.texto) + '</p>';
+      }).join('')
+    ].join('\n');
+  }
+
   function resumoExecutivo(d, r) {
     var i = r.indicadores;
     var nome = d.sociedade.designacao || 'a sociedade';
     return [
-      '<h2>1. Resumo executivo</h2>',
+      '<h2>2. Resumo executivo</h2>',
       '<div class="destaque-caixa">',
       '<span class="numero-grande">' + esc(F.euro(i.exposicaoLiquida)) + '</span>',
       '<strong>Exposição fiscal líquida estimada</strong> para o exercício de ' + esc(r.meta.exercicio) +
@@ -2149,7 +2450,7 @@ input:focus-visible, select:focus-visible {
 
   function fundamentacao(r) {
     return [
-      '<h2>2. Fundamentação jurídica</h2>',
+      '<h2>3. Fundamentação jurídica</h2>',
       '<p>A presente simulação parte do pressuposto, previamente verificado, de que a sociedade se enquadra ' +
       'no regime de transparência fiscal. Não é objeto deste relatório determinar se esse enquadramento existe, ' +
       'mas apenas quantificar as consequências financeiras da sua aplicação.</p>',
@@ -2235,10 +2536,10 @@ input:focus-visible, select:focus-visible {
     }).join('') + '</ul>';
 
     return [
-      '<h2 class="quebra">3. Simulação financeira</h2>',
-      '<h3>3.1 Comparador entre a situação atual e a situação corrigida</h3>', comparador,
-      '<h3>3.2 Impacto por sócio</h3>', socios,
-      '<h3>3.3 Juros compensatórios</h3>',
+      '<h2 class="quebra">4. Simulação financeira</h2>',
+      '<h3>4.1 Comparador entre a situação atual e a situação corrigida</h3>', comparador,
+      '<h3>4.2 Impacto por sócio</h3>', socios,
+      '<h3>4.3 Juros compensatórios</h3>',
       '<p>Regime aplicado: <strong>' + esc(r.juros.regimeRotulo) + '</strong>. ' + esc(r.juros.regra) + '</p>',
       '<p>Base de cálculo de ' + esc(F.euro(r.juros.base)) + ', à taxa anual de ' + esc(F.percentagem(r.juros.taxaAnual, 2)) +
       ', durante ' + esc(r.juros.dias) + ' dias' +
@@ -2246,13 +2547,13 @@ input:focus-visible, select:focus-visible {
       ' (' + esc(F.data(r.juros.dataInicio)) + ' a ' + esc(F.data(r.juros.dataFim)) +
       '), num total de <strong>' + esc(F.euro(r.juros.montante)) + '</strong>.</p>',
       (r.juros.notas || []).map(function (n) { return '<div class="aviso">' + esc(n) + '</div>'; }).join(''),
-      '<h3>3.4 Cenários de coima</h3>', coimas,
-      '<h3>3.5 Recuperação do IRC</h3>',
+      '<h3>4.4 Cenários de coima</h3>', coimas,
+      '<h3>4.5 Recuperação do IRC</h3>',
       '<p>Base potencialmente recuperável de ' + esc(F.euro(r.recuperacaoIRC.base)) + ', correspondente à coleta de IRC ' +
       'e derramas pagas. As tributações autónomas mantêm-se devidas e não integram esta base.</p>',
       '<div class="aviso">' + esc(r.recuperacaoIRC.aviso) + '</div>', irc,
-      '<h3>3.6 Matriz de exposição líquida</h3>', matriz,
-      '<h3>3.7 Cronologia fiscal</h3>', cronologia
+      '<h3>4.6 Matriz de exposição líquida</h3>', matriz,
+      '<h3>4.7 Cronologia fiscal</h3>', cronologia
     ].join('\n');
   }
 
@@ -2287,7 +2588,7 @@ input:focus-visible, select:focus-visible {
     linhas.push('Avaliar o impacto nos exercícios seguintes e corrigir o enquadramento declarativo para o futuro, ' +
       'de modo a interromper a acumulação de exposição.');
 
-    return '<h2>4. Recomendações</h2><ol class="plano">' +
+    return '<h2>5. Recomendações</h2><ol class="plano">' +
       linhas.map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ol>';
   }
 
@@ -2311,12 +2612,12 @@ input:focus-visible, select:focus-visible {
       ['Fase 6 — Correção prospetiva',
         'Adequação do enquadramento declarativo dos exercícios seguintes e, se aplicável, revisão da estrutura societária.']
     ];
-    return '<h2>5. Plano de regularização</h2>' + passos.map(function (p) {
+    return '<h2>6. Plano de regularização</h2>' + passos.map(function (p) {
       return '<h3>' + esc(p[0]) + '</h3><p>' + esc(p[1]) + '</p>';
     }).join('');
   }
 
-  function html(d, r, semBarra) {
+  function html(d, r, c, semBarra) {
     var titulo = 'Relatório de impacto — transparência fiscal — exercício de ' + r.meta.exercicio;
     return [
       '<!DOCTYPE html><html lang="pt-PT"><head><title>' + esc(titulo) + '</title>',
@@ -2328,10 +2629,15 @@ input:focus-visible, select:focus-visible {
       marca(),
       '<div class="capa">',
       '<h1>Impacto da reclassificação para o regime de transparência fiscal</h1>',
-      '<div class="sub">' + esc(d.sociedade.designacao || 'Sociedade não identificada') + ' · Exercício de ' + esc(r.meta.exercicio) + '</div>',
+      '<div class="sub">' + esc(d.sociedade.designacao || 'Sociedade não identificada') +
+      (c && c.exercicios.length > 1
+        ? ' · Exercícios de ' + esc(c.exercicios[0].exercicio) + ' a ' + esc(c.exercicios[c.exercicios.length - 1].exercicio) +
+          ' · detalhe do exercício de ' + esc(r.meta.exercicio)
+        : ' · Exercício de ' + esc(r.meta.exercicio)) + '</div>',
       '<div class="meta">Relatório gerado em ' + esc(F.data(r.meta.geradoEm)) +
       ' · Data de referência da simulação: ' + esc(F.data(r.meta.dataReferencia)) + '</div>',
       '</div>',
+      consolidadoSeccao(c),
       resumoExecutivo(d, r),
       fundamentacao(r),
       simulacaoFinanceira(d, r),
@@ -2351,7 +2657,7 @@ input:focus-visible, select:focus-visible {
    * Alternativa para contextos em que as janelas emergentes são bloqueadas
    * (telemóvel, páginas em moldura): o relatório abre sobreposto à aplicação.
    */
-  function sobrepor(d, r) {
+  function sobrepor(d, r, c) {
     var fundo = document.createElement('div');
     fundo.setAttribute('role', 'dialog');
     fundo.setAttribute('aria-label', 'Relatório');
@@ -2380,7 +2686,7 @@ input:focus-visible, select:focus-visible {
     var moldura = document.createElement('iframe');
     moldura.title = 'Relatório de impacto';
     moldura.style.cssText = 'flex:1;width:100%;border:0;background:#fff;';
-    moldura.srcdoc = html(d, r, true);
+    moldura.srcdoc = html(d, r, c, true);
 
     imprimir.addEventListener('click', function () {
       try {
@@ -2406,12 +2712,12 @@ input:focus-visible, select:focus-visible {
   raiz.Relatorio = {
     html: html,
     sobrepor: sobrepor,
-    abrir: function (d, r) {
+    abrir: function (d, r, c) {
       var janela = null;
       try { janela = window.open('', '_blank'); } catch (e) { janela = null; }
-      if (!janela) { sobrepor(d, r); return; }
+      if (!janela) { sobrepor(d, r, c); return; }
       janela.document.open();
-      janela.document.write(html(d, r));
+      janela.document.write(html(d, r, c));
       janela.document.close();
     }
   };
@@ -2432,8 +2738,12 @@ input:focus-visible, select:focus-visible {
   var Estado = window.Estado;
 
   var dados = Estado.ler() || Estado.novo();
-  var resultado = null;
+  var resultado = null;      // simulação do exercício ativo
+  var consolidado = null;    // todos os exercícios
   var ecraAtual = 1;
+
+  /** O exercício que está a ser editado. */
+  function ex() { return Estado.ativo(dados); }
 
   /* ================================================================== *
    * Esquemas de formulário
@@ -2649,8 +2959,8 @@ input:focus-visible, select:focus-visible {
 
   /** Marca cada passo como completo quando tem o que precisa para calcular. */
   function atualizarProgresso() {
-    var mc = F.numeroBruto(dados.sociedade.materiaColetavel) > 0;
-    var soma = dados.socios.reduce(function (a, x) { return a + F.numeroBruto(x.participacao); }, 0);
+    var mc = dados.exercicios.every(function (e) { return F.numeroBruto(e.sociedade.materiaColetavel) > 0; });
+    var soma = ex().socios.reduce(function (a, x) { return a + F.numeroBruto(x.participacao); }, 0);
     var estados = { 1: mc, 2: Math.abs(soma - 100) < 0.01, 3: true, 4: mc };
     $$('.passo').forEach(function (b) {
       var n = Number(b.dataset.ecra);
@@ -2676,16 +2986,69 @@ input:focus-visible, select:focus-visible {
    * Ecrã 1
    * ================================================================== */
 
+  /**
+   * Barra de exercícios. Um enquadramento incorreto abrange vários anos e
+   * cada um tem prazo próprio, por isso a lista de exercícios acompanha o
+   * utilizador nos ecrãs onde ele introduz e lê dados.
+   */
+  function renderBarraExercicios() {
+    $$('.exercicios').forEach(function (barra) {
+      barra.innerHTML = '';
+      dados.exercicios.forEach(function (item, indice) {
+        var ano = F.numeroBruto(item.sociedade.exercicio);
+        var preenchido = F.numeroBruto(item.sociedade.materiaColetavel) > 0;
+        barra.appendChild(el('button', {
+          type: 'button',
+          class: 'exercicio' + (indice === dados.ativo ? ' exercicio--ativo' : '') +
+            (preenchido ? ' exercicio--preenchido' : ''),
+          'aria-current': indice === dados.ativo,
+          texto: String(ano),
+          onclick: function () {
+            dados.ativo = indice;
+            Estado.guardar(dados);
+            renderTudo();
+            if (ecraAtual === 4) simular();
+          }
+        }));
+      });
+
+      barra.appendChild(el('button', {
+        type: 'button', class: 'exercicio exercicio--novo', texto: '+ exercício',
+        title: 'Acrescenta o ano seguinte, copiando os sócios',
+        onclick: function () {
+          Estado.adicionarExercicio(dados);
+          Estado.guardar(dados);
+          renderTudo();
+          irPara(1);
+        }
+      }));
+
+      if (dados.exercicios.length > 1) {
+        barra.appendChild(el('button', {
+          type: 'button', class: 'exercicio exercicio--remover',
+          texto: 'remover ' + F.numeroBruto(ex().sociedade.exercicio),
+          onclick: function () {
+            if (!confirm('Remover o exercício de ' + F.numeroBruto(ex().sociedade.exercicio) + '?')) return;
+            Estado.removerExercicio(dados, dados.ativo);
+            Estado.guardar(dados);
+            renderTudo();
+          }
+        }));
+      }
+    });
+  }
+
   function renderSociedade() {
+    renderBarraExercicios();
     renderFormulario('#form-sociedade', CAMPOS_SOCIEDADE,
-      function (c) { return dados.sociedade[c.chave]; },
-      function (c, v) { dados.sociedade[c.chave] = v; },
-      dados.sociedade, 'Reconciliação e valores já pagos');
+      function (c) { return ex().sociedade[c.chave]; },
+      function (c, v) { ex().sociedade[c.chave] = v; },
+      ex().sociedade, 'Reconciliação e valores já pagos');
     verificarCoerencia();
   }
 
   function verificarCoerencia() {
-    var s = dados.sociedade;
+    var s = ex().sociedade;
     var lista = $('#coerencia-sociedade');
     if (!lista) return;
     var notas = [];
@@ -2721,14 +3084,17 @@ input:focus-visible, select:focus-visible {
    * ================================================================== */
 
   function renderSocios() {
+    renderBarraExercicios();
     var alvo = $('#lista-socios');
     alvo.innerHTML = '';
 
     // Consequência de cada sócio, para o cartão não ser só um formulário.
     var previa = null;
-    try { previa = Motor.simular(dados).socios; } catch (e) { previa = null; }
+    try {
+      previa = Motor.simular({ sociedade: ex().sociedade, socios: ex().socios, parametros: dados.parametros }).socios;
+    } catch (e) { previa = null; }
 
-    dados.socios.forEach(function (socio, indice) {
+    ex().socios.forEach(function (socio, indice) {
       var cartao = el('div', { class: 'cartao socio' });
       var p = previa && previa[indice];
       var cabeca = el('div', { class: 'socio__cabeca' }, [
@@ -2744,8 +3110,8 @@ input:focus-visible, select:focus-visible {
         el('button', {
           type: 'button', class: 'btn btn--fantasma btn--pequeno btn--perigo', texto: 'Remover',
           onclick: function () {
-            dados.socios.splice(indice, 1);
-            if (!dados.socios.length) dados.socios.push(Estado.socioVazio(1));
+            ex().socios.splice(indice, 1);
+            if (!ex().socios.length) ex().socios.push(Estado.socioVazio(1));
             Estado.guardar(dados); renderSocios();
           }
         })
@@ -2767,7 +3133,7 @@ input:focus-visible, select:focus-visible {
   }
 
   function atualizarSomaParticipacoes() {
-    var soma = dados.socios.reduce(function (a, s) { return a + F.numeroBruto(s.participacao); }, 0);
+    var soma = ex().socios.reduce(function (a, s) { return a + F.numeroBruto(s.participacao); }, 0);
     var no = $('#soma-participacoes');
     if (!no) return;
     var ok = Math.abs(soma - 100) < 0.01;
@@ -2792,7 +3158,7 @@ input:focus-visible, select:focus-visible {
   }
 
   function tabelaEscaloesAtual() {
-    var ano = F.numeroBruto(dados.sociedade.exercicio);
+    var ano = F.numeroBruto(ex().sociedade.exercicio);
     var p = Motor.mesclarParametros(dados.parametros);
     return { ano: ano, tabela: Parametros.tabelaDoExercicio(p, ano) };
   }
@@ -2862,7 +3228,8 @@ input:focus-visible, select:focus-visible {
    * ================================================================== */
 
   function simular() {
-    var vazio = F.numeroBruto(dados.sociedade.materiaColetavel) <= 0;
+    renderBarraExercicios();
+    var vazio = F.numeroBruto(ex().sociedade.materiaColetavel) <= 0;
     $('#ecra-4').classList.toggle('resultado--vazio', vazio);
     $('#vazio').hidden = !vazio;
     if (vazio) {
@@ -2876,13 +3243,16 @@ input:focus-visible, select:focus-visible {
       return;
     }
     try {
-      resultado = Motor.simular(dados);
+      resultado = Motor.simular({ sociedade: ex().sociedade, socios: ex().socios, parametros: dados.parametros });
+      consolidado = Motor.consolidar(dados);
     } catch (erro) {
       $('#avisos').innerHTML = '';
       $('#avisos').appendChild(el('div', { class: 'aviso-caixa aviso-caixa--erro', texto: 'Não foi possível simular: ' + erro.message }));
       return;
     }
     window.__resultado = resultado;
+    window.__consolidado = consolidado;
+    renderConsolidado();
     renderHeroi();
     renderAvisos();
     renderConfianca();
@@ -2904,6 +3274,84 @@ input:focus-visible, select:focus-visible {
       .forEach(function (a) {
         alvo.appendChild(el('div', { class: 'aviso-caixa aviso-caixa--erro', texto: a.texto }));
       });
+  }
+
+  /**
+   * Consolidado. Quando há mais do que um exercício, a primeira coisa a ler
+   * é o total e a ordem por que os anos têm de ser tratados — não o detalhe
+   * de um deles.
+   */
+  function renderConsolidado() {
+    var alvo = $('#consolidado');
+    alvo.innerHTML = '';
+    var visivel = consolidado && consolidado.exercicios.length > 1;
+    alvo.hidden = !visivel;
+    if (!visivel) return;
+
+    var t = consolidado.totais;
+
+    alvo.appendChild(el('div', { class: 'consolidado__topo' }, [
+      el('div', {}, [
+        el('div', { class: 'consolidado__rotulo',
+          texto: 'Exposição consolidada · ' + t.abertos + ' de ' + t.exercicios + ' exercícios dentro do prazo' }),
+        el('div', { class: 'consolidado__valor', texto: F.euro(t.exposicaoLiquida) })
+      ]),
+      el('div', { class: 'consolidado__resumo' }, [
+        el('div', { texto: 'IRS adicional ' + F.euro(t.irsAdicional) }),
+        el('div', { texto: 'Juros ' + F.euro(t.juros) }),
+        el('div', { texto: 'Coimas ' + F.euro(t.coimas) }),
+        el('div', { texto: 'IRC recuperável −' + F.euro(t.ircRecuperavel) })
+      ])
+    ]));
+
+    consolidado.avisos.forEach(function (a) {
+      alvo.appendChild(el('div', { class: 'aviso-caixa aviso-caixa--' + a.nivel, texto: a.texto }));
+    });
+
+    var tabela = el('table', { class: 'tabela tabela--exercicios' }, [
+      el('thead', {}, [el('tr', {}, [
+        el('th', { texto: 'Exercício' }),
+        el('th', { texto: 'Exposição líquida' }),
+        el('th', { texto: 'Caducidade' }),
+        el('th', { texto: 'Prazo' }),
+        el('th', { texto: 'Confiança' })
+      ])])
+    ]);
+    var corpo = el('tbody');
+
+    consolidado.exercicios.forEach(function (item) {
+      var indice = dados.exercicios.findIndex(function (e) {
+        return F.numeroBruto(e.sociedade.exercicio) === item.exercicio;
+      });
+      var urgente = !item.caducado && item.diasAteCaducidade !== null && item.diasAteCaducidade <= 183;
+      var linha = el('tr', {
+        class: (indice === dados.ativo ? 'destaque ' : '') + (item.caducado ? 'caducado' : ''),
+        tabindex: '0',
+        title: 'Abrir o exercício de ' + item.exercicio,
+        onclick: function () { dados.ativo = indice; Estado.guardar(dados); renderTudo(); simular(); },
+        onkeydown: function (ev) { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); ev.target.click(); } }
+      }, [
+        el('td', { texto: String(item.exercicio) + (item.erros ? ' ⚠' : '') }),
+        el('td', { class: item.favoravel ? 'desceu' : 'subiu',
+          texto: (item.favoravel ? '−' : '') + F.euro(Math.abs(item.exposicaoLiquida)) }),
+        el('td', { texto: F.data(item.caducidade) }),
+        el('td', { class: urgente ? 'subiu' : '',
+          texto: item.caducado ? 'caducado'
+            : (item.diasAteCaducidade !== null ? item.diasAteCaducidade + ' dias' : '—') }),
+        el('td', { texto: item.confianca + '%' })
+      ]);
+      corpo.appendChild(linha);
+    });
+
+    tabela.appendChild(corpo);
+    alvo.appendChild(el('div', { class: 'tabela-scroll' }, [tabela]));
+
+    if (consolidado.ordemUrgencia.length > 1) {
+      alvo.appendChild(el('p', { class: 'ajuda',
+        texto: 'Ordem de tratamento pelo prazo, não pelo montante: ' +
+          consolidado.ordemUrgencia.join(' → ') +
+          '. Um exercício que caduca perde-se, independentemente do valor que representa.' }));
+    }
   }
 
   /**
@@ -3216,9 +3664,13 @@ input:focus-visible, select:focus-visible {
   }
 
   function nomeFicheiro(extensao) {
-    var base = (dados.sociedade.designacao || 'simulacao').toLowerCase()
+    var base = (ex().sociedade.designacao || 'simulacao').toLowerCase()
       .normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-    return 'transparencia-fiscal-' + base + '-' + dados.sociedade.exercicio + '.' + extensao;
+    var anos = dados.exercicios.map(function (e) { return F.numeroBruto(e.sociedade.exercicio); });
+    var intervalo = anos.length > 1
+      ? Math.min.apply(null, anos) + '-' + Math.max.apply(null, anos)
+      : anos[0];
+    return 'transparencia-fiscal-' + base + '-' + intervalo + '.' + extensao;
   }
 
   var ACOES = {
@@ -3229,7 +3681,8 @@ input:focus-visible, select:focus-visible {
       irPara(1);
     },
     limpar: function () {
-      if (!confirm('Limpar todos os dados introduzidos?')) return;
+      if (!confirm('Apagar deste dispositivo todos os dados introduzidos, incluindo nomes e ' +
+        'rendimentos dos sócios? Esta ação não é reversível. Guarde primeiro em JSON se quiser conservar a simulação.')) return;
       Estado.apagar();
       dados = Estado.novo();
       renderTudo();
@@ -3237,10 +3690,12 @@ input:focus-visible, select:focus-visible {
     },
     guardar: function () { descarregar(nomeFicheiro('json'), JSON.stringify(dados, null, 2), 'application/json'); },
     'exportar-json': function () {
-      descarregar(nomeFicheiro('resultado.json'), JSON.stringify({ dados: dados, resultado: resultado }, null, 2), 'application/json');
+      descarregar(nomeFicheiro('resultado.json'),
+        JSON.stringify({ dados: dados, resultado: resultado, consolidado: consolidado }, null, 2),
+        'application/json');
     },
     'adicionar-socio': function () {
-      dados.socios.push(Estado.socioVazio(dados.socios.length + 1));
+      ex().socios.push(Estado.socioVazio(ex().socios.length + 1));
       Estado.guardar(dados);
       renderSocios();
     },
@@ -3252,18 +3707,20 @@ input:focus-visible, select:focus-visible {
       renderEscaloes();
     },
     'repor-escaloes': function () {
-      var ano = F.numeroBruto(dados.sociedade.exercicio);
+      var ano = F.numeroBruto(ex().sociedade.exercicio);
       if (dados.parametros.escaloesIRS) delete dados.parametros.escaloesIRS[ano];
       Estado.guardar(dados);
       renderEscaloes();
     },
     relatorio: function () {
       if (!resultado) simular();
-      window.Relatorio.abrir(dados, resultado);
+      window.Relatorio.abrir({ sociedade: ex().sociedade, socios: ex().socios, parametros: dados.parametros },
+        resultado, consolidado);
     }
   };
 
   function renderTudo() {
+    renderBarraExercicios();
     renderSociedade();
     renderSocios();
     renderParametros();

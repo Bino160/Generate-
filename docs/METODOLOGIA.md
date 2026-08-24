@@ -161,7 +161,23 @@ Cada evento da cronologia declara a **regra aplicável**, e os que resultam de e
 
 ---
 
-## 9. Confiança da simulação
+## 9. Consolidação de vários exercícios
+
+`Motor.consolidar(dados)` corre a simulação para cada exercício e agrega:
+
+```
+Total consolidado = Σ exposição líquida dos exercícios DENTRO do prazo de caducidade
+```
+
+- Exercícios já caducados à data de referência são assinalados e **excluídos do total** (o valor com todos fica disponível em `totais.exposicaoTodos`).
+- A **ordem de tratamento** é dada pelo prazo, não pelo montante: um exercício que caduca perde-se independentemente do valor que representa.
+- Um prazo a terminar dentro de **183 dias** gera erro.
+- Quando há anos favoráveis e desfavoráveis, a aplicação avisa que **regularizar só os favoráveis não é uma opção autónoma**: expor o enquadramento traz consigo os exercícios desfavoráveis ainda abertos.
+- A confiança consolidada é a **mínima** dos exercícios, não a média: a simulação vale o que vale o seu ano mais fraco.
+
+Os exercícios são independentes entre si. Não é modelada a transmissão de prejuízos nem qualquer interação entre anos.
+
+## 10. Confiança da simulação
 
 Cada simulação produz um índice de confiança a partir do estado dos inputs, apresentado no ecrã de resultado e no relatório. Sete verificações, ponderadas (`ok` = 1, `aviso` = 0,5, `em falta` = 0):
 
@@ -175,11 +191,11 @@ Cada simulação produz um índice de confiança a partir do estado dos inputs, 
 
 O índice nunca chega a 100%: o cenário de recuperação é, por natureza, uma hipótese. É deliberado — a ferramenta não deve poder apresentar-se como certa.
 
-## 10. Versão das regras fiscais
+## 11. Versão das regras fiscais
 
 O conjunto de parâmetros tem versão e data (`Parametros.VERSAO`), apresentadas no rodapé da aplicação e no relatório. Um relatório emitido hoje tem de poder ser lido daqui a dois anos com a indicação de que regras usou.
 
-## 11. Validações automáticas
+## 12. Validações automáticas
 
 - Soma das participações diferente de 100% → **erro** (imputação sub ou sobreavaliada).
 - `resultado contabilístico + correções ≠ matéria coletável` → **aviso** com a diferença quantificada (justificável por prejuízos fiscais reportados ou benefícios).
@@ -190,9 +206,9 @@ O conjunto de parâmetros tem versão e data (`Parametros.VERSAO`), apresentadas
 
 ---
 
-## 12. Testes
+## 13. Testes
 
-`tests/motor.test.js` (30 testes) cobre a coleta progressiva contra valores calculados à mão, a taxa de solidariedade por faixas, o quociente conjugal, o piso zero do imposto, a imputação integral da matéria coletável, **os quatro regimes de juros e os respetivos limites**, a ordenação dos cenários de coima e a **ausência da palavra «provável»**, a não multiplicação automática da coima declarativa, a base de recuperação do IRC e os seus rótulos, a matriz de sensibilidade, a **não compensação** dos lucros distribuídos, o efeito das deduções à coleta reais, o **índice de confiança**, a **regra aplicável em cada evento da cronologia**, a ancoragem dos prazos na data de liquidação, a versão das regras, a sobreposição de parâmetros do utilizador, a substituição de tabelas em falta e as validações.
+`tests/motor.test.js` (40 testes) cobre a coleta progressiva contra valores calculados à mão, a taxa de solidariedade por faixas, o quociente conjugal, o piso zero do imposto, a imputação integral da matéria coletável, **os quatro regimes de juros e os respetivos limites**, a ordenação dos cenários de coima e a **ausência da palavra «provável»**, a não multiplicação automática da coima declarativa, a base de recuperação do IRC e os seus rótulos, a matriz de sensibilidade, a **não compensação** dos lucros distribuídos, o efeito das deduções à coleta reais, o **índice de confiança**, a **regra aplicável em cada evento da cronologia**, a ancoragem dos prazos na data de liquidação, a versão das regras, a sobreposição de parâmetros do utilizador, a substituição de tabelas em falta e as validações.
 
 ```bash
 npm test

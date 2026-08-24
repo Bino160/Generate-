@@ -71,11 +71,48 @@
     return '<table><thead><tr>' + th + '</tr></thead><tbody>' + tr + '</tbody></table>';
   }
 
+  /** Quadro consolidado: só aparece quando a análise abrange vários anos. */
+  function consolidadoSeccao(c) {
+    if (!c || !c.exercicios || c.exercicios.length < 2) return '';
+    var t = c.totais;
+    var linhas = c.exercicios.map(function (x) {
+      return {
+        celulas: [
+          String(x.exercicio) + (x.caducado ? ' (caducado)' : ''),
+          (x.favoravel ? '−' : '') + F.euro(Math.abs(x.exposicaoLiquida)),
+          F.data(x.caducidade),
+          x.caducado ? '—' : x.diasAteCaducidade + ' dias',
+          x.confianca + '%'
+        ]
+      };
+    }).concat([{
+      celulas: ['Total dos exercícios dentro do prazo', F.euro(t.exposicaoLiquida), '', '', t.confiancaMinima + '%'],
+      total: true
+    }]);
+
+    return [
+      '<h2>1. Exposição consolidada</h2>',
+      '<div class="destaque-caixa">',
+      '<span class="numero-grande">' + esc(F.euro(t.exposicaoLiquida)) + '</span>',
+      '<strong>Exposição consolidada</strong> de ' + esc(t.abertos) + ' exercício(s) dentro do prazo de caducidade, ',
+      'num total de ' + esc(t.exercicios) + ' analisado(s).',
+      '</div>',
+      tabela(['Exercício', 'Exposição líquida', 'Caducidade', 'Prazo restante', 'Confiança'], linhas),
+      '<p>Ordem de tratamento pelo prazo e não pelo montante: <strong>' + esc(c.ordemUrgencia.join(' → ')) +
+      '</strong>. Um exercício cujo prazo termine deixa de ser recuperável e deixa de ser exigível, ' +
+      'pelo que a decisão sobre ele não se adia.</p>',
+      c.avisos.map(function (a) {
+        return a.nivel === 'erro' ? '<div class="aviso">' + esc(a.texto) + '</div>'
+          : '<p class="nota">' + esc(a.texto) + '</p>';
+      }).join('')
+    ].join('\n');
+  }
+
   function resumoExecutivo(d, r) {
     var i = r.indicadores;
     var nome = d.sociedade.designacao || 'a sociedade';
     return [
-      '<h2>1. Resumo executivo</h2>',
+      '<h2>2. Resumo executivo</h2>',
       '<div class="destaque-caixa">',
       '<span class="numero-grande">' + esc(F.euro(i.exposicaoLiquida)) + '</span>',
       '<strong>Exposição fiscal líquida estimada</strong> para o exercício de ' + esc(r.meta.exercicio) +
@@ -118,7 +155,7 @@
 
   function fundamentacao(r) {
     return [
-      '<h2>2. Fundamentação jurídica</h2>',
+      '<h2>3. Fundamentação jurídica</h2>',
       '<p>A presente simulação parte do pressuposto, previamente verificado, de que a sociedade se enquadra ' +
       'no regime de transparência fiscal. Não é objeto deste relatório determinar se esse enquadramento existe, ' +
       'mas apenas quantificar as consequências financeiras da sua aplicação.</p>',
@@ -204,10 +241,10 @@
     }).join('') + '</ul>';
 
     return [
-      '<h2 class="quebra">3. Simulação financeira</h2>',
-      '<h3>3.1 Comparador entre a situação atual e a situação corrigida</h3>', comparador,
-      '<h3>3.2 Impacto por sócio</h3>', socios,
-      '<h3>3.3 Juros compensatórios</h3>',
+      '<h2 class="quebra">4. Simulação financeira</h2>',
+      '<h3>4.1 Comparador entre a situação atual e a situação corrigida</h3>', comparador,
+      '<h3>4.2 Impacto por sócio</h3>', socios,
+      '<h3>4.3 Juros compensatórios</h3>',
       '<p>Regime aplicado: <strong>' + esc(r.juros.regimeRotulo) + '</strong>. ' + esc(r.juros.regra) + '</p>',
       '<p>Base de cálculo de ' + esc(F.euro(r.juros.base)) + ', à taxa anual de ' + esc(F.percentagem(r.juros.taxaAnual, 2)) +
       ', durante ' + esc(r.juros.dias) + ' dias' +
@@ -215,13 +252,13 @@
       ' (' + esc(F.data(r.juros.dataInicio)) + ' a ' + esc(F.data(r.juros.dataFim)) +
       '), num total de <strong>' + esc(F.euro(r.juros.montante)) + '</strong>.</p>',
       (r.juros.notas || []).map(function (n) { return '<div class="aviso">' + esc(n) + '</div>'; }).join(''),
-      '<h3>3.4 Cenários de coima</h3>', coimas,
-      '<h3>3.5 Recuperação do IRC</h3>',
+      '<h3>4.4 Cenários de coima</h3>', coimas,
+      '<h3>4.5 Recuperação do IRC</h3>',
       '<p>Base potencialmente recuperável de ' + esc(F.euro(r.recuperacaoIRC.base)) + ', correspondente à coleta de IRC ' +
       'e derramas pagas. As tributações autónomas mantêm-se devidas e não integram esta base.</p>',
       '<div class="aviso">' + esc(r.recuperacaoIRC.aviso) + '</div>', irc,
-      '<h3>3.6 Matriz de exposição líquida</h3>', matriz,
-      '<h3>3.7 Cronologia fiscal</h3>', cronologia
+      '<h3>4.6 Matriz de exposição líquida</h3>', matriz,
+      '<h3>4.7 Cronologia fiscal</h3>', cronologia
     ].join('\n');
   }
 
@@ -256,7 +293,7 @@
     linhas.push('Avaliar o impacto nos exercícios seguintes e corrigir o enquadramento declarativo para o futuro, ' +
       'de modo a interromper a acumulação de exposição.');
 
-    return '<h2>4. Recomendações</h2><ol class="plano">' +
+    return '<h2>5. Recomendações</h2><ol class="plano">' +
       linhas.map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ol>';
   }
 
@@ -280,12 +317,12 @@
       ['Fase 6 — Correção prospetiva',
         'Adequação do enquadramento declarativo dos exercícios seguintes e, se aplicável, revisão da estrutura societária.']
     ];
-    return '<h2>5. Plano de regularização</h2>' + passos.map(function (p) {
+    return '<h2>6. Plano de regularização</h2>' + passos.map(function (p) {
       return '<h3>' + esc(p[0]) + '</h3><p>' + esc(p[1]) + '</p>';
     }).join('');
   }
 
-  function html(d, r, semBarra) {
+  function html(d, r, c, semBarra) {
     var titulo = 'Relatório de impacto — transparência fiscal — exercício de ' + r.meta.exercicio;
     return [
       '<!DOCTYPE html><html lang="pt-PT"><head><meta charset="utf-8"><title>' + esc(titulo) + '</title>',
@@ -297,10 +334,15 @@
       marca(),
       '<div class="capa">',
       '<h1>Impacto da reclassificação para o regime de transparência fiscal</h1>',
-      '<div class="sub">' + esc(d.sociedade.designacao || 'Sociedade não identificada') + ' · Exercício de ' + esc(r.meta.exercicio) + '</div>',
+      '<div class="sub">' + esc(d.sociedade.designacao || 'Sociedade não identificada') +
+      (c && c.exercicios.length > 1
+        ? ' · Exercícios de ' + esc(c.exercicios[0].exercicio) + ' a ' + esc(c.exercicios[c.exercicios.length - 1].exercicio) +
+          ' · detalhe do exercício de ' + esc(r.meta.exercicio)
+        : ' · Exercício de ' + esc(r.meta.exercicio)) + '</div>',
       '<div class="meta">Relatório gerado em ' + esc(F.data(r.meta.geradoEm)) +
       ' · Data de referência da simulação: ' + esc(F.data(r.meta.dataReferencia)) + '</div>',
       '</div>',
+      consolidadoSeccao(c),
       resumoExecutivo(d, r),
       fundamentacao(r),
       simulacaoFinanceira(d, r),
@@ -320,7 +362,7 @@
    * Alternativa para contextos em que as janelas emergentes são bloqueadas
    * (telemóvel, páginas em moldura): o relatório abre sobreposto à aplicação.
    */
-  function sobrepor(d, r) {
+  function sobrepor(d, r, c) {
     var fundo = document.createElement('div');
     fundo.setAttribute('role', 'dialog');
     fundo.setAttribute('aria-label', 'Relatório');
@@ -349,7 +391,7 @@
     var moldura = document.createElement('iframe');
     moldura.title = 'Relatório de impacto';
     moldura.style.cssText = 'flex:1;width:100%;border:0;background:#fff;';
-    moldura.srcdoc = html(d, r, true);
+    moldura.srcdoc = html(d, r, c, true);
 
     imprimir.addEventListener('click', function () {
       try {
@@ -375,12 +417,12 @@
   raiz.Relatorio = {
     html: html,
     sobrepor: sobrepor,
-    abrir: function (d, r) {
+    abrir: function (d, r, c) {
       var janela = null;
       try { janela = window.open('', '_blank'); } catch (e) { janela = null; }
-      if (!janela) { sobrepor(d, r); return; }
+      if (!janela) { sobrepor(d, r, c); return; }
       janela.document.open();
-      janela.document.write(html(d, r));
+      janela.document.write(html(d, r, c));
       janela.document.close();
     }
   };

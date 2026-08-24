@@ -839,6 +839,119 @@
     };
   }
 
+  /* ================================================================== *
+   * 11. Consolidacao de varios exercicios
+   *
+   * Um enquadramento incorrecto instala-se ao longo de anos. Cada exercicio
+   * tem o seu proprio prazo de caducidade, o seu proprio periodo de juros e
+   * pode ter sinal diferente: ha anos em que regularizar custa e anos em que
+   * compensa. Consolidar nao e somar — e ordenar por urgencia e por sinal.
+   * ================================================================== */
+
+  function consolidar(dados) {
+    var exercicios = (dados.exercicios || []).map(function (ex) {
+      var resultado = simular({
+        sociedade: ex.sociedade,
+        socios: ex.socios,
+        parametros: dados.parametros
+      });
+      var caducidade = resultado.timeline.filter(function (e) {
+        return /caducidade/i.test(e.titulo);
+      })[0];
+      var revisao = resultado.timeline.filter(function (e) {
+        return /revis/i.test(e.titulo);
+      })[0];
+      var ref = data(dados.parametros && dados.parametros.dataReferencia);
+      var diasAteCaducidade = caducidade ? dias(ref, caducidade.data) : null;
+
+      return {
+        exercicio: resultado.meta.exercicio,
+        resultado: resultado,
+        exposicaoLiquida: resultado.indicadores.exposicaoLiquida,
+        irsAdicional: resultado.indicadores.irsAdicional,
+        juros: resultado.indicadores.juros,
+        coimas: resultado.indicadores.coimas,
+        ircRecuperavel: resultado.indicadores.ircRecuperavel,
+        favoravel: resultado.indicadores.exposicaoLiquida < 0,
+        confianca: resultado.qualidade.indice,
+        caducidade: caducidade ? caducidade.data : null,
+        diasAteCaducidade: diasAteCaducidade,
+        caducado: diasAteCaducidade !== null && diasAteCaducidade <= 0,
+        revisao: revisao ? revisao.data : null,
+        erros: resultado.avisos.filter(function (a) { return a.nivel === 'erro'; }).length
+      };
+    });
+
+    exercicios.sort(function (a, b) { return a.exercicio - b.exercicio; });
+
+    var soma = function (campo) {
+      return arred(exercicios.reduce(function (a, x) { return a + x[campo]; }, 0));
+    };
+    var abertos = exercicios.filter(function (x) { return !x.caducado; });
+
+    // Ordem de tratamento: primeiro o que caduca mais cedo. E o prazo, e nao o
+    // montante, que define a urgencia — um exercicio que caduca perde-se.
+    var urgencia = abertos.slice().sort(function (a, b) {
+      if (a.diasAteCaducidade === null) return 1;
+      if (b.diasAteCaducidade === null) return -1;
+      return a.diasAteCaducidade - b.diasAteCaducidade;
+    });
+
+    var avisos = [];
+    var aExpirar = abertos.filter(function (x) {
+      return x.diasAteCaducidade !== null && x.diasAteCaducidade <= 183;
+    });
+    if (aExpirar.length) {
+      avisos.push({
+        nivel: 'erro',
+        texto: 'Exercício(s) de ' + aExpirar.map(function (x) { return x.exercicio; }).join(', ') +
+          ' com prazo de caducidade a terminar dentro de seis meses. ' +
+          'A decisão sobre esse(s) ano(s) não pode ser adiada: passado o prazo, ' +
+          'nem a Autoridade Tributária pode liquidar nem faz sentido regularizar voluntariamente.'
+      });
+    }
+    var caducados = exercicios.filter(function (x) { return x.caducado; });
+    if (caducados.length) {
+      avisos.push({
+        nivel: 'info',
+        texto: 'Exercício(s) de ' + caducados.map(function (x) { return x.exercicio; }).join(', ') +
+          ' já fora do prazo de caducidade à data de referência. Ficam fora do total consolidado.'
+      });
+    }
+    var favoraveis = exercicios.filter(function (x) { return x.favoravel && !x.caducado; });
+    if (favoraveis.length && favoraveis.length < exercicios.length) {
+      avisos.push({
+        nivel: 'aviso',
+        texto: 'Em ' + favoraveis.map(function (x) { return x.exercicio; }).join(', ') +
+          ' a reclassificação é favorável ao contribuinte. Regularizar apenas os anos favoráveis ' +
+          'não é uma opção autónoma: expor o enquadramento traz consigo os exercícios desfavoráveis ainda abertos.'
+      });
+    }
+
+    var somaAbertos = function (campo) {
+      return arred(abertos.reduce(function (a, x) { return a + x[campo]; }, 0));
+    };
+
+    return {
+      exercicios: exercicios,
+      ordemUrgencia: urgencia.map(function (x) { return x.exercicio; }),
+      totais: {
+        exercicios: exercicios.length,
+        abertos: abertos.length,
+        irsAdicional: somaAbertos('irsAdicional'),
+        juros: somaAbertos('juros'),
+        coimas: somaAbertos('coimas'),
+        ircRecuperavel: somaAbertos('ircRecuperavel'),
+        exposicaoLiquida: somaAbertos('exposicaoLiquida'),
+        exposicaoTodos: soma('exposicaoLiquida'),
+        confiancaMinima: exercicios.length
+          ? Math.min.apply(null, exercicios.map(function (x) { return x.confianca; }))
+          : 0
+      },
+      avisos: avisos
+    };
+  }
+
   /** Funde parametros do utilizador sobre os valores por omissao. */
   function mesclarParametros(personalizados) {
     var base = Parametros.porOmissao();
@@ -858,6 +971,7 @@
 
   return {
     simular: simular,
+    consolidar: consolidar,
     avaliarQualidade: avaliarQualidade,
     liquidarIRS: liquidarIRS,
     coletaProgressiva: coletaProgressiva,

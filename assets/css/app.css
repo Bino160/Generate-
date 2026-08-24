@@ -501,3 +501,63 @@ input:focus-visible, select:focus-visible {
   .passos { padding: .5rem 1rem; }
   .heroi { padding: 1.2rem 1.1rem 1rem; }
 }
+
+/* ===================================================================== *
+ * Exercícios: um enquadramento incorreto abrange vários anos.
+ * ===================================================================== */
+.exercicios {
+  display: flex; flex-wrap: wrap; gap: .35rem; margin-bottom: 1rem;
+  padding-bottom: .7rem; border-bottom: 1px solid var(--linha);
+}
+.exercicio {
+  font: inherit; font-family: var(--titulo); font-size: .82rem; font-weight: 600;
+  padding: .4rem .8rem; min-height: 2.2rem; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--linha-forte); background: var(--superficie); color: var(--tinta-suave);
+}
+.exercicio:hover { border-color: var(--ouro); color: var(--tinta); }
+.exercicio--preenchido { border-color: var(--positivo); }
+.exercicio--ativo {
+  background: var(--marca); border-color: var(--marca); color: var(--superficie);
+}
+:root[data-theme="dark"] .exercicio--ativo,
+.exercicio--ativo { color: var(--fundo); }
+.exercicio--novo, .exercicio--remover {
+  font-weight: 500; border-style: dashed; color: var(--tinta-tenue); background: transparent;
+}
+.exercicio--remover { margin-left: auto; }
+.exercicio--remover:hover { border-color: var(--alerta); color: var(--alerta); }
+
+/* --------------------------- Consolidado ---------------------------- */
+.consolidado {
+  background: var(--superficie); border: 1px solid var(--linha);
+  border-top: 3px solid var(--marca); border-radius: var(--raio);
+  box-shadow: var(--sombra); padding: 1.3rem 1.4rem 1.1rem;
+  margin-bottom: .9rem; display: flex; flex-direction: column; gap: .9rem;
+}
+.consolidado[hidden] { display: none; }
+.consolidado__topo {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  gap: 1.2rem; flex-wrap: wrap;
+}
+.consolidado__rotulo {
+  font-family: var(--titulo); font-size: .72rem; font-weight: 600;
+  letter-spacing: .12em; text-transform: uppercase; color: var(--tinta-tenue);
+}
+.consolidado__valor {
+  font-family: var(--titulo); font-size: clamp(1.9rem, 6vw, 2.6rem); font-weight: 700;
+  line-height: 1.05; letter-spacing: -.02em; font-variant-numeric: tabular-nums;
+  color: var(--alerta); margin-top: .15rem;
+}
+.consolidado__resumo {
+  display: grid; gap: .15rem; font-size: .82rem; color: var(--tinta-suave);
+  font-variant-numeric: tabular-nums; text-align: right;
+}
+.tabela--exercicios tbody tr { cursor: pointer; }
+.tabela--exercicios tbody tr:hover td { background: var(--marca-clara); }
+.tabela--exercicios tbody tr:focus-visible { outline: 2px solid var(--ouro); outline-offset: -2px; }
+.tabela--exercicios td:first-child { font-family: var(--titulo); font-weight: 600; }
+.tabela--exercicios tr.caducado td { opacity: .55; text-decoration: line-through; }
+@media (max-width: 640px) {
+  .consolidado__resumo { text-align: left; }
+  .exercicio--remover { margin-left: 0; }
+}

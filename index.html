@@ -23,7 +23,7 @@
     <button type="button" class="btn btn--fantasma" data-acao="exemplo">Carregar exemplo</button>
     <button type="button" class="btn btn--fantasma" data-acao="guardar">Guardar JSON</button>
     <label class="btn btn--fantasma" for="ficheiro">Abrir JSON<input id="ficheiro" type="file" accept="application/json" hidden></label>
-    <button type="button" class="btn btn--fantasma" data-acao="limpar">Limpar</button>
+    <button type="button" class="btn btn--fantasma" data-acao="limpar">Apagar dados</button>
   </div>
 </header>
 
@@ -39,8 +39,9 @@
   <section class="ecra" id="ecra-1" hidden>
     <div class="ecra__cabeca">
       <h2>Ecrã 1 · Dados da sociedade</h2>
-      <p>Valores efetivamente declarados no exercício em análise. Retire-os da Modelo 22 e da demonstração de resultados.</p>
+      <p>Valores efetivamente declarados no exercício em análise. Retire-os da Modelo 22 e da demonstração de resultados. Acrescente um exercício por cada ano em risco — cada um tem o seu próprio prazo.</p>
     </div>
+    <nav class="exercicios" aria-label="Exercícios em análise"></nav>
     <div class="cartao">
       <div id="form-sociedade"></div>
     </div>
@@ -60,6 +61,7 @@
       <h2>Ecrã 2 · Dados dos sócios</h2>
       <p>A matéria coletável é imputada a cada sócio na proporção da participação e tributada em IRS como rendimento líquido da categoria B (artigo 20.º do CIRS).</p>
     </div>
+    <nav class="exercicios" aria-label="Exercícios em análise"></nav>
     <div id="lista-socios"></div>
     <div class="barra-socios">
       <button type="button" class="btn btn--secundario" data-acao="adicionar-socio">+ Adicionar sócio</button>
@@ -132,6 +134,10 @@
     </div>
 
     <div id="vazio" class="vazio" hidden></div>
+
+    <section class="consolidado" id="consolidado" aria-label="Exposição consolidada" hidden></section>
+
+    <nav class="exercicios" aria-label="Exercícios em análise"></nav>
 
     <section class="heroi" id="heroi" aria-label="Exposição fiscal líquida"></section>
 
@@ -206,7 +212,7 @@
 
 <footer class="rodape">
   <p><strong>Aviso.</strong> Ferramenta de apoio à decisão. Os valores apresentados são estimativas construídas sobre parâmetros configuráveis e não substituem a liquidação da Autoridade Tributária nem parecer jurídico-fiscal. Este simulador pressupõe que a elegibilidade para o artigo 6.º do CIRC já foi previamente determinada.</p>
-  <p class="rodape__meta">Cálculo local no navegador. Nenhum dado é enviado para servidores. <span id="versao-regras"></span></p>
+  <p class="rodape__meta"><strong>Dados guardados neste dispositivo.</strong> Para não perder o trabalho entre sessões, a simulação — incluindo nomes e rendimentos dos sócios — fica no armazenamento local deste navegador até ser apagada. Nada é enviado para servidores. Num computador partilhado, use <em>Apagar dados</em> no fim de cada cliente. <span id="versao-regras"></span></p>
   <p class="rodape__assinatura">VC Level · Strategic Leadership. Fractional Impact.</p>
 </footer>
 

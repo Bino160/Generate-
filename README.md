@@ -30,11 +30,17 @@ npm run dev              # http://localhost:8080
 npm test
 ```
 
-Os dados são guardados apenas no `localStorage` do navegador. **Nada é enviado para servidores.** Os botões `Guardar JSON` e `Abrir JSON` permitem arquivar e retomar simulações; `Carregar exemplo` preenche um caso realista para explorar a ferramenta.
+Os dados — incluindo nomes e rendimentos dos sócios — são guardados no `localStorage` do navegador até serem apagados, para não se perder o trabalho entre sessões. **Nada é enviado para servidores.** Num computador partilhado, use **Apagar dados** no fim de cada cliente. Os botões `Guardar JSON` e `Abrir JSON` permitem arquivar e retomar simulações; `Carregar exemplo` preenche um caso realista para explorar a ferramenta.
 
 ---
 
 ## Arquitetura funcional
+
+### Módulo 0 · Exercícios
+
+Um enquadramento incorreto instala-se ao longo de anos, e **cada exercício tem o seu próprio prazo de caducidade, o seu próprio período de juros e pode ter sinal próprio** — há anos em que regularizar custa e anos em que compensa. A simulação abrange por isso vários exercícios: acrescentar um ano copia os sócios do anterior, e o resultado abre com o consolidado.
+
+O total soma apenas os exercícios **dentro do prazo**; os já caducados aparecem assinalados e fora da conta. A ordem de tratamento é dada pelo prazo e não pelo montante, porque um exercício que caduca perde-se independentemente do valor que representa.
 
 ### Módulo 1 · Dados da sociedade
 
@@ -159,7 +165,7 @@ Três decisões deliberadas contra a ilusão de precisão:
 - Juros calculados sobre o IRS adicional agregado. Num produto profissional seriam calculados por sujeito passivo, com datas próprias.
 - O IRS suportado sobre lucros distribuídos é assinalado mas **não** compensado: exige tratamento jurídico próprio.
 - Prazos de caducidade sem modelação das causas de suspensão e interrupção do artigo 46.º da LGT.
-- Um exercício por simulação. Vários exercícios exigem uma simulação por ano (os ficheiros JSON permitem arquivá-las separadamente).
+- Prazos de caducidade sem modelação das causas de suspensão e interrupção; os exercícios são independentes entre si, sem modelação de prejuízos que transitem de um ano para o outro.
 
 ---
 
@@ -167,8 +173,8 @@ Três decisões deliberadas contra a ilusão de precisão:
 
 | Versão | Âmbito |
 |---|---|
-| **MVP** ✅ | Introdução manual dos dados, simulação e relatório. |
-| **v2** | Multi-exercício; cenário «custo de esperar» (+1/+2/+3 anos); juros por sujeito passivo; importação do ficheiro SAF-T. |
+| **MVP** ✅ | Introdução manual dos dados, multi-exercício, simulação e relatório. |
+| **v2** | Cenário «custo de esperar» (+1/+2/+3 anos); juros de mora; juros por sujeito passivo; importação do ficheiro SAF-T. |
 | **v3** | Integração com software de contabilidade. |
 | **v4** | Benchmark setorial. |
 
