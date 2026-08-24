@@ -1180,9 +1180,14 @@ input:focus-visible, select:focus-visible {
     var mc = num(s.materiaColetavel);
     var ta = num(s.tributacoesAutonomas);
 
+    // Só há imputação quando há matéria colectável. Um prejuízo fiscal nao e
+    // imputado aos socios: fica na sociedade, reportavel nos termos do artigo
+    // 52.º do CIRC. Imputar um valor negativo reduziria o IRS dos socios e
+    // faria a ferramenta anunciar um ganho que nao existe.
+    var baseImputavel = Math.max(0, mc);
     var socios = (dados.socios || []).map(function (socio) {
       var quota = num(socio.participacao) / 100;
-      var imputacao = mc * quota;
+      var imputacao = baseImputavel * quota;
       var componentes = rendimentoColetavelSocio(socio, p, imputacao);
       var liq = liquidarIRS(componentes.total, {
         parametros: p,
@@ -1647,8 +1652,15 @@ input:focus-visible, select:focus-visible {
       });
     }
 
-    if (num(s.materiaColetavel) <= 0) {
-      avisos.push({ nivel: 'aviso', texto: 'Matéria coletável nula ou negativa: não há imputação a tributar em IRS.' });
+    if (num(s.materiaColetavel) < 0) {
+      avisos.push({
+        nivel: 'erro',
+        texto: 'Matéria coletável negativa: o prejuízo fiscal não é imputado aos sócios, fica na sociedade e é ' +
+          'reportável nos termos do artigo 52.º do CIRC. A imputação foi fixada em zero, mas a simulação de um ' +
+          'exercício com prejuízo não é conclusiva — o tratamento dos prejuízos difere entre os dois regimes.'
+      });
+    } else if (num(s.materiaColetavel) === 0) {
+      avisos.push({ nivel: 'aviso', texto: 'Matéria coletável nula: não há imputação a tributar em IRS.' });
     }
 
     if (tabela && tabela.estado === 'provisorio') {

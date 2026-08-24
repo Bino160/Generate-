@@ -328,3 +328,17 @@ test('caducidade conta-se do termo do ano do facto tributario, nao do ano seguin
   const r2024 = Motor.simular(cenarioBase());
   assert.strictEqual(r2024.timeline.find((e) => /caducidade/i.test(e.titulo)).data, '2028-12-31');
 });
+
+test('prejuizo fiscal nao e imputado aos socios nem gera ganho fantasma', () => {
+  const dados = cenarioBase();
+  dados.sociedade.materiaColetavel = -50000;
+  dados.sociedade.resultadoContabilistico = -50000;
+  const r = Motor.simular(dados);
+
+  // Artigo 52.º do CIRC: o prejuizo fica na sociedade.
+  r.corrigido.socios.forEach((s) => eq(s.imputacao, 0));
+  eq(r.indicadores.irsAdicional, 0);
+  // Sem imputacao, o IRS dos socios e o mesmo nos dois cenarios.
+  eq(r.corrigido.irsTotal, r.atual.irsTotal);
+  assert.ok(r.avisos.some((a) => a.nivel === 'erro' && /prejuízo fiscal não é imputado/.test(a.texto)));
+});
