@@ -40,6 +40,8 @@ Os dados — incluindo nomes e rendimentos dos sócios — são guardados no `lo
 
 Um enquadramento incorreto instala-se ao longo de anos, e **cada exercício tem o seu próprio prazo de caducidade, o seu próprio período de juros e pode ter sinal próprio** — há anos em que regularizar custa e anos em que compensa. A simulação abrange por isso vários exercícios: acrescentar um ano copia os sócios do anterior, e o resultado abre com o consolidado.
 
+Uma simulação nova abre no **exercício mais antigo ainda dentro do prazo** — é o que decide e o que expira primeiro — e um botão cria de uma vez todos os anos em aberto, calculados a partir da data de referência (em agosto de 2026: 2022 a 2025).
+
 O total soma apenas os exercícios **dentro do prazo**; os já caducados aparecem assinalados e fora da conta. A ordem de tratamento é dada pelo prazo e não pelo montante, porque um exercício que caduca perde-se independentemente do valor que representa.
 
 ### Módulo 1 · Dados da sociedade

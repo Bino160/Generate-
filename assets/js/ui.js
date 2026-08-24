@@ -115,6 +115,45 @@
   function $(sel, raiz) { return (raiz || document).querySelector(sel); }
   function $$(sel, raiz) { return Array.prototype.slice.call((raiz || document).querySelectorAll(sel)); }
 
+  /**
+   * Confirmação em página. O confirm() do navegador é bloqueado quando a
+   * aplicação corre dentro de uma moldura restrita — a chamada rebenta e a
+   * ação não acontece, sem qualquer indicação ao utilizador.
+   */
+  function confirmar(mensagem, detalhe, rotuloAcao, aoConfirmar) {
+    var anterior = document.activeElement;
+    var fundo = el('div', { class: 'confirmar' });
+
+    var fechar = function () {
+      document.removeEventListener('keydown', aoTeclar);
+      if (fundo.parentNode) document.body.removeChild(fundo);
+      if (anterior && anterior.focus) anterior.focus();
+    };
+    var aoTeclar = function (ev) { if (ev.key === 'Escape') fechar(); };
+
+    var botaoConfirmar = el('button', {
+      type: 'button', class: 'btn btn--primario', texto: rotuloAcao,
+      onclick: function () { fechar(); aoConfirmar(); }
+    });
+
+    var caixa = el('div', {
+      class: 'confirmar__caixa', role: 'alertdialog', 'aria-modal': 'true', 'aria-label': mensagem
+    }, [
+      el('p', { class: 'confirmar__titulo', texto: mensagem }),
+      detalhe ? el('p', { class: 'confirmar__detalhe', texto: detalhe }) : null,
+      el('div', { class: 'confirmar__acoes' }, [
+        el('button', { type: 'button', class: 'btn btn--fantasma', texto: 'Cancelar', onclick: fechar }),
+        botaoConfirmar
+      ])
+    ]);
+
+    fundo.addEventListener('click', function (ev) { if (ev.target === fundo) fechar(); });
+    document.addEventListener('keydown', aoTeclar);
+    fundo.appendChild(caixa);
+    document.body.appendChild(fundo);
+    botaoConfirmar.focus();
+  }
+
   function el(tag, props, filhos) {
     var n = document.createElement(tag);
     Object.keys(props || {}).forEach(function (k) {
@@ -270,12 +309,15 @@
       dados.exercicios.forEach(function (item, indice) {
         var ano = F.numeroBruto(item.sociedade.exercicio);
         var preenchido = F.numeroBruto(item.sociedade.materiaColetavel) > 0;
-        barra.appendChild(el('button', {
-          type: 'button',
+
+        var grupo = el('div', {
           class: 'exercicio' + (indice === dados.ativo ? ' exercicio--ativo' : '') +
-            (preenchido ? ' exercicio--preenchido' : ''),
+            (preenchido ? ' exercicio--preenchido' : '')
+        });
+
+        grupo.appendChild(el('button', {
+          type: 'button', class: 'exercicio__ano', texto: String(ano),
           'aria-current': indice === dados.ativo,
-          texto: String(ano),
           onclick: function () {
             dados.ativo = indice;
             Estado.guardar(dados);
@@ -283,10 +325,33 @@
             if (ecraAtual === 4) simular();
           }
         }));
+
+        // Cada exercício remove-se a si próprio. Obrigar a selecioná-lo antes
+        // era o caminho mais curto para o utilizador concluir que não dá.
+        if (dados.exercicios.length > 1) {
+          grupo.appendChild(el('button', {
+            type: 'button', class: 'exercicio__remover', texto: '×',
+            'aria-label': 'Remover o exercício de ' + ano,
+            title: 'Remover o exercício de ' + ano,
+            onclick: function (ev) {
+              ev.stopPropagation();
+              confirmar('Remover o exercício de ' + ano + '?',
+                'Os dados da sociedade e dos sócios desse ano são apagados. Os restantes exercícios ficam intactos.',
+                'Remover ' + ano,
+                function () {
+                  Estado.removerExercicio(dados, indice);
+                  Estado.guardar(dados);
+                  renderTudo();
+                  if (ecraAtual === 4) simular();
+                });
+            }
+          }));
+        }
+        barra.appendChild(grupo);
       });
 
       barra.appendChild(el('button', {
-        type: 'button', class: 'exercicio exercicio--novo', texto: '+ exercício',
+        type: 'button', class: 'exercicio exercicio--novo exercicio__ano', texto: '+ exercício',
         title: 'Acrescenta o ano seguinte, copiando os sócios',
         onclick: function () {
           Estado.adicionarExercicio(dados);
@@ -296,18 +361,24 @@
         }
       }));
 
-      if (dados.exercicios.length > 1) {
+      var abertos = Estado.anosEmAberto(dados.parametros.dataReferencia);
+      var temTodos = abertos.every(function (ano) {
+        return dados.exercicios.some(function (e) { return F.numeroBruto(e.sociedade.exercicio) === ano; });
+      });
+      if (!temTodos) {
         barra.appendChild(el('button', {
-          type: 'button', class: 'exercicio exercicio--remover',
-          texto: 'remover ' + F.numeroBruto(ex().sociedade.exercicio),
+          type: 'button', class: 'exercicio exercicio--novo exercicio__ano',
+          texto: 'anos em aberto: ' + abertos[0] + '–' + abertos[abertos.length - 1],
+          title: 'Cria de uma vez os exercícios ainda dentro do prazo de caducidade',
           onclick: function () {
-            if (!confirm('Remover o exercício de ' + F.numeroBruto(ex().sociedade.exercicio) + '?')) return;
-            Estado.removerExercicio(dados, dados.ativo);
+            Estado.criarAnosEmAberto(dados, dados.parametros.dataReferencia);
             Estado.guardar(dados);
             renderTudo();
+            irPara(1);
           }
         }));
       }
+
     });
   }
 
@@ -509,9 +580,20 @@
       $('#vazio').innerHTML = '';
       $('#vazio').appendChild(el('p', { class: 'vazio__titulo', texto: 'Ainda não há nada para simular.' }));
       $('#vazio').appendChild(el('p', { texto: 'A matéria coletável é o valor que a lei manda imputar aos sócios. Sem ela não há exposição a calcular.' }));
+      var abertos = Estado.anosEmAberto(dados.parametros.dataReferencia);
       $('#vazio').appendChild(el('div', { class: 'vazio__acoes' }, [
         el('button', { type: 'button', class: 'btn btn--primario', texto: 'Introduzir os dados da sociedade', 'data-ir': '1' }),
-        el('button', { type: 'button', class: 'btn btn--secundario', texto: 'Ver um caso de exemplo', 'data-acao': 'exemplo' })
+        el('button', {
+          type: 'button', class: 'btn btn--secundario',
+          texto: 'Criar os anos em aberto (' + abertos[0] + '–' + abertos[abertos.length - 1] + ')',
+          onclick: function () {
+            Estado.criarAnosEmAberto(dados, dados.parametros.dataReferencia);
+            Estado.guardar(dados);
+            renderTudo();
+            irPara(1);
+          }
+        }),
+        el('button', { type: 'button', class: 'btn btn--fantasma', texto: 'Ver um caso de exemplo', 'data-acao': 'exemplo' })
       ]));
       return;
     }
@@ -954,12 +1036,16 @@
       irPara(1);
     },
     limpar: function () {
-      if (!confirm('Apagar deste dispositivo todos os dados introduzidos, incluindo nomes e ' +
-        'rendimentos dos sócios? Esta ação não é reversível. Guarde primeiro em JSON se quiser conservar a simulação.')) return;
-      Estado.apagar();
-      dados = Estado.novo();
-      renderTudo();
-      irPara(1);
+      confirmar('Apagar todos os dados deste dispositivo?',
+        'Inclui os nomes e rendimentos dos sócios de todos os exercícios. Não é reversível — ' +
+        'guarde primeiro em JSON se quiser conservar a simulação.',
+        'Apagar tudo',
+        function () {
+          Estado.apagar();
+          dados = Estado.novo();
+          renderTudo();
+          irPara(1);
+        });
     },
     guardar: function () { descarregar(nomeFicheiro('json'), JSON.stringify(dados, null, 2), 'application/json'); },
     'exportar-json': function () {

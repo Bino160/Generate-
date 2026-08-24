@@ -47,11 +47,26 @@
     };
   }
 
+  /**
+   * Exercícios ainda dentro do prazo de caducidade à data indicada.
+   * Artigo 45.º, n.os 1 e 4 da LGT: para o exercício Y o prazo termina em
+   * 31/12/(Y+4). Ficam de fora o ano em curso e o ano corrente, cujas
+   * declarações ainda não venceram ou acabaram de vencer.
+   */
+  function anosEmAberto(referencia) {
+    var ano = (referencia ? new Date(referencia) : new Date()).getFullYear();
+    var lista = [];
+    for (var y = ano - 4; y <= ano - 1; y++) lista.push(y);
+    return lista;
+  }
+
   function novo() {
-    var anoCorrente = new Date().getFullYear();
+    var abertos = anosEmAberto();
     return {
       versao: VERSAO_DADOS,
-      exercicios: [exercicioVazio(anoCorrente - 2)],
+      // Começa no exercício mais antigo ainda dentro do prazo: é o que decide
+      // e o que expira primeiro.
+      exercicios: [exercicioVazio(abertos[0])],
       ativo: 0,
       parametros: {
         dataReferencia: new Date().toISOString().slice(0, 10),
@@ -170,6 +185,24 @@
     return ex;
   }
 
+  /** Cria de uma vez todos os exercícios ainda dentro do prazo. */
+  function criarAnosEmAberto(dados, referencia) {
+    var existentes = dados.exercicios.map(function (e) { return Number(e.sociedade.exercicio); });
+    anosEmAberto(referencia).forEach(function (ano) {
+      if (existentes.indexOf(ano) === -1) adicionarExercicio(dados, ano);
+    });
+    // Remove um primeiro exercício ainda por preencher, se ficou órfão.
+    if (dados.exercicios.length > 1) {
+      dados.exercicios = dados.exercicios.filter(function (e, i) {
+        var vazio = !Number(e.sociedade.materiaColetavel) && !Number(e.sociedade.ircLiquidado);
+        var duplicadoDeAberto = anosEmAberto(referencia).indexOf(Number(e.sociedade.exercicio)) === -1;
+        return !(vazio && duplicadoDeAberto);
+      });
+    }
+    dados.ativo = 0;
+    return dados;
+  }
+
   function removerExercicio(dados, indice) {
     if (dados.exercicios.length <= 1) return false;
     dados.exercicios.splice(indice, 1);
@@ -200,6 +233,8 @@
     exemplo: exemplo,
     socioVazio: socioVazio,
     exercicioVazio: exercicioVazio,
+    anosEmAberto: anosEmAberto,
+    criarAnosEmAberto: criarAnosEmAberto,
     normalizar: normalizar,
     ativo: ativo,
     adicionarExercicio: adicionarExercicio,

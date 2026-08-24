@@ -428,3 +428,36 @@ test('acrescentar exercicio copia os socios do ano mais recente', () => {
   // Os valores da sociedade nao sao copiados: sao proprios de cada ano.
   eq(d.exercicios[1].sociedade.materiaColetavel, 0);
 });
+
+test('anos em aberto seguem o prazo de caducidade e nao um numero fixo', () => {
+  // Em agosto de 2026 estao em aberto 2022 a 2025: para o exercicio Y o prazo
+  // termina em 31/12/(Y+4), artigo 45.º, n.os 1 e 4 da LGT.
+  assert.deepStrictEqual(Estado.anosEmAberto('2026-08-20'), [2022, 2023, 2024, 2025]);
+  // Passada a viragem do ano, 2022 sai e entra 2026.
+  assert.deepStrictEqual(Estado.anosEmAberto('2027-01-05'), [2023, 2024, 2025, 2026]);
+});
+
+test('uma simulacao nova comeca no exercicio mais antigo ainda em prazo', () => {
+  const d = Estado.novo();
+  assert.strictEqual(d.exercicios.length, 1);
+  assert.strictEqual(d.exercicios[0].sociedade.exercicio, Estado.anosEmAberto()[0]);
+});
+
+test('criar os anos em aberto cria todos e nao duplica', () => {
+  const d = Estado.novo();
+  Estado.criarAnosEmAberto(d, '2026-08-20');
+  assert.deepStrictEqual(d.exercicios.map((e) => e.sociedade.exercicio), [2022, 2023, 2024, 2025]);
+  Estado.criarAnosEmAberto(d, '2026-08-20');
+  assert.strictEqual(d.exercicios.length, 4);
+});
+
+test('remover um exercicio remove o indicado, nao o que esta selecionado', () => {
+  const d = Estado.normalizar(multiplo([2022, 2023, 2024]));
+  d.ativo = 0;
+  Estado.removerExercicio(d, 2); // remove 2024, com 2022 selecionado
+  assert.deepStrictEqual(d.exercicios.map((e) => e.sociedade.exercicio), [2022, 2023]);
+  // O ultimo exercicio nao se remove: ficaria uma simulacao sem nada.
+  Estado.removerExercicio(d, 0);
+  assert.strictEqual(Estado.removerExercicio(d, 0), false);
+  assert.strictEqual(d.exercicios.length, 1);
+});

@@ -521,22 +521,46 @@ input:focus-visible, select:focus-visible {
   padding-bottom: .7rem; border-bottom: 1px solid var(--linha);
 }
 .exercicio {
+  display: inline-flex; align-items: stretch; overflow: hidden;
+  border-radius: 999px; border: 1px solid var(--linha-forte); background: var(--superficie);
+}
+.exercicio__ano {
   font: inherit; font-family: var(--titulo); font-size: .82rem; font-weight: 600;
-  padding: .4rem .8rem; min-height: 2.2rem; border-radius: 999px; cursor: pointer;
-  border: 1px solid var(--linha-forte); background: var(--superficie); color: var(--tinta-suave);
+  padding: .4rem .85rem; min-height: 2.2rem; cursor: pointer;
+  border: 0; background: transparent; color: var(--tinta-suave);
 }
-.exercicio:hover { border-color: var(--ouro); color: var(--tinta); }
+.exercicio:hover { border-color: var(--ouro); }
+.exercicio:hover .exercicio__ano { color: var(--tinta); }
 .exercicio--preenchido { border-color: var(--positivo); }
-.exercicio--ativo {
-  background: var(--marca); border-color: var(--marca); color: var(--superficie);
+.exercicio--ativo { background: var(--marca); border-color: var(--marca); }
+.exercicio--ativo .exercicio__ano { color: var(--fundo); }
+.exercicio__remover {
+  font: inherit; font-size: 1rem; line-height: 1; cursor: pointer;
+  padding: 0 .6rem 0 .1rem; border: 0; background: transparent;
+  color: var(--tinta-tenue); min-width: 1.9rem;
 }
-:root[data-theme="dark"] .exercicio--ativo,
-.exercicio--ativo { color: var(--fundo); }
-.exercicio--novo, .exercicio--remover {
-  font-weight: 500; border-style: dashed; color: var(--tinta-tenue); background: transparent;
+.exercicio--ativo .exercicio__remover { color: var(--fundo); opacity: .75; }
+.exercicio__remover:hover { color: var(--alerta); background: var(--alerta-claro); }
+.exercicio--ativo .exercicio__remover:hover { opacity: 1; }
+.exercicio--novo {
+  border-style: dashed; background: transparent;
 }
-.exercicio--remover { margin-left: auto; }
-.exercicio--remover:hover { border-color: var(--alerta); color: var(--alerta); }
+.exercicio--novo.exercicio__ano { color: var(--tinta-tenue); font-weight: 500; padding: .4rem .85rem; }
+.exercicio--novo:hover { border-color: var(--ouro); color: var(--tinta); }
+
+/* ------------------- Confirmação em página ------------------------- */
+.confirmar {
+  position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center;
+  padding: 1.2rem; background: rgba(12, 39, 31, .55);
+}
+.confirmar__caixa {
+  background: var(--superficie); border-radius: var(--raio); box-shadow: var(--sombra);
+  border: 1px solid var(--linha); padding: 1.3rem 1.4rem; max-width: 30rem;
+  display: flex; flex-direction: column; gap: .6rem;
+}
+.confirmar__titulo { font-family: var(--titulo); font-weight: 600; font-size: 1.05rem; margin: 0; }
+.confirmar__detalhe { font-size: .9rem; color: var(--tinta-suave); margin: 0; }
+.confirmar__acoes { display: flex; gap: .5rem; justify-content: flex-end; margin-top: .4rem; flex-wrap: wrap; }
 
 /* --------------------------- Consolidado ---------------------------- */
 .consolidado {
@@ -2135,11 +2159,26 @@ input:focus-visible, select:focus-visible {
     };
   }
 
+  /**
+   * Exercícios ainda dentro do prazo de caducidade à data indicada.
+   * Artigo 45.º, n.os 1 e 4 da LGT: para o exercício Y o prazo termina em
+   * 31/12/(Y+4). Ficam de fora o ano em curso e o ano corrente, cujas
+   * declarações ainda não venceram ou acabaram de vencer.
+   */
+  function anosEmAberto(referencia) {
+    var ano = (referencia ? new Date(referencia) : new Date()).getFullYear();
+    var lista = [];
+    for (var y = ano - 4; y <= ano - 1; y++) lista.push(y);
+    return lista;
+  }
+
   function novo() {
-    var anoCorrente = new Date().getFullYear();
+    var abertos = anosEmAberto();
     return {
       versao: VERSAO_DADOS,
-      exercicios: [exercicioVazio(anoCorrente - 2)],
+      // Começa no exercício mais antigo ainda dentro do prazo: é o que decide
+      // e o que expira primeiro.
+      exercicios: [exercicioVazio(abertos[0])],
       ativo: 0,
       parametros: {
         dataReferencia: new Date().toISOString().slice(0, 10),
@@ -2258,6 +2297,24 @@ input:focus-visible, select:focus-visible {
     return ex;
   }
 
+  /** Cria de uma vez todos os exercícios ainda dentro do prazo. */
+  function criarAnosEmAberto(dados, referencia) {
+    var existentes = dados.exercicios.map(function (e) { return Number(e.sociedade.exercicio); });
+    anosEmAberto(referencia).forEach(function (ano) {
+      if (existentes.indexOf(ano) === -1) adicionarExercicio(dados, ano);
+    });
+    // Remove um primeiro exercício ainda por preencher, se ficou órfão.
+    if (dados.exercicios.length > 1) {
+      dados.exercicios = dados.exercicios.filter(function (e, i) {
+        var vazio = !Number(e.sociedade.materiaColetavel) && !Number(e.sociedade.ircLiquidado);
+        var duplicadoDeAberto = anosEmAberto(referencia).indexOf(Number(e.sociedade.exercicio)) === -1;
+        return !(vazio && duplicadoDeAberto);
+      });
+    }
+    dados.ativo = 0;
+    return dados;
+  }
+
   function removerExercicio(dados, indice) {
     if (dados.exercicios.length <= 1) return false;
     dados.exercicios.splice(indice, 1);
@@ -2288,6 +2345,8 @@ input:focus-visible, select:focus-visible {
     exemplo: exemplo,
     socioVazio: socioVazio,
     exercicioVazio: exercicioVazio,
+    anosEmAberto: anosEmAberto,
+    criarAnosEmAberto: criarAnosEmAberto,
     normalizar: normalizar,
     ativo: ativo,
     adicionarExercicio: adicionarExercicio,
@@ -2849,6 +2908,45 @@ input:focus-visible, select:focus-visible {
   function $(sel, raiz) { return (raiz || document).querySelector(sel); }
   function $$(sel, raiz) { return Array.prototype.slice.call((raiz || document).querySelectorAll(sel)); }
 
+  /**
+   * Confirmação em página. O confirm() do navegador é bloqueado quando a
+   * aplicação corre dentro de uma moldura restrita — a chamada rebenta e a
+   * ação não acontece, sem qualquer indicação ao utilizador.
+   */
+  function confirmar(mensagem, detalhe, rotuloAcao, aoConfirmar) {
+    var anterior = document.activeElement;
+    var fundo = el('div', { class: 'confirmar' });
+
+    var fechar = function () {
+      document.removeEventListener('keydown', aoTeclar);
+      if (fundo.parentNode) document.body.removeChild(fundo);
+      if (anterior && anterior.focus) anterior.focus();
+    };
+    var aoTeclar = function (ev) { if (ev.key === 'Escape') fechar(); };
+
+    var botaoConfirmar = el('button', {
+      type: 'button', class: 'btn btn--primario', texto: rotuloAcao,
+      onclick: function () { fechar(); aoConfirmar(); }
+    });
+
+    var caixa = el('div', {
+      class: 'confirmar__caixa', role: 'alertdialog', 'aria-modal': 'true', 'aria-label': mensagem
+    }, [
+      el('p', { class: 'confirmar__titulo', texto: mensagem }),
+      detalhe ? el('p', { class: 'confirmar__detalhe', texto: detalhe }) : null,
+      el('div', { class: 'confirmar__acoes' }, [
+        el('button', { type: 'button', class: 'btn btn--fantasma', texto: 'Cancelar', onclick: fechar }),
+        botaoConfirmar
+      ])
+    ]);
+
+    fundo.addEventListener('click', function (ev) { if (ev.target === fundo) fechar(); });
+    document.addEventListener('keydown', aoTeclar);
+    fundo.appendChild(caixa);
+    document.body.appendChild(fundo);
+    botaoConfirmar.focus();
+  }
+
   function el(tag, props, filhos) {
     var n = document.createElement(tag);
     Object.keys(props || {}).forEach(function (k) {
@@ -3004,12 +3102,15 @@ input:focus-visible, select:focus-visible {
       dados.exercicios.forEach(function (item, indice) {
         var ano = F.numeroBruto(item.sociedade.exercicio);
         var preenchido = F.numeroBruto(item.sociedade.materiaColetavel) > 0;
-        barra.appendChild(el('button', {
-          type: 'button',
+
+        var grupo = el('div', {
           class: 'exercicio' + (indice === dados.ativo ? ' exercicio--ativo' : '') +
-            (preenchido ? ' exercicio--preenchido' : ''),
+            (preenchido ? ' exercicio--preenchido' : '')
+        });
+
+        grupo.appendChild(el('button', {
+          type: 'button', class: 'exercicio__ano', texto: String(ano),
           'aria-current': indice === dados.ativo,
-          texto: String(ano),
           onclick: function () {
             dados.ativo = indice;
             Estado.guardar(dados);
@@ -3017,10 +3118,33 @@ input:focus-visible, select:focus-visible {
             if (ecraAtual === 4) simular();
           }
         }));
+
+        // Cada exercício remove-se a si próprio. Obrigar a selecioná-lo antes
+        // era o caminho mais curto para o utilizador concluir que não dá.
+        if (dados.exercicios.length > 1) {
+          grupo.appendChild(el('button', {
+            type: 'button', class: 'exercicio__remover', texto: '×',
+            'aria-label': 'Remover o exercício de ' + ano,
+            title: 'Remover o exercício de ' + ano,
+            onclick: function (ev) {
+              ev.stopPropagation();
+              confirmar('Remover o exercício de ' + ano + '?',
+                'Os dados da sociedade e dos sócios desse ano são apagados. Os restantes exercícios ficam intactos.',
+                'Remover ' + ano,
+                function () {
+                  Estado.removerExercicio(dados, indice);
+                  Estado.guardar(dados);
+                  renderTudo();
+                  if (ecraAtual === 4) simular();
+                });
+            }
+          }));
+        }
+        barra.appendChild(grupo);
       });
 
       barra.appendChild(el('button', {
-        type: 'button', class: 'exercicio exercicio--novo', texto: '+ exercício',
+        type: 'button', class: 'exercicio exercicio--novo exercicio__ano', texto: '+ exercício',
         title: 'Acrescenta o ano seguinte, copiando os sócios',
         onclick: function () {
           Estado.adicionarExercicio(dados);
@@ -3030,18 +3154,24 @@ input:focus-visible, select:focus-visible {
         }
       }));
 
-      if (dados.exercicios.length > 1) {
+      var abertos = Estado.anosEmAberto(dados.parametros.dataReferencia);
+      var temTodos = abertos.every(function (ano) {
+        return dados.exercicios.some(function (e) { return F.numeroBruto(e.sociedade.exercicio) === ano; });
+      });
+      if (!temTodos) {
         barra.appendChild(el('button', {
-          type: 'button', class: 'exercicio exercicio--remover',
-          texto: 'remover ' + F.numeroBruto(ex().sociedade.exercicio),
+          type: 'button', class: 'exercicio exercicio--novo exercicio__ano',
+          texto: 'anos em aberto: ' + abertos[0] + '–' + abertos[abertos.length - 1],
+          title: 'Cria de uma vez os exercícios ainda dentro do prazo de caducidade',
           onclick: function () {
-            if (!confirm('Remover o exercício de ' + F.numeroBruto(ex().sociedade.exercicio) + '?')) return;
-            Estado.removerExercicio(dados, dados.ativo);
+            Estado.criarAnosEmAberto(dados, dados.parametros.dataReferencia);
             Estado.guardar(dados);
             renderTudo();
+            irPara(1);
           }
         }));
       }
+
     });
   }
 
@@ -3243,9 +3373,20 @@ input:focus-visible, select:focus-visible {
       $('#vazio').innerHTML = '';
       $('#vazio').appendChild(el('p', { class: 'vazio__titulo', texto: 'Ainda não há nada para simular.' }));
       $('#vazio').appendChild(el('p', { texto: 'A matéria coletável é o valor que a lei manda imputar aos sócios. Sem ela não há exposição a calcular.' }));
+      var abertos = Estado.anosEmAberto(dados.parametros.dataReferencia);
       $('#vazio').appendChild(el('div', { class: 'vazio__acoes' }, [
         el('button', { type: 'button', class: 'btn btn--primario', texto: 'Introduzir os dados da sociedade', 'data-ir': '1' }),
-        el('button', { type: 'button', class: 'btn btn--secundario', texto: 'Ver um caso de exemplo', 'data-acao': 'exemplo' })
+        el('button', {
+          type: 'button', class: 'btn btn--secundario',
+          texto: 'Criar os anos em aberto (' + abertos[0] + '–' + abertos[abertos.length - 1] + ')',
+          onclick: function () {
+            Estado.criarAnosEmAberto(dados, dados.parametros.dataReferencia);
+            Estado.guardar(dados);
+            renderTudo();
+            irPara(1);
+          }
+        }),
+        el('button', { type: 'button', class: 'btn btn--fantasma', texto: 'Ver um caso de exemplo', 'data-acao': 'exemplo' })
       ]));
       return;
     }
@@ -3688,12 +3829,16 @@ input:focus-visible, select:focus-visible {
       irPara(1);
     },
     limpar: function () {
-      if (!confirm('Apagar deste dispositivo todos os dados introduzidos, incluindo nomes e ' +
-        'rendimentos dos sócios? Esta ação não é reversível. Guarde primeiro em JSON se quiser conservar a simulação.')) return;
-      Estado.apagar();
-      dados = Estado.novo();
-      renderTudo();
-      irPara(1);
+      confirmar('Apagar todos os dados deste dispositivo?',
+        'Inclui os nomes e rendimentos dos sócios de todos os exercícios. Não é reversível — ' +
+        'guarde primeiro em JSON se quiser conservar a simulação.',
+        'Apagar tudo',
+        function () {
+          Estado.apagar();
+          dados = Estado.novo();
+          renderTudo();
+          irPara(1);
+        });
     },
     guardar: function () { descarregar(nomeFicheiro('json'), JSON.stringify(dados, null, 2), 'application/json'); },
     'exportar-json': function () {

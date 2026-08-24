@@ -510,22 +510,46 @@ input:focus-visible, select:focus-visible {
   padding-bottom: .7rem; border-bottom: 1px solid var(--linha);
 }
 .exercicio {
+  display: inline-flex; align-items: stretch; overflow: hidden;
+  border-radius: 999px; border: 1px solid var(--linha-forte); background: var(--superficie);
+}
+.exercicio__ano {
   font: inherit; font-family: var(--titulo); font-size: .82rem; font-weight: 600;
-  padding: .4rem .8rem; min-height: 2.2rem; border-radius: 999px; cursor: pointer;
-  border: 1px solid var(--linha-forte); background: var(--superficie); color: var(--tinta-suave);
+  padding: .4rem .85rem; min-height: 2.2rem; cursor: pointer;
+  border: 0; background: transparent; color: var(--tinta-suave);
 }
-.exercicio:hover { border-color: var(--ouro); color: var(--tinta); }
+.exercicio:hover { border-color: var(--ouro); }
+.exercicio:hover .exercicio__ano { color: var(--tinta); }
 .exercicio--preenchido { border-color: var(--positivo); }
-.exercicio--ativo {
-  background: var(--marca); border-color: var(--marca); color: var(--superficie);
+.exercicio--ativo { background: var(--marca); border-color: var(--marca); }
+.exercicio--ativo .exercicio__ano { color: var(--fundo); }
+.exercicio__remover {
+  font: inherit; font-size: 1rem; line-height: 1; cursor: pointer;
+  padding: 0 .6rem 0 .1rem; border: 0; background: transparent;
+  color: var(--tinta-tenue); min-width: 1.9rem;
 }
-:root[data-theme="dark"] .exercicio--ativo,
-.exercicio--ativo { color: var(--fundo); }
-.exercicio--novo, .exercicio--remover {
-  font-weight: 500; border-style: dashed; color: var(--tinta-tenue); background: transparent;
+.exercicio--ativo .exercicio__remover { color: var(--fundo); opacity: .75; }
+.exercicio__remover:hover { color: var(--alerta); background: var(--alerta-claro); }
+.exercicio--ativo .exercicio__remover:hover { opacity: 1; }
+.exercicio--novo {
+  border-style: dashed; background: transparent;
 }
-.exercicio--remover { margin-left: auto; }
-.exercicio--remover:hover { border-color: var(--alerta); color: var(--alerta); }
+.exercicio--novo.exercicio__ano { color: var(--tinta-tenue); font-weight: 500; padding: .4rem .85rem; }
+.exercicio--novo:hover { border-color: var(--ouro); color: var(--tinta); }
+
+/* ------------------- Confirmação em página ------------------------- */
+.confirmar {
+  position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center;
+  padding: 1.2rem; background: rgba(12, 39, 31, .55);
+}
+.confirmar__caixa {
+  background: var(--superficie); border-radius: var(--raio); box-shadow: var(--sombra);
+  border: 1px solid var(--linha); padding: 1.3rem 1.4rem; max-width: 30rem;
+  display: flex; flex-direction: column; gap: .6rem;
+}
+.confirmar__titulo { font-family: var(--titulo); font-weight: 600; font-size: 1.05rem; margin: 0; }
+.confirmar__detalhe { font-size: .9rem; color: var(--tinta-suave); margin: 0; }
+.confirmar__acoes { display: flex; gap: .5rem; justify-content: flex-end; margin-top: .4rem; flex-wrap: wrap; }
 
 /* --------------------------- Consolidado ---------------------------- */
 .consolidado {
