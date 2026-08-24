@@ -6,9 +6,10 @@
 
 **Regras de redação — vinculativas:**
 
-1. Cada afirmação com efeito fiscal remete para norma — artigo e código — ou para pressuposto identificado em R1. Sem números sem fonte.
+1. Cada afirmação com efeito fiscal remete para norma — artigo e código, ou para pressuposto identificado em R1. Sem números sem fonte.
 2. **Não afirmar limiares que o modelo não produziu.** Um número inventado com ar de precisão é pior do que nenhum número (D2).
 3. **A destinatária tem zero experiência empresarial.** Cada conclusão termina em unidades que ela controla: doentes por dia, euros por mês. Nunca só em faturação anual ou em percentagens.
+4. **Densidade de ênfase medida, não estimada.** Menos de 8 travessões e menos de 22 negritos por mil palavras. Negrito marca uma decisão, uma restrição vinculativa ou um número que não pode passar despercebido; quando marca tudo, não marca nada. Verifica-se com `python3 08-auditoria/verifica_prosa.py` antes de qualquer peça sair.
 
 **Estado global:** 1 capítulo redigido, 1 com a lógica fechada à espera de números, 5 em esqueleto. O que falta não é redação: são os inputs da cliente e a validação normativa da Fiscalidade.
 
@@ -32,7 +33,7 @@ Estrutura fixa, uma página, quatro blocos:
 
 1. **A recomendação, em duas frases, logo na primeira linha.** Não uma síntese do processo, não um agradecimento pela confiança: a recomendação. Quem só ler este parágrafo tem de ficar a saber o que fazer.
 2. **O número que a sustenta.** O diferencial de líquido anual disponível entre a via recomendada e a atual, num cenário identificado.
-3. **As duas ou três condições de que a recomendação depende.** Extraídas de R1, magnitude ALTA apenas.
+3. As duas ou três condições de que a recomendação depende. Extraídas de R1, magnitude ALTA apenas.
 4. **A ação imediata, com a data-limite.** Tipicamente a janela de março ou a de junho (P1, «Janelas que não se recuperam»).
 
 **Não incluir:** metodologia, agradecimentos, descrição do trabalho realizado.
@@ -41,13 +42,13 @@ Estrutura fixa, uma página, quatro blocos:
 
 ## Capítulo 2 — Enquadramento consolidado e pressupostos assumidos
 
-**REDIGIDO. Base: ata de 18/08/2026 e brief de 22/08/2026. Rever após a receção dos inputs.**
+REDIGIDO. Base: ata de 18/08/2026 e brief de 22/08/2026. Rever após a receção dos inputs.
 
 ### 2.1 Situação de partida
 
 A Dra. Júlia Best exerce a atividade de fisioterapia como Empresária em Nome Individual, enquadrada no regime simplificado de tributação em sede de IRS. A atividade é isenta de IVA ao abrigo do art. 9.º n.º 1 do Código do IVA, na qualidade de prestação de serviços efetuada no exercício de profissão paramédica.
 
-Trata-se de uma isenção **incompleta**: não confere direito à dedução do imposto suportado a montante (art. 20.º n.º 1 CIVA *a contrario*). Todo o IVA suportado na aquisição de bens e serviços para a atividade — designadamente em obras e equipamento — constitui custo definitivo e não é recuperável. Este ponto tem efeito direto na avaliação do investimento e é retomado no capítulo 3.
+Trata-se de uma isenção **incompleta**: não confere direito à dedução do imposto suportado a montante (art. 20.º n.º 1 CIVA *a contrario*). Todo o IVA suportado na aquisição de bens e serviços para a atividade, designadamente em obras e equipamento — constitui custo definitivo e não é recuperável. Este ponto tem efeito direto na avaliação do investimento e é retomado no capítulo 3.
 
 À data da reunião de 18 de agosto de 2026 não existia tabela de preços formalmente definida, apesar de já existirem faturações a clientes, nem decisão fechada quanto ao espaço ou quanto à estrutura societária.
 
@@ -89,10 +90,10 @@ As vias 1 e 2 mantêm a atividade em nome individual; as vias 3 e 4 implicam a c
 A Dra. Júlia está a montar a primeira estrutura empresarial da vida dela. O relatório usa cinco expressões que vai encontrar repetidas e que têm significado técnico preciso. Explicá-las aqui, uma frase cada, com um exemplo dos números dela:
 
 - **Margem de contribuição** — do que entra por cada consulta, quanto sobra depois de pagar o que essa consulta em concreto custou.
-- **Custos fixos** — o que se paga todos os meses haja ou não doentes. É isto que a renda é.
+- **Custos fixos**, o que se paga todos os meses haja ou não doentes. É isto que a renda é.
 - **Break-even** — quantos doentes por mês são precisos para as contas darem zero. Abaixo disto, está a pagar para trabalhar.
-- **Taxa de utilização** — que percentagem do tempo os gabinetes estão realmente ocupados.
-- **Regime fiscal** — a forma como o Estado calcula o que ela paga. Não muda o dinheiro que entra; muda a fatia que sai.
+- **Taxa de utilização**, que percentagem do tempo os gabinetes estão realmente ocupados.
+- **Regime fiscal**, a forma como o Estado calcula o que ela paga. Não muda o dinheiro que entra; muda a fatia que sai.
 
 **Regra de redação desta secção:** se uma frase precisar de ser lida duas vezes, está mal escrita. Testar em voz alta.
 
@@ -108,13 +109,13 @@ A Dra. Júlia está a montar a primeira estrutura empresarial da vida dela. O re
 
 ## Capítulo 3 — Análise comparativa das quatro vias
 
-**Esqueleto com o mapa de exposições. Não se redige antes de a folha `Validacao` do M1 estar assinada.**
+Esqueleto com o mapa de exposições. Não se redige antes de a folha `Validacao` do M1 estar assinada.
 
 Sequência de argumentação, fixa:
 
 **3.1 O que se compara e porquê.** Explicar que o indicador de decisão é o **líquido anual disponível para a sócia**, e não a carga fiscal absoluta. Uma via pode pagar menos imposto e entregar menos dinheiro — nas vias societárias porque parte do resultado fica retido, e na via 4 porque parte é atribuída ao cônjuge. Explicar também que o IRS é apresentado em diferencial face ao agregado sem a atividade, porque é o que torna as quatro vias comparáveis quando o cônjuge tem rendimento próprio.
 
-**3.2 O peso da Segurança Social.** Este bloco não constava da ata e é, muito provavelmente, o de maior efeito. No regime simplificado a base de incidência é uma percentagem da faturação bruta; com contabilidade organizada é o lucro tributável; nas vias societárias incide apenas sobre a remuneração de gerência. O diferencial contributivo é, com frequência, superior ao diferencial de IRS — e é a razão principal pela qual as vias 1 e 2 divergem tanto.
+**3.2 O peso da Segurança Social.** Este bloco não constava da ata e é, muito provavelmente, o de maior efeito. No regime simplificado a base de incidência é uma percentagem da faturação bruta; com contabilidade organizada é o lucro tributável; nas vias societárias incide apenas sobre a remuneração de gerência. O diferencial contributivo é, com frequência, superior ao diferencial de IRS, e é a razão principal pela qual as vias 1 e 2 divergem tanto.
 
 **3.3 Comparação das quatro vias, em três cenários.**
 
@@ -143,9 +144,9 @@ Sequência de argumentação, fixa:
 | E2.9 | 2 vs. 3 gabinetes: capacidade, investimento, payback, e a procura a partir da qual o terceiro compensa | `Espaco` | Acréscimo. Responde a um ponto que a ata deixou em aberto |
 | E2.10 | Rendimento-alvo: faturação necessária para a fundadora receber o valor pretendido, por estrutura | `BreakEven` | Acréscimo. Suporta a regra de decisão do capítulo 5 |
 
-**Regras de apresentação do anexo:** sem fórmulas visíveis, sem referências a folhas de cálculo, sem ficheiro Excel entregue (secção 5 do brief). Cada exposição com uma frase de leitura por baixo — o que a tabela mostra, não o que contém.
+**Regras de apresentação do anexo:** sem fórmulas visíveis, sem referências a folhas de cálculo, sem ficheiro Excel entregue (secção 5 do brief). Cada exposição com uma frase de leitura por baixo, o que a tabela mostra, não o que contém.
 
-**E2.6 e E2.7 exigem correr o M1 mais do que uma vez.** Não são tabelas, são cenários, e cada um é uma passagem pelo modelo:
+E2.6 e E2.7 exigem correr o M1 mais do que uma vez. Não são tabelas, são cenários, e cada um é uma passagem pelo modelo:
 
 - **E2.6** alterna a alavanca `MOD_COLAB` da folha `Inputs` entre 1 (prestação de serviços) e 2 (cedência de sala). A linha `MARGEM_COLAB` é a resposta direta à pergunta da ata.
 - **E2.7** varre a alavanca `POL_DIST` em 0%, 50% e 100%, e alterna `ENGLOB` na via 4.
@@ -156,7 +157,7 @@ Prever o tempo: são cinco passagens pelo modelo, com os resultados a copiar par
 
 ## Capítulo 4 — Composição societária e transparência fiscal
 
-**Esqueleto. A nota técnica N1 está pronta e cobre todo o capítulo.**
+Esqueleto. A nota técnica N1 está pronta e cobre todo o capítulo.
 
 | Secção | Fonte em N1 |
 |---|---|
@@ -170,14 +171,14 @@ Prever o tempo: são cinco passagens pelo modelo, com os resultados a copiar par
 
 **Duas advertências de redação:**
 
-1. **O capítulo não pode ser escrito antes de N1-01 estar resolvido.** Se a atividade do cônjuge constar da tabela do art. 151.º CIRS, as secções 4.3 e 4.4 mudam de sentido e a via 4 sai da análise. Ver R1-14.
-2. **A afirmação da ata de que o efeito da transparência é «materialmente superior» ao da recuperação parcial de IVA tem de ser demonstrada com os números do M1, não repetida.** Se os números não a sustentarem no caso concreto, corrige-se — e diz-se que se corrigiu.
+1. O capítulo não pode ser escrito antes de N1-01 estar resolvido. Se a atividade do cônjuge constar da tabela do art. 151.º CIRS, as secções 4.3 e 4.4 mudam de sentido e a via 4 sai da análise. Ver R1-14.
+2. A afirmação da ata de que o efeito da transparência é «materialmente superior» ao da recuperação parcial de IVA tem de ser demonstrada com os números do M1, não repetida. Se os números não a sustentarem no caso concreto, corrige-se, e diz-se que se corrigiu.
 
 ---
 
 ## Capítulo 5 — Recomendação fundamentada
 
-**A regra de decisão está fechada. Faltam os números que a percorrem.**
+A regra de decisão está fechada. Faltam os números que a percorrem.
 
 Esta secção é o motivo pelo qual o capítulo 5 não fica para o fim: a lógica pode e deve ser fixada antes de os números existirem. Assim a recomendação decorre do modelo, em vez de ser escolhida e depois justificada com ele.
 
@@ -205,7 +206,7 @@ Depende de **uma** variável, e é a única pergunta que a cliente tem de respon
 - **Distribuição integral e recorrente** → a dupla tributação anula ou inverte o ganho. Recomenda-se a **via 3**, mais simples e sem cedência de capital.
 - **Retenção significativa de lucros** → afastar a transparência difere a segunda tributação e pode compensar. Avaliar a **via 4**, mas apenas se N1-01 confirmar que é sequer possível, e apenas depois de comparar com a alternativa da secção 5 de N1, que não exige ceder capital.
 
-**Passo 4 — Se via 4: como afastar o regime?**
+Passo 4 — Se via 4: como afastar o regime?
 Comparar a entrada do cônjuge com mais de 25% do capital contra a via dos rendimentos não profissionais. A segunda não cede capital nem controlo, mas tem risco de qualificação próprio. Ver a tabela comparativa em N1, secção 5.
 
 ### O que tem de acontecer para os números funcionarem
@@ -219,11 +220,11 @@ O valor da nossa entrega está em dizer à cliente o que tem de acontecer, não 
 - **quantos doentes por dia** justificam o terceiro gabinete;
 - **a que taxa de ocupação dos gabinetes** cada um destes pontos corresponde.
 
-Se algum destes números exigir uma ocupação superior a 100%, é impossível — e é preciso dizê-lo com essa palavra, antes de qualquer conclusão fiscal.
+Se algum destes números exigir uma ocupação superior a 100%, é impossível, e é preciso dizê-lo com essa palavra, antes de qualquer conclusão fiscal.
 
 ### Como redigir
 
-- A recomendação é **uma** via, não um leque. Se as condições forem tais que a recomendação dependa de uma decisão pessoal da cliente, o relatório apresenta a decisão pessoal e o que cada resposta implica — mas não devolve a análise sob a forma de opções.
+- A recomendação é **uma** via, não um leque. Se as condições forem tais que a recomendação dependa de uma decisão pessoal da cliente, o relatório apresenta a decisão pessoal e o que cada resposta implica, mas não devolve a análise sob a forma de opções.
 - Cada passo da regra de decisão remete para a exposição de E2 que o sustenta.
 - O que a análise **não** decide diz-se explicitamente: proteção patrimonial e objetivos pessoais não são quantificáveis e são da cliente. A ata já o antecipa na conclusão.
 
@@ -303,4 +304,4 @@ Esta tabela não existe em nenhuma outra peça e é, provavelmente, a página ma
 | 9 | Anexo E2 no template, sem fórmulas visíveis | 4 | Bloqueado |
 | 10 | Deck E3, 14 slides, derivado do relatório | 8 | Estrutura e guião fechados em `06-reuniao/` |
 
-**O passo 1 não depende da cliente e está a bloquear tanto quanto o passo 2.** Vale a pena arrancar já.
+O passo 1 não depende da cliente e está a bloquear tanto quanto o passo 2. Vale a pena arrancar já.

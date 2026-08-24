@@ -19,9 +19,9 @@ A especificação está certa no diagnóstico e erra na fronteira.
 
 ## O ponto sensível ao tempo, e é o mais importante
 
-**Construir a camada operacional muda o que pedimos à cliente, e o pedido ainda não foi enviado.**
+Construir a camada operacional muda o que pedimos à cliente, e o pedido ainda não foi enviado.
 
-O pedido atual (`00-inputs/pedido_inputs_cliente.md`) pede «projeção de faturação a 24 meses». É a pergunta errada. As pessoas estimam mal receita e estimam bem quantos doentes atendem por dia. Com a camada operacional, passamos a pedir os **drivers** — dias de trabalho, consultas por dia, duração, preço por serviço, utilização esperada — e **derivamos** a faturação.
+O pedido atual (`00-inputs/pedido_inputs_cliente.md`) pede «projeção de faturação a 24 meses». É a pergunta errada. As pessoas estimam mal receita e estimam bem quantos doentes atendem por dia. Com a camada operacional, passamos a pedir os **drivers** (dias de trabalho, consultas por dia, duração, preço por serviço, utilização esperada) e **derivamos** a faturação.
 
 Ganha-se três coisas de uma vez:
 
@@ -29,7 +29,7 @@ Ganha-se três coisas de uma vez:
 2. A projeção passa a ser verificável: se as consultas implicarem utilização acima de 100% dos gabinetes, a projeção é impossível e sabemo-lo antes de a usar.
 3. Deixa de haver duas perguntas separadas sobre o espaço e sobre a faturação, que na realidade são a mesma.
 
-**Se o pedido for enviado antes desta alteração, perde-se a oportunidade e pede-se outra vez.** É a única parte desta decisão com relógio.
+Se o pedido for enviado antes desta alteração, perde-se a oportunidade e pede-se outra vez. É a única parte desta decisão com relógio.
 
 ---
 
@@ -54,7 +54,7 @@ Ganha-se três coisas de uma vez:
 
 **Não implementar.**
 
-Um número único que mistura eficiência fiscal com proteção patrimonial, escalabilidade e complexidade administrativa parece objetivo e não é. **Os pesos são a recomendação; a aritmética só a disfarça.** Pior, num trabalho de assessoria fiscal convida a cliente a discutir os pesos em vez de discutir a substância — e o consultor a ajustar os pesos até o resultado dar a via que já tinha em mente.
+Um número único que mistura eficiência fiscal com proteção patrimonial, escalabilidade e complexidade administrativa parece objetivo e não é. Os pesos são a recomendação; a aritmética só a disfarça. Pior, num trabalho de assessoria fiscal convida a cliente a discutir os pesos em vez de discutir a substância, e o consultor a ajustar os pesos até o resultado dar a via que já tinha em mente.
 
 O E1, capítulo 5, já tem uma **regra de decisão sequencial**: quatro passos, cada um com uma resposta factual, cada um a remeter para a exposição que o sustenta. É superior precisamente porque não agrega grandezas incomensuráveis.
 
@@ -72,7 +72,7 @@ Fazer: bloco quantitativo (do modelo) e bloco qualitativo (juízo profissional),
 
 **Não adotar como critério deste projeto.**
 
-Exige P&L, cash-flow, break-even, payback, ROI, cenários e unit economics validados antes de o modelo estar «pronto». Aplicado à letra, transforma um projeto bloqueado por falta de dados num projeto bloqueado por excesso de âmbito — e nenhum dos oito inputs da cliente chegou ainda.
+Exige P&L, cash-flow, break-even, payback, ROI, cenários e unit economics validados antes de o modelo estar «pronto». Aplicado à letra, transforma um projeto bloqueado por falta de dados num projeto bloqueado por excesso de âmbito, e nenhum dos oito inputs da cliente chegou ainda.
 
 O *definition of done* deste projeto é o do brief: E1, E2, E3 entregues. O §29 serve como *definition of done* do **produto** VCLevel, e aí está bem.
 
@@ -101,7 +101,7 @@ Não é rejeição — é sequência. O `build_m1.py` é a semente natural desse
 
 O documento está escrito como se os dados existissem. Não existem.
 
-Nenhum dos oito inputs da secção 4 do brief foi recebido, e os parâmetros fiscais de 2026 não estão confirmados. **O P0 da especificação e o meu R1, secção C, são a mesma lista** — e continuam a ser o que bloqueia.
+Nenhum dos oito inputs da secção 4 do brief foi recebido, e os parâmetros fiscais de 2026 não estão confirmados. O P0 da especificação e o meu R1, secção C, são a mesma lista, e continuam a ser o que bloqueia.
 
 Vale a pena dizê-lo sem rodeios: se o P1 for construído antes de o P0 estar fechado, teremos um motor mais capaz a produzir números igualmente inutilizáveis. A camada operacional implementa-se agora porque **melhora a pergunta que fazemos à cliente**, não porque produza resultados citáveis. Essa distinção tem de se manter.
 
@@ -110,7 +110,7 @@ Vale a pena dizê-lo sem rodeios: se o P1 for construído antes de o P0 estar fe
 ## Decisão proposta
 
 1. Implementar os oito itens da secção «Implementar», nesta ronda.
-2. **Reescrever o pedido de inputs para pedir drivers operacionais em vez de uma projeção de faturação, antes de o enviar.**
+2. Reescrever o pedido de inputs para pedir drivers operacionais em vez de uma projeção de faturação, antes de o enviar.
 3. Rejeitar o scoring ponderado; manter a regra de decisão do E1, capítulo 5, e acrescentar a árvore do §16.
 4. Manter o *definition of done* do brief.
 5. Registar P2 e P3 como âmbito do projeto de produto, sem data neste projeto.

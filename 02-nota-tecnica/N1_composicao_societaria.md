@@ -12,7 +12,7 @@
 
 Na ata ficou escrito que a entrada de um sócio que exerça atividade não incluída na lista do art. 151.º CIRS, «com participação de dimensão suficiente», poderá afastar a transparência fiscal. A expressão é vaga e a cliente não pode decidir sobre ela. Esta nota substitui-a por um teste concreto.
 
-Fecha também um ponto que a ata não abordou: **a entrada do cônjuge não é a única forma de afastar o regime, e provavelmente não é a mais barata.** Ver secção 5.
+Fecha também um ponto que a ata não abordou: a entrada do cônjuge não é a única forma de afastar o regime, e provavelmente não é a mais barata. Ver secção 5.
 
 ---
 
@@ -24,10 +24,10 @@ A qualificação como **sociedade de profissionais** consta do art. 6.º n.º 4 
 
 **Via i)** — sociedade constituída para o exercício de uma atividade profissional da lista do art. 151.º CIRS, em que **todos** os sócios pessoas singulares sejam profissionais dessa atividade.
 
-**Via ii)** — sociedade cujos rendimentos provenham em **mais de 75%** do exercício de atividades profissionais da lista do art. 151.º CIRS, desde que, **cumulativamente e durante mais de 183 dias do período de tributação**:
+**Via ii)** — sociedade cujos rendimentos provenham em **mais de 75%** do exercício de atividades profissionais da lista do art. 151.º CIRS, desde que, cumulativamente e durante mais de 183 dias do período de tributação:
 - o número de sócios não seja superior a cinco;
 - nenhum sócio seja pessoa coletiva de direito público;
-- **pelo menos 75% do capital social seja detido por profissionais que exercem as referidas atividades, total ou parcialmente, através da sociedade.**
+- pelo menos 75% do capital social seja detido por profissionais que exercem as referidas atividades, total ou parcialmente, através da sociedade.
 
 Basta uma das vias para haver transparência. Para a afastar é preciso falhar **ambas**.
 
@@ -46,20 +46,20 @@ A fisioterapia consta da tabela do art. 151.º CIRS (Portaria n.º 1011/2001). S
 
 ## 4. Entrada do cônjuge: o que é preciso testar, e por que ordem
 
-O cônjuge exerce atividade de Personal Trainer. A ata regista que essa atividade está sujeita a IVA e não isenta — o que é uma afirmação sobre IVA e **não** responde à questão que interessa aqui.
+O cônjuge exerce atividade de Personal Trainer. A ata regista que essa atividade está sujeita a IVA e não isenta, o que é uma afirmação sobre IVA e **não** responde à questão que interessa aqui.
 
 ### 4.1 A questão decisiva, que ainda não está respondida — [VERIFICAR]
 
-Todo o desenho assenta na premissa de que a atividade de Personal Trainer **não consta da tabela do art. 151.º CIRS**. O brief assume-o («o cônjuge, Personal Trainer, fora da lista»). **Essa premissa não está verificada e é a única coisa de que tudo depende.**
+Todo o desenho assenta na premissa de que a atividade de Personal Trainer **não consta da tabela do art. 151.º CIRS**. O brief assume-o («o cônjuge, Personal Trainer, fora da lista»). Essa premissa não está verificada e é a única coisa de que tudo depende.
 
-Se a atividade do cônjuge constar da tabela — designadamente por enquadramento no código de **desportistas**, ou por via do código residual de **outros prestadores de serviços** —, então:
+Se a atividade do cônjuge constar da tabela, designadamente por enquadramento no código de **desportistas**, ou por via do código residual de **outros prestadores de serviços**, então:
 
 - os rendimentos continuam a provir em mais de 75% de atividades da lista (fisioterapia + a atividade do cônjuge), e
 - o cônjuge é ele próprio um profissional que exerce, através da sociedade, uma das «referidas atividades»,
 
-pelo que **100% do capital continua detido por profissionais das atividades relevantes e a transparência mantém-se**, por muito que a participação seja superior a 25%. O desenho não produziria nenhum efeito fiscal — apenas os custos.
+pelo que 100% do capital continua detido por profissionais das atividades relevantes e a transparência mantém-se, por muito que a participação seja superior a 25%. O desenho não produziria nenhum efeito fiscal — apenas os custos.
 
-Há um argumento conhecido, e não pacífico, de que o **código residual** não corresponde a uma atividade «especificamente prevista» na lista, para efeitos do art. 6.º n.º 4 al. b) CIRC. É precisamente sobre este tipo de questão que incide a jurisprudência arbitral levantada (secção 7). **Não se pode dar por adquirida a conclusão em nenhum dos sentidos antes de verificado o código de atividade efetivamente declarado pelo cônjuge na AT.**
+Há um argumento conhecido, e não pacífico, de que o **código residual** não corresponde a uma atividade «especificamente prevista» na lista, para efeitos do art. 6.º n.º 4 al. b) CIRC. É precisamente sobre este tipo de questão que incide a jurisprudência arbitral levantada (secção 7). Não se pode dar por adquirida a conclusão em nenhum dos sentidos antes de verificado o código de atividade efetivamente declarado pelo cônjuge na AT.
 
 **Ação:** obter o código de atividade do cônjuge (art. 151.º CIRS / CAE) a partir da declaração de início de atividade. É o input 6 da secção 4 do brief e passa a ser o primeiro a pedir, não o sexto.
 
@@ -72,7 +72,7 @@ Se o cônjuge não for profissional de atividade da lista:
 | i) | **Falha.** Deixa de ser verdade que todos os sócios pessoas singulares são profissionais da atividade. Falha com qualquer percentagem, ainda que simbólica. |
 | ii) | **Falha apenas se** a participação do cônjuge **exceder 25%** do capital, fazendo com que a participação detida por profissionais da atividade desça abaixo de 75%. |
 
-**Limiar operacional: a participação do cônjuge tem de ser estritamente superior a 25%.** Exatamente 25% não chega — a norma exige «pelo menos 75%» detido por profissionais, e 75% seria ainda «pelo menos 75%». O modelo M1 usa 26% como valor de trabalho, o que dá uma margem de segurança de um ponto percentual.
+Limiar operacional: a participação do cônjuge tem de ser estritamente superior a 25%. Exatamente 25% não chega, a norma exige «pelo menos 75%» detido por profissionais, e 75% seria ainda «pelo menos 75%». O modelo M1 usa 26% como valor de trabalho, o que dá uma margem de segurança de um ponto percentual.
 
 **Duas condições que se perdem de vista com facilidade:**
 
@@ -95,9 +95,9 @@ O modelo M1 quantifica a primeira consequência na linha «valor atribuído ao c
 
 A via ii) do art. 6.º n.º 4 al. b) CIRC só se aplica se os rendimentos da sociedade provierem em **mais de 75%** de atividades da lista do art. 151.º CIRS. Fazer com que **25% ou mais** dos rendimentos provenham de atividades não previstas na lista afasta a via ii) sem tocar na estrutura de capital.
 
-E a ata já contém a fonte natural desses rendimentos, no ponto 4: **o modelo de arrendamento de sala aos fisioterapeutas a integrar.** Rendimentos de cedência de espaço não são rendimentos do exercício de uma atividade profissional da lista.
+E a ata já contém a fonte natural desses rendimentos, no ponto 4: o modelo de arrendamento de sala aos fisioterapeutas a integrar. Rendimentos de cedência de espaço não são rendimentos do exercício de uma atividade profissional da lista.
 
-Nota de coerência entre pontos da ata que até aqui foram tratados como independentes: a escolha do modelo de colaboração com os fisioterapeutas (ponto 4) não é apenas uma questão de margem e de risco laboral — **condiciona também a qualificação da sociedade para efeitos de transparência fiscal (ponto 6).** As duas decisões têm de ser tomadas em conjunto.
+Nota de coerência entre pontos da ata que até aqui foram tratados como independentes: a escolha do modelo de colaboração com os fisioterapeutas (ponto 4) não é apenas uma questão de margem e de risco laboral — condiciona também a qualificação da sociedade para efeitos de transparência fiscal (ponto 6). As duas decisões têm de ser tomadas em conjunto.
 
 **Comparação das duas vias para afastar o regime:**
 
@@ -125,9 +125,9 @@ O M1 calcula-o na linha `REC_SALA_MIN` da folha `Inputs`, para cada cenário.
 
 Corolário que tem de ser dito com esta clareza: **não basta escolher o modelo de cedência de sala.** No cenário de trabalho, cedência de sala a 30% da faturação dos colaboradores dá 87,8% de rendimentos profissionais — o teste **mantém-se verificado** e a transparência **não** é afastada. A via só funciona se a renda cobrada for substancial em termos absolutos, o que por sua vez exige que os colaboradores faturem o suficiente para a suportar.
 
-**Esta via não é uma recomendação nesta fase, e não é a alternativa barata que aparentava.** É uma alternativa que tem de ser posta em cima da mesa antes de a cliente decidir dar mais de um quarto da sociedade ao cônjuge — mas apresentada com a condição quantificada, não como princípio. Se a renda necessária não for atingível com o número de gabinetes em avaliação, a via cai e sobra a do capital, com a premissa por verificar da secção 4.1.
+Esta via não é uma recomendação nesta fase, e não é a alternativa barata que aparentava. É uma alternativa que tem de ser posta em cima da mesa antes de a cliente decidir dar mais de um quarto da sociedade ao cônjuge, mas apresentada com a condição quantificada, não como princípio. Se a renda necessária não for atingível com o número de gabinetes em avaliação, a via cai e sobra a do capital, com a premissa por verificar da secção 4.1.
 
-**Consequência para a decisão da fase 0:** a escolha do modelo de colaboração deixa de ser binária. Passa a ser «que modelo, e a que preço» — porque é o preço que determina se o efeito fiscal existe.
+**Consequência para a decisão da fase 0:** a escolha do modelo de colaboração deixa de ser binária. Passa a ser «que modelo, e a que preço», porque é o preço que determina se o efeito fiscal existe.
 
 ---
 
@@ -144,7 +144,7 @@ A ata já o diz na conclusão. A nota acrescenta a mecânica:
 
 Daqui decorre a única regra de decisão que se pode enunciar antes dos números:
 
-> **Afastar a transparência compensa na medida em que a sociedade retenha lucros. Com distribuição integral e recorrente, a dupla tributação tende a anular ou inverter o ganho.**
+> Afastar a transparência compensa na medida em que a sociedade retenha lucros. Com distribuição integral e recorrente, a dupla tributação tende a anular ou inverter o ganho.
 
 É por isso que a política de distribuição está modelada em M1 como **variável** e não como constante, e é a primeira sensibilidade a apresentar no capítulo 3. A pergunta a fazer à cliente não é «quer sociedade?», é «quanto do lucro precisa de levantar todos os anos?».
 
@@ -168,7 +168,7 @@ Elementos que a fragilizam: participação fixada no mínimo estritamente necess
 
 O brief identifica duas decisões arbitrais a mobilizar: **CAAD 657/2022-T** e **CAAD 896/2023-T**.
 
-**Não foram lidas na preparação desta nota e o seu conteúdo não é aqui resumido.** Alegar um sentido decisório sem ter lido o acórdão é exatamente o erro que a regra de redação do brief proíbe («cada afirmação com efeito fiscal remete para norma ou para pressuposto identificado»).
+Não foram lidas na preparação desta nota e o seu conteúdo não é aqui resumido. Alegar um sentido decisório sem ter lido o acórdão é exatamente o erro que a regra de redação do brief proíbe («cada afirmação com efeito fiscal remete para norma ou para pressuposto identificado»).
 
 A Fiscalidade deve, para cada decisão, devolver: questão apreciada, sentido decisório, e se a decisão incide sobre (a) o teste de capital, (b) o teste de rendimentos, (c) o alcance do código residual da tabela do art. 151.º, ou (d) a substância da participação. O ponto (c) é o que interessa para a secção 4.1 desta nota.
 
@@ -194,7 +194,7 @@ Feita a distinção: se o cônjuge passar a exercer a sua atividade **dentro** d
 - **Pro rata** (art. 23.º n.º 4 CIVA): percentagem única sobre o volume de negócios. Simples, e tanto menor quanto menor for o peso da atividade tributada.
 - **Afetação real** (art. 23.º n.º 2 CIVA): dedução integral do que estiver exclusivamente afeto à atividade tributada. Mais favorável, e exige segregação documental e contabilística permanente — custo administrativo recorrente, corretamente sinalizado na ata.
 
-**Ordem de grandeza — a ata contém uma afirmação que tem de ser testada, não repetida.** Foi transmitido à cliente que o efeito da transparência fiscal seria «materialmente superior» ao da recuperação parcial de IVA. É plausível, mas não foi quantificado nessa sessão. A folha `IVA` do M1 calcula o ganho de IVA atribuível à entrada do cônjuge e a folha `Comparativo` calcula o diferencial entre as vias 3 e 4: **o relatório afirma a comparação depois de a ler nessas duas folhas, e não antes.**
+Ordem de grandeza, a ata contém uma afirmação que tem de ser testada, não repetida. Foi transmitido à cliente que o efeito da transparência fiscal seria «materialmente superior» ao da recuperação parcial de IVA. É plausível, mas não foi quantificado nessa sessão. A folha `IVA` do M1 calcula o ganho de IVA atribuível à entrada do cônjuge e a folha `Comparativo` calcula o diferencial entre as vias 3 e 4: o relatório afirma a comparação depois de a ler nessas duas folhas, e não antes.
 
 Observação que reduz o problema antes de o resolver: parte do equipamento clínico pode ser elegível para a taxa reduzida, ao abrigo das verbas 2.5 e 2.6 da Lista I do CIVA. A verificação faz-se item a item sobre o orçamento de equipamento, é barata, e reduz a base do problema de IVA independentemente de tudo o resto. Nunca foi feita.
 
@@ -203,7 +203,7 @@ Observação que reduz o problema antes de o resolver: parte do equipamento clí
 ## 9. Conclusão
 
 1. Com a sociedade detida a 100% pela Dra. Júlia, a transparência fiscal aplica-se. Não é uma questão em aberto.
-2. Afastá-la pela entrada do cônjuge exige participação **estritamente superior a 25%**, mantida por mais de 183 dias no exercício, e **depende inteiramente de a atividade do cônjuge não constar da tabela do art. 151.º CIRS — o que não está verificado.** É o primeiro input a obter.
+2. Afastá-la pela entrada do cônjuge exige participação **estritamente superior a 25%**, mantida por mais de 183 dias no exercício, e depende inteiramente de a atividade do cônjuge não constar da tabela do art. 151.º CIRS, o que não está verificado. É o primeiro input a obter.
 3. Existe uma via alternativa, não considerada na ata: fazer com que **25% ou mais** dos rendimentos provenham de atividades não previstas na lista, designadamente por cedência de espaço. Não cede capital nem controlo, mas tem risco de qualificação próprio e depende do modelo de colaboração escolhido.
 4. Afastar a transparência **não é uma vantagem em si**. O ganho existe na medida em que a sociedade retenha lucros, e tende a anular-se com distribuição integral.
 5. O efeito em IVA é secundário face ao efeito da transparência, mas essa hierarquia é para **demonstrar com os números do M1**, não para repetir.

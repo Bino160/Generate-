@@ -6,9 +6,9 @@
 
 ## Veredito
 
-**Deu uma coisa nova, e é importante. O resto é o D2 e o próprio repositório devolvidos.**
+Deu uma coisa nova, e é importante. O resto é o D2 e o próprio repositório devolvidos.
 
-Verifiquei ponto por ponto contra os ficheiros, em vez de aceitar a lista. Dos seis gaps críticos enunciados, quatro são conclusões minhas citadas de volta, um está factualmente errado, e a secção 2 contém — enterrada numa lista de sete itens — a única lacuna real: **não havia plano de tesouraria nem fundo de maneio.**
+Verifiquei ponto por ponto contra os ficheiros, em vez de aceitar a lista. Dos seis gaps críticos enunciados, quatro são conclusões minhas citadas de volta, um está factualmente errado, e a secção 2 contém — enterrada numa lista de sete itens, a única lacuna real: **não havia plano de tesouraria nem fundo de maneio.**
 
 ---
 
@@ -36,9 +36,9 @@ Três coisas que a folha trouxe e não estavam em lado nenhum:
 
 1. **A caução do arrendamento.** Dois a três meses de renda, pagos antes de abrir. É a rubrica que sistematicamente falta nos planos de investimento.
 2. **O desfasamento entre faturar e receber.** Consultas particulares pagam-se na hora; subsistemas e seguros pagam a 30 dias. A diferença é dinheiro que não está em caixa.
-3. **A armadilha dos pagamentos por conta de IRS no ano 1.** São calculados sobre o rendimento do ano **anterior**, no regime antigo. Paga-se IRS do passado enquanto se está a investir no futuro — e num ano em que a tesouraria já está no seu pior momento.
+3. A armadilha dos pagamentos por conta de IRS no ano 1. São calculados sobre o rendimento do ano **anterior**, no regime antigo. Paga-se IRS do passado enquanto se está a investir no futuro, e num ano em que a tesouraria já está no seu pior momento.
 
-**E uma correção que tive de fazer a mim próprio:** a primeira versão da folha somava o investimento duas vezes — a necessidade máxima de tesouraria já o continha, e eu voltava a acrescentá-lo, dando 128.716 € em vez de 67.306 €. Corrigido, e a linha passou a estar decomposta para que o erro não se repita.
+**E uma correção que tive de fazer a mim próprio:** a primeira versão da folha somava o investimento duas vezes, a necessidade máxima de tesouraria já o continha, e eu voltava a acrescentá-lo, dando 128.716 € em vez de 67.306 €. Corrigido, e a linha passou a estar decomposta para que o erro não se repita.
 
 ### Projeção a três anos com rampa de arranque
 
@@ -83,11 +83,11 @@ Não é inútil: como validação independente, confirma que o diagnóstico se a
 
 Da lista da análise, três itens não foram implementados, com fundamento:
 
-**Plano comercial.** Fora do âmbito do brief, que é assessoria fiscal. Mas o ponto por trás é legítimo e não pode ficar mudo: **como é que os gabinetes se enchem é o pressuposto silencioso de tudo isto.** A rampa de ocupação do ano 1 e as taxas dos anos 2 e 3 são, na prática, um plano comercial disfarçado de célula de Excel. Registado como R1-41: se ninguém souber justificar aqueles números, o modelo está a assumir a parte mais difícil do negócio.
+**Plano comercial.** Fora do âmbito do brief, que é assessoria fiscal. Mas o ponto por trás é legítimo e não pode ficar mudo: como é que os gabinetes se enchem é o pressuposto silencioso de tudo isto. A rampa de ocupação do ano 1 e as taxas dos anos 2 e 3 são, na prática, um plano comercial disfarçado de célula de Excel. Registado como R1-41: se ninguém souber justificar aqueles números, o modelo está a assumir a parte mais difícil do negócio.
 
-**Margens por serviço.** Precisa da tabela de preços por serviço, que não existe — a ata regista que não há tabela formalizada. A margem por profissional e por gabinete já está na folha `Operacao`.
+**Margens por serviço.** Precisa da tabela de preços por serviço, que não existe, a ata regista que não há tabela formalizada. A margem por profissional e por gabinete já está na folha `Operacao`.
 
-**Estrutura operacional detalhada (quem marca, quem fatura, quem controla horário e equipamento).** Está coberta onde importa e com mais força do que uma descrição narrativa teria: é exatamente o mapa dos cinco indícios do art. 12.º do Código do Trabalho, na folha `RiscoLaboral`. «Quem controla o horário» e «de quem é o equipamento» não são detalhes de organização — são dois dos cinco indícios que determinam um passivo de 77.065 €.
+Estrutura operacional detalhada (quem marca, quem fatura, quem controla horário e equipamento). Está coberta onde importa e com mais força do que uma descrição narrativa teria: é exatamente o mapa dos cinco indícios do art. 12.º do Código do Trabalho, na folha `RiscoLaboral`. «Quem controla o horário» e «de quem é o equipamento» não são detalhes de organização — são dois dos cinco indícios que determinam um passivo de 77.065 €.
 
 ---
 
@@ -105,4 +105,4 @@ Da lista da análise, três itens não foram implementados, com fundamento:
 
 Três análises seguidas convergiram no mesmo diagnóstico e cada uma trouxe menos matéria nova do que a anterior: a primeira trouxe a camada operacional, a segunda o risco laboral quantificado, esta a tesouraria. O rendimento decrescente é claro.
 
-**O que falta agora não é mais análise — são os oito números que só a Dra. Júlia pode dar, e uma tarde da Fiscalidade a confirmar os parâmetros de 2026.** Enquanto isso não acontecer, cada ronda adicional de revisão produz mais folhas de cálculo sobre os mesmos placeholders.
+O que falta agora não é mais análise — são os oito números que só a Dra. Júlia pode dar, e uma tarde da Fiscalidade a confirmar os parâmetros de 2026. Enquanto isso não acontecer, cada ronda adicional de revisão produz mais folhas de cálculo sobre os mesmos placeholders.

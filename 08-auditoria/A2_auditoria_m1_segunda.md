@@ -6,14 +6,14 @@
 
 ## Nota: **16/20**
 
-A A1 deu 15 e eu próprio anunciei 18 depois de executar o plano de correção. **Esta auditoria baixa para 16**, porque olhou para coisas que a primeira nunca tinha olhado e encontrou uma lacuna estrutural.
+A A1 deu 15 e eu próprio anunciei 18 depois de executar o plano de correção. **Esta auditoria baixa para 16**, porque olhou para coisas que a primeira nunca examinou e encontrou uma lacuna estrutural.
 
 Uma auditoria que baixa uma nota que eu próprio dei vale mais do que uma que a confirma.
 
 | Critério | Peso | Nota | Movimento |
 |---|---|---|---|
 | Correção do modelo | 20% | 18 | mantém |
-| **Cobertura de cenários** | 15% | **11** | **novo — é o problema** |
+| **Cobertura de cenários** | 15% | **11** | novo, e é o problema |
 | Cobertura de validação | 15% | 18 | mantém |
 | Robustez a uso por terceiros | 10% | 18 | subiu com as correções de hoje |
 | Auditabilidade humana | 10% | 15 | mantém |
@@ -26,25 +26,25 @@ Uma auditoria que baixa uma nota que eu próprio dei vale mais do que uma que a 
 
 ## Forças, agora com prova
 
-A A1 afirmou várias destas. Esta auditoria **verificou-as no ficheiro**, que é coisa diferente.
+A A1 afirmou várias destas. Esta auditoria verificou-as no ficheiro, que é coisa diferente.
 
 ### A proteção está correta, não apenas ligada
 
-**Zero células de fórmula ficaram desbloqueadas por engano.** As 320 células editáveis são exatamente as de preenchimento. Uma proteção mal aplicada — que trancasse inputs ou deixasse fórmulas abertas — seria pior do que nenhuma, porque dá falsa confiança.
+**Zero células de fórmula ficaram desbloqueadas por engano.** As 320 células editáveis são exatamente as de preenchimento. Uma proteção mal aplicada, que trancasse inputs ou deixasse fórmulas abertas, seria pior do que nenhuma: dá falsa confiança.
 
 ### O semáforo de alertas cobre mesmo tudo
 
-`SUM(Parametros!$F$6:$F$50)` e `SUM(Inputs!$J$6:$J$40)`. Verificado: os sinalizadores estão nas linhas 6–50 e 6–40. **Cobertura de 100%.**
+`SUM(Parametros!$F$6:$F$50)` e `SUM(Inputs!$J$6:$J$40)`. Verificado: os sinalizadores estão nas linhas 6 a 50 e 6 a 40. Cobertura de 100%.
 
 Isto importa mais do que parece. Se o intervalo deixasse um parâmetro de fora, o mecanismo desenhado para impedir falhas silenciosas falharia em silêncio.
 
 ### Os gráficos apontam para os dados certos
 
-Verificado célula a célula: o gráfico do Comparativo lê `C32:F32`, que é a linha «LÍQUIDO DISPONÍVEL PARA A SÓCIA», com as categorias na linha 22, cabeçalho do bloco **Base** — e não do bloco Baixo, que está logo acima e seria o erro natural.
+Verificado célula a célula: o gráfico do Comparativo lê `C32:F32`, que é a linha «LÍQUIDO DISPONÍVEL PARA A SÓCIA», com as categorias na linha 22, cabeçalho do bloco Base, e não do bloco Baixo, que está logo acima e seria o erro natural.
 
 ### Sem formatos que mentem
 
-Zero células com percentagem guardada como inteiro. É o erro mais comum em folhas de cálculo e não existe aqui.
+Zero células com percentagem guardada como inteiro, que é o erro mais comum em folhas de cálculo.
 
 ### O ficheiro abre onde deve
 
@@ -64,19 +64,19 @@ Três folhas correm **apenas o cenário Base**:
 | `Espaco` | 103 | A decisão entre 2 e 3 gabinetes, o investimento, o custo do degrau |
 | `Alertas` | 28 | O próprio semáforo que autoriza ou proíbe citar números |
 
-A comparação fiscal — que a ata e o meu próprio trabalho concluíram ser **a parte menos decisiva** — tem três cenários. A tesouraria, que decide se a clínica sobrevive ao primeiro ano, tem um.
+A comparação fiscal, que a ata e o meu próprio trabalho concluíram ser **a parte menos decisiva**, tem três cenários. A tesouraria, que decide se a clínica sobrevive ao primeiro ano, tem um.
 
-**E isto contradiz uma exigência que eu próprio inscrevi no E1**, secção 7.4: «o cenário de baixa, em dinheiro» é obrigatório. O modelo não o consegue produzir sem alguém reescrever à mão os inputs do Base, correr, anotar e repor. Para uma cliente sem experiência empresarial, o cenário de baixa da tesouraria é provavelmente a página mais importante do relatório inteiro — e é a que o modelo não sabe fazer.
+**Isto contradiz uma exigência que eu próprio inscrevi no E1**, secção 7.4: o cenário de baixa em dinheiro é obrigatório. O modelo não o consegue produzir sem alguém reescrever à mão os inputs do Base, correr, anotar e repor. Para uma cliente sem experiência empresarial, o cenário de baixa da tesouraria é provavelmente a página mais importante do relatório inteiro, e é a que o modelo não sabe fazer.
 
-Nota de justiça: no `PontoViragem` e nas tabelas do `BreakEven` o cenário único é deliberado e correto — são varrimentos, e varrer duas dimensões ao mesmo tempo não se lê. A crítica não se aplica aí.
+Nota de justiça: no `PontoViragem` e nas tabelas do `BreakEven` o cenário único é deliberado e correto, porque são varrimentos, e varrer duas dimensões ao mesmo tempo não se lê. A crítica não se aplica aí.
 
 ### 2. Uma divisão sem guarda podia partir o ficheiro inteiro — corrigida hoje
 
-`Capacidade diária = horas × 60 ÷ duração da consulta`, sem proteção. Uma duração a zero propagava erro de divisão por **todas** as folhas, porque tudo desce da capacidade.
+`Capacidade diária = horas × 60 ÷ duração da consulta`, sem proteção. Uma duração a zero propagava erro de divisão por todas as folhas, porque tudo desce da capacidade.
 
 E a folha `Operacao` não tinha uma única regra de validação: as suas 27 células de preenchimento aceitavam qualquer coisa.
 
-**Corrigido:** guarda na fórmula, e regra de «estritamente maior do que zero» nos quatro divisores — duração, horas, dias e gabinetes.
+**Corrigido:** guarda na fórmula, e regra de estritamente maior do que zero nos quatro divisores: duração, horas, dias e gabinetes.
 
 ### 3. Quarenta e uma células de preenchimento sem qualquer regra — corrigidas hoje
 
@@ -86,15 +86,15 @@ A regra genérica da A1 aplicava-se por formato de número e só apanhava moeda 
 
 ### 4. Um rótulo duplicado que convida ao erro — corrigido hoje
 
-«N.º de gabinetes» existia com o mesmo nome na `Operacao` e na `Espaco`. São deliberadamente independentes — na `Operacao` está o espaço escolhido, na `Espaco` comparam-se as duas hipóteses — mas o rótulo idêntico leva qualquer pessoa a supor que estão ligados.
+«N.º de gabinetes» existia com o mesmo nome na `Operacao` e na `Espaco`. São deliberadamente independentes, porque na `Operacao` está o espaço escolhido e na `Espaco` comparam-se as duas hipóteses, mas o rótulo idêntico leva qualquer pessoa a supor que estão ligados.
 
 **Corrigido:** renomeado para «N.º de gabinetes desta opção», com a explicação ao lado.
 
 ### 5. Quatro parâmetros que nunca são usados
 
-`LIM_SIMPL`, `PERM_OPCAO`, `TF_CAP`, `TF_SOCIOS`. Estão lá com norma e estado de validação, mas nenhuma fórmula lhes toca — servem a N1 e ao P1, não ao cálculo.
+`LIM_SIMPL`, `PERM_OPCAO`, `TF_CAP`, `TF_SOCIOS`. Estão lá com norma e estado de validação, mas nenhuma fórmula lhes toca: servem a N1 e ao P1, não ao cálculo.
 
-Consequência prática: **inflacionam a contagem de «parâmetros por validar» do alerta.** A Fiscalidade gasta tempo a confirmar quatro valores que não movem um cêntimo. Devem ser separados numa secção de referência, fora da contagem.
+Consequência prática: inflacionam a contagem de parâmetros por validar do alerta. A Fiscalidade gasta tempo a confirmar quatro valores que não movem um cêntimo. Devem ser separados numa secção de referência, fora da contagem.
 
 ### 6. Continua sem intervalos nomeados, e continua por abrir em Excel real
 
@@ -119,8 +119,32 @@ Da A1, sem alteração. O segundo é a única limitação que não é resolúvel
 
 ---
 
-## A correção que falta, e é uma só
+## A correção que falta
 
 Levar `Tesouraria` e `Espaco` aos três cenários. Meio dia de trabalho, e fecha a distância entre o que o modelo promete e o que entrega.
 
-Enquanto isso não estiver feito, a frase a não dizer à cliente é «e no cenário baixo fica assim» — porque o modelo não sabe.
+Enquanto isso não estiver feito, a frase a não dizer à cliente é «e no cenário baixo fica assim», porque o modelo não sabe.
+
+
+---
+
+# Adenda — 22/08/2026
+
+A correção que faltava foi executada.
+
+`Tesouraria` passou a correr os três cenários, com doze meses cada, mais um quarto bloco de teste de esforço. `Espaco` ganhou o ponto de viragem calculado para os três cenários por álgebra, sem varrimento.
+
+O teste de esforço nasceu de uma coisa que só se viu depois de os três cenários correrem: os cenários movem investimento e receita ao mesmo tempo, pelo que o Baixo precisa de **menos** dinheiro do que o Base. Não é um teste de esforço, é uma clínica mais pequena. O cenário que arruína quem abre pela primeira vez é o espaço grande com procura fraca, e não estava representado.
+
+| Cenário | Dinheiro necessário antes de abrir |
+|---|---|
+| Baixo | 43.073 € |
+| Base | 67.306 € |
+| Alto | 101.623 € |
+| Teste de esforço | **102.525 €** |
+
+Ponto de viragem do terceiro gabinete: 104% da capacidade de dois, estável nos três cenários.
+
+Reverificação: 4.507 células, zero erros de fórmula, 32 verificações conformes.
+
+**Nota revista: 18 em 20.** Cobertura de cenários sobe de 11 para 18. Continuam por fazer os intervalos nomeados e a conferência em Excel real.

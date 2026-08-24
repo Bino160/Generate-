@@ -26,7 +26,7 @@ Duas restrições temporais são exteriores ao projeto e determinam o calendári
 | **Opção por contabilidade organizada mantendo o ENI: até ao final de março** do ano em que se pretende que produza efeitos, por declaração de alterações | Art. 28.º n.º 4 CIRS | A cliente fica no regime simplificado mais um exercício completo. Dado o peso de custos projetado, é o cenário mais caro de todos os que estão em cima da mesa. |
 | **Condição da transparência fiscal verificada por mais de 183 dias do período de tributação** | Art. 6.º n.º 4 al. b) ii) CIRC | Uma estrutura societária montada depois de **~30 de junho** é transparente nesse exercício, independentemente da composição do capital. Se o objetivo for afastar o regime, o primeiro ano não o consegue. |
 
-**Consequência para o sequenciamento:** a decisão D tem de ocorrer com folga sobre a janela de março. Se a receção dos inputs arrastar para dentro do primeiro trimestre, a recomendação a dar à cliente deixa de ser apenas «qual estrutura» e passa a incluir «qual estrutura **este ano**, e qual no seguinte» — que é uma recomendação diferente. Registado em R1-24.
+**Consequência para o sequenciamento:** a decisão D tem de ocorrer com folga sobre a janela de março. Se a receção dos inputs arrastar para dentro do primeiro trimestre, a recomendação a dar à cliente deixa de ser apenas «qual estrutura» e passa a incluir «qual estrutura **este ano**, e qual no seguinte», que é uma recomendação diferente. Registado em R1-24.
 
 Nota sobre a permanência: a opção por contabilidade organizada vincula por **três anos** (art. 28.º n.º 5 CIRS). Não é um teste que se faça durante um exercício e se desfaça no seguinte. Isto tem de ser dito à cliente em voz alta na reunião de apresentação, não em rodapé.
 
@@ -51,7 +51,7 @@ Nota sobre a permanência: a opção por contabilidade organizada vincula por **
 
 0.1 porque toda a via da sociedade não transparente depende de uma premissa que ninguém verificou (N1, secção 4.1). É um pedido de dois minutos que pode invalidar um capítulo inteiro.
 
-0.8 porque a política de distribuição é a variável que decide se afastar a transparência compensa (N1, secção 6). Sem ela, o capítulo 3 apresenta cenários em vez de uma recomendação — e o brief pede uma recomendação, em primeiro lugar e fundamentada.
+0.8 porque a política de distribuição é a variável que decide se afastar a transparência compensa (N1, secção 6). Sem ela, o capítulo 3 apresenta cenários em vez de uma recomendação, e o brief pede uma recomendação, em primeiro lugar e fundamentada.
 
 **Nota sobre 0.4:** a escolha do modelo de colaboração não é apenas uma questão de margem e de risco laboral. Condiciona a qualificação da sociedade para efeitos de transparência fiscal (N1, secção 5) e o enquadramento em IVA. É a decisão da fase 0 com mais ramificações e é a que a cliente está menos preparada para tomar sozinha.
 
@@ -119,7 +119,7 @@ Nota sobre a permanência: a opção por contabilidade organizada vincula por **
 
 **3.1 é o item de maior prazo e o único que pode atrasar a abertura por si só.** Está fora do nosso âmbito (secção 5), o que significa que não o executamos — não que o possamos deixar de fora do plano. Arranca em D+15 e não quando as obras acabarem.
 
-**3.5 e 3.6 não são genéricos.** Dados de saúde são categoria especial de dados pessoais (art. 9.º RGPD) e o tratamento tem exigências acrescidas. A entrada de outros profissionais a partilhar o espaço e, eventualmente, o sistema de registo clínico levanta a questão de quem é responsável pelo tratamento e a que título — que não é a mesma coisa que quem paga o software.
+**3.5 e 3.6 não são genéricos.** Dados de saúde são categoria especial de dados pessoais (art. 9.º RGPD) e o tratamento tem exigências acrescidas. A entrada de outros profissionais a partilhar o espaço e, eventualmente, o sistema de registo clínico levanta a questão de quem é responsável pelo tratamento e a que título, que não é a mesma coisa que quem paga o software.
 
 ---
 

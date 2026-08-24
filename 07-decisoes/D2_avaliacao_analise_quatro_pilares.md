@@ -42,7 +42,7 @@ Isto muda a mensagem a dar à cliente: não é «tenha cuidado com os contratos�
 
 ### 2. O custo de complexidade do cônjuge
 
-A análise pede que o modelo isole o cônjuge e demonstre matematicamente o custo de o integrar. Nova folha `Conjuge`, com ganhos de um lado, custos do outro, saldo na esfera da sócia e na do agregado — e três coisas explicitamente não quantificadas: perda de controlo qualificado, efeito em divórcio ou sucessão, e risco do art. 38.º n.º 2 da LGT.
+A análise pede que o modelo isole o cônjuge e demonstre matematicamente o custo de o integrar. Nova folha `Conjuge`, com ganhos de um lado, custos do outro, saldo na esfera da sócia e na do agregado, e três coisas explicitamente não quantificadas: perda de controlo qualificado, efeito em divórcio ou sucessão, e risco do art. 38.º n.º 2 da LGT.
 
 ### 3. O degrau de custo fixo do terceiro gabinete
 
@@ -67,7 +67,7 @@ Nova tabela e gráfico na folha `BreakEven`. É a frase do ponto 6 da ata traduz
 
 **Errado, e é exatamente a confusão que a ata avisou.** Quem deduz os custos reais é a **contabilidade organizada**, que se pode ter mantendo o nome individual, sem constituir sociedade nenhuma.
 
-A sociedade acrescenta proteção patrimonial, formalização da relação com prestadores e escalabilidade. Não acrescenta dedutibilidade. O documento diz isto corretamente duas linhas depois, mas a frase, tal como está, levaria a cliente a constituir sociedade para obter uma coisa que já obteria sem ela — e a assumir custos de estrutura e um regime de transparência sem contrapartida.
+A sociedade acrescenta proteção patrimonial, formalização da relação com prestadores e escalabilidade. Não acrescenta dedutibilidade. O documento diz isto corretamente duas linhas depois, mas a frase, tal como está, levaria a cliente a constituir sociedade para obter uma coisa que já obteria sem ela, e a assumir custos de estrutura e um regime de transparência sem contrapartida.
 
 O modelo confirma: no cenário Base, a via 2 e a via 3 diferem em **cerca de 1.050 € por ano** de líquido para a sócia. É esse o tamanho da questão fiscal entre elas.
 
@@ -75,7 +75,7 @@ O modelo confirma: no cenário Base, a via 2 e a via 3 diferem em **cerca de 1.0
 
 Afirmado como facto. **É uma premissa por verificar, e é o maior risco isolado do projeto** (R1-14).
 
-Só é verdade se a atividade de Personal Trainer não constar da tabela do art. 151.º CIRS. Se constar — por enquadramento como desportista ou pelo código residual — a entrada do cônjuge não afasta a transparência com percentagem de capital nenhuma, e todo o Pilar 1 cai. O código de atividade do cônjuge continua por pedir.
+Só é verdade se a atividade de Personal Trainer não constar da tabela do art. 151.º CIRS. Se constar, por enquadramento como desportista ou pelo código residual, a entrada do cônjuge não afasta a transparência com percentagem de capital nenhuma, e todo o Pilar 1 cai. O código de atividade do cônjuge continua por pedir.
 
 ### 3. «O break-even operacional dispara exponencialmente»
 
@@ -111,7 +111,7 @@ Isso não muda o motor. Muda o dever de cuidado da entrega, em três pontos conc
 
 1. **O cenário de baixa, em dinheiro, e não só a recomendação.** Quanto perde por ano se a procura ficar em metade do previsto e o terceiro gabinete ficar vazio.
 2. **Os pontos de não retorno, com data.** O arrendamento vincula por anos; a opção por contabilidade organizada vincula por três; as obras não se desfazem. Tem de saber o que é reversível e o que não é, antes de assinar.
-3. **A conclusão em unidades que ela controla.** Não «faturação de 100.800 €», mas «seis doentes por dia, 200 dias por ano, a 48 € — e o mínimo para pagar as contas é dois doentes por dia».
+3. **A conclusão em unidades que ela controla.** Não «faturação de 100.800 €», mas «seis doentes por dia, 200 dias por ano, a 48 €, e o mínimo para pagar as contas é dois doentes por dia».
 
 A última linha do documento avaliado está certa e é a melhor frase dele: **o valor está em dizer à cliente o que tem de acontecer para a matemática funcionar, não em perguntar-lhe o que acha que vai acontecer.** As três alterações acima são o que falta para cumprir isso.
 

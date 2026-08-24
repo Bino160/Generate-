@@ -13,14 +13,14 @@ Rever tom e confirmar a contagem de prazo antes de enviar. Data prevista de envi
 >
 > Na sequência da nossa reunião de 18 de agosto, avançámos com a preparação da análise comparativa entre manter o enquadramento atual, optar por contabilidade organizada em nome individual, ou constituir sociedade. O modelo de cálculo está construído e a análise da questão da transparência fiscal está feita.
 >
-> Para produzir números que sirvam para decidir — e não apenas ordens de grandeza — precisamos dos elementos da lista em anexo. Estão organizados por ordem de utilidade: **o primeiro é o mais importante e é o mais rápido de obter.**
+> Para produzir números que sirvam para decidir, e não apenas ordens de grandeza — precisamos dos elementos da lista em anexo. Estão organizados por ordem de utilidade. O primeiro é o mais importante e o mais rápido de obter.
 >
 > Dois pontos de calendário que convém ter presentes desde já:
 >
 > - A opção por contabilidade organizada mantendo a atividade em nome individual só produz efeitos se for exercida **até ao final de março**. Se essa vier a ser a via recomendada e a janela for perdida, a decisão adia-se um ano inteiro.
 > - Se a constituição de sociedade for a via escolhida e houver intenção de afastar o regime de transparência fiscal, a estrutura tem de estar montada **antes do final de junho** para produzir efeito nesse exercício.
 >
-> Se algum elemento não existir ainda em versão definitiva, envie a versão de trabalho com essa indicação. Trabalhamos com estimativas identificadas como tal; o que não conseguimos fazer é adivinhar sem o dizer.
+> Se algum elemento não existir ainda em versão definitiva, envie a versão de trabalho com essa indicação. Trabalhamos com estimativas identificadas como tal. O que não conseguimos fazer é adivinhar sem o dizer.
 >
 > Fico disponível para uma chamada de quinze minutos se for mais rápido do que escrever.
 >
@@ -35,7 +35,7 @@ Rever tom e confirmar a contagem de prazo antes de enviar. Data prevista de envi
 
 O código de atividade que consta da declaração de início ou de alterações de atividade do seu cônjuge, junto da Autoridade Tributária. Serve uma cópia do documento, ou apenas o código.
 
-**Porque é o primeiro da lista:** toda a análise da hipótese de integrar o cônjuge na sociedade — que ficou em aberto na nossa reunião — depende de saber se a atividade dele está ou não incluída numa lista específica do Código do IRS. Se estiver, a hipótese não produz o efeito que se pretendia, seja qual for a percentagem de capital. É o elemento mais barato de obter e o que mais pode alterar a recomendação.
+**Porque é o primeiro da lista:** toda a análise da hipótese de integrar o cônjuge na sociedade, que ficou em aberto na nossa reunião, depende de saber se a atividade dele está ou não incluída numa lista específica do Código do IRS. Se estiver, a hipótese não produz o efeito que se pretendia, seja qual for a percentagem de capital. É o elemento mais barato de obter e o que mais pode alterar a recomendação.
 
 ---
 
@@ -50,7 +50,7 @@ Não lhe vamos pedir uma projeção de faturação. Vamos pedir-lhe os números 
 
 E o mesmo, para cada fisioterapeuta que pretende integrar: dias por ano, consultas por dia, duração.
 
-**Porque perguntamos assim:** uma previsão de faturação é um palpite e ninguém a consegue verificar. Estes números, não — com eles calculamos a faturação **e** verificamos se ela cabe no espaço. É uma diferença prática: uma projeção que exija mais consultas do que os gabinetes comportam é impossível, não é ambiciosa, e mais vale descobri-lo agora do que depois de assinar o arrendamento.
+**Porque perguntamos assim:** uma previsão de faturação é um palpite e ninguém a consegue verificar. Estes números, não. Com eles calculamos a faturação e verificamos se ela cabe no espaço. A diferença é prática: uma projeção que exija mais consultas do que os gabinetes comportam é impossível, não é ambiciosa, e mais vale descobri-lo agora do que depois de assinar o arrendamento.
 
 Se preferir dar-nos diretamente um valor de faturação previsto, também trabalhamos com ele. Mas perdemos essa verificação.
 
@@ -72,7 +72,7 @@ Para **cada um** dos espaços (2 e 3 gabinetes):
 - se a renda inclui ou não IVA;
 - **número de gabinetes efetivamente utilizáveis para consulta**, e o horário de funcionamento previsto.
 
-**Sobre o último ponto:** é o que permite comparar os dois espaços a sério. A escolha entre dois e três gabinetes não se decide pela diferença de renda — decide-se pelo número de doentes que espera atender. Abaixo de um certo nível de procura, o terceiro gabinete é renda e obras a mais sem receita a acompanhar; acima dele, o espaço mais pequeno começa a recusar consultas. Conseguimos dizer-lhe onde está esse ponto, mas só com estes dados.
+**Sobre o último ponto:** é o que permite comparar os dois espaços a sério. A escolha entre dois e três gabinetes não se decide pela diferença de renda, mas pelo número de doentes que espera atender. Abaixo de um certo nível de procura, o terceiro gabinete é renda e obras a mais sem receita a acompanhar; acima dele, o espaço mais pequeno começa a recusar consultas. Conseguimos dizer-lhe onde está esse ponto, mas só com estes dados.
 
 **Nota:** o concelho não é um detalhe. A taxa de derrama municipal varia de município para município, e alguns isentam volumes de negócios reduzidos.
 
@@ -82,7 +82,7 @@ Para **cada um** dos espaços (2 e 3 gabinetes):
 
 Orçamentos dos fornecedores, com o valor sem IVA, a taxa aplicada e o total, **discriminados por item** no caso do equipamento clínico.
 
-**Porque pedimos item a item:** a fisioterapia é uma atividade isenta de IVA, o que significa que o IVA que suporta nas obras e no equipamento não é recuperável e passa a ser custo definitivo. Há equipamento clínico que pode beneficiar de taxa reduzida, e essa verificação só se faz olhando para cada item. É uma poupança que só se obtém antes de comprar.
+**Porque pedimos item a item:** a fisioterapia é isenta de IVA, o que significa que o IVA suportado nas obras e no equipamento não é recuperável e passa a ser custo definitivo. Há equipamento clínico que pode beneficiar de taxa reduzida, e essa verificação só se faz olhando para cada item. É uma poupança que só se obtém antes de comprar.
 
 ---
 
@@ -97,7 +97,7 @@ Para cada profissional, ainda que em negociação:
 - quem marca as consultas e define os horários;
 - se está previsto ele faturar-lhe a si, ou pagar-lhe a si pelo uso do espaço.
 
-**Porque perguntamos tanto:** discutimos na reunião dois modelos, prestação de serviços e cedência de sala. A escolha entre eles altera a margem, o tratamento em IVA, e — como confirmámos entretanto — pode alterar também o enquadramento fiscal da própria sociedade. As últimas três perguntas são as que determinam o risco de a relação vir a ser lida como contrato de trabalho, que é o risco mais caro desta operação.
+**Porque perguntamos tanto:** discutimos na reunião dois modelos, prestação de serviços e cedência de sala. A escolha entre eles altera a margem, o tratamento em IVA e, como confirmámos entretanto, pode alterar também o enquadramento fiscal da própria sociedade. As últimas três perguntas são as que determinam o risco de a relação vir a ser lida como contrato de trabalho, que é o risco mais caro desta operação.
 
 ---
 
@@ -111,7 +111,7 @@ Além do código de atividade (ponto 1): faturação anual, regime em que está 
 
 Rendimento anual de cada um, número de dependentes, e se apresentam declaração conjunta ou separada.
 
-**Porque é necessário:** em qualquer das vias em análise, o resultado da atividade vai ser tributado na sua esfera pessoal, às taxas progressivas do IRS. O rendimento do agregado determina a taxa marginal aplicável — sem ele, não conseguimos calcular o efeito real de cada estrutura, apenas o efeito teórico.
+**Porque é necessário:** em qualquer das vias em análise, o resultado da atividade é tributado na sua esfera pessoal, às taxas progressivas do IRS. O rendimento do agregado determina a taxa aplicável. Sem ele, calculamos o efeito teórico de cada estrutura, não o real.
 
 ---
 
@@ -127,7 +127,7 @@ A proposta escrita, ou os termos discutidos. Se não houver nada de concreto, ba
 
 Um valor anual indicativo do que precisa de retirar da atividade para as suas despesas pessoais.
 
-**Porque perguntamos:** esta é, provavelmente, a pergunta desta lista com maior efeito sobre a recomendação final, e é a única que não se responde com um documento. A vantagem relativa de algumas das estruturas em análise depende inteiramente de o lucro ficar na empresa ou ser levantado todos os anos. Não há resposta certa — só há a sua.
+**Porque perguntamos:** é provavelmente a pergunta desta lista com maior efeito sobre a recomendação final, e a única que não se responde com um documento. A vantagem relativa de algumas estruturas depende inteiramente de o lucro ficar na empresa ou ser levantado todos os anos. Não há resposta certa. Há a sua.
 
 ---
 
@@ -135,7 +135,7 @@ Um valor anual indicativo do que precisa de retirar da atividade para as suas de
 
 O prazo da nossa análise conta a partir da receção completa destes elementos e suspende-se enquanto faltar informação. Findos **60 dias** sem elementos, o trabalho encerra e fatura-se o realizado.
 
-Não é uma imposição burocrática: os números que produzimos têm de refletir uma realidade que não se altere entre a análise e a decisão.
+Não é uma imposição burocrática. Os números que produzimos têm de refletir uma realidade que não se altere entre a análise e a decisão.
 
 ---
 

@@ -47,7 +47,7 @@ A modelação está boa. O ficheiro não está preparado para sair das minhas m�
 
 ### 1. Disciplina de parâmetros, com norma e estado
 
-Todas as taxas, escalões e limiares vivem numa folha, cada um com a norma que o sustenta e uma coluna de estado de validação que alimenta os alertas. Depois da correção desta auditoria, **não resta um único número fiscal cravado dentro de uma fórmula**.
+Todas as taxas, escalões e limiares vivem numa folha, cada um com a norma que o sustenta e uma coluna de estado de validação que alimenta os alertas. Depois da correção desta auditoria, não resta um único número fiscal cravado dentro de uma fórmula.
 
 ### 2. Validação por recálculo independente
 
@@ -59,14 +59,14 @@ A folha `Alertas` diz, em duas palavras, se o ficheiro pode ou não produzir nú
 
 ### 4. Separações conceptuais que quase nunca se fazem
 
-- Três break-even distintos — fiscal, operacional e rendimento-alvo — que a mesma palavra designa e que aqui nunca se misturam.
+- Três break-even distintos — fiscal, operacional e rendimento-alvo, que a mesma palavra designa e que aqui nunca se misturam.
 - Retido na sociedade separado do líquido da sócia, e ambos separados do líquido do agregado.
 - IRS em diferencial do agregado, única forma de comparar as vias havendo rendimento do cônjuge.
 - Rentabilidade separada de solvência.
 
 ### 5. Comparações metodologicamente corretas
 
-A comparação 2 vs. 3 gabinetes faz-se a **procura constante**, não a igual taxa de utilização. É a diferença entre uma comparação e um artefacto — e foi um erro que existiu e teve de ser corrigido.
+A comparação 2 vs. 3 gabinetes faz-se a **procura constante**, não a igual taxa de utilização. É a diferença entre uma comparação e um artefacto, e foi um erro que existiu e teve de ser corrigido.
 
 ### 6. Reprodutível e versionável
 
@@ -76,7 +76,7 @@ Gerado por script. Diferenças entre versões leem-se num diff, não abrindo dua
 
 ## Contras
 
-### 1. **68% das fórmulas não têm validação independente** — o mais grave
+### 1. 68% das fórmulas não têm validação independente — o mais grave
 
 | Folha | Fórmulas | Validada |
 |---|---|---|
@@ -88,15 +88,15 @@ Gerado por script. Diferenças entre versões leem-se num diff, não abrindo dua
 | Espaco, IVA, Operacao, RiscoLaboral, Alertas, Conjuge | 283 | Não |
 | **Total sem validação** | **1.054 de 1.546** | |
 
-Não é uma questão de volume. As folhas não validadas são precisamente aquelas onde estão os números que passaram a sustentar a decisão: os **67.306 €** de dinheiro necessário antes de abrir, o break-even, o ponto de viragem do terceiro gabinete, os **77.065 €** de passivo laboral. Se algum estiver errado, **nada o apanha**.
+Não é uma questão de volume. As folhas não validadas são precisamente aquelas onde estão os números que passaram a sustentar a decisão: os **67.306 €** de dinheiro necessário antes de abrir, o break-even, o ponto de viragem do terceiro gabinete, os **77.065 €** de passivo laboral. Se algum estiver errado, nada o apanha.
 
 A validação foi construída quando o modelo tinha quatro folhas de vias e não acompanhou o crescimento.
 
 ### 2. Fórmulas que nenhum humano consegue auditar
 
-Mediana de 26 caracteres, o que está bem. Mas **69 fórmulas acima de 500 caracteres**, e as cinco maiores com **1.030 caracteres cada**.
+Mediana de 26 caracteres, o que está bem. Mas 69 fórmulas acima de 500 caracteres, e as cinco maiores com 1.030 caracteres cada.
 
-A causa é o cálculo do IRS por escalões, replicado inline em cada sítio onde é preciso em vez de viver numa coluna auxiliar. Funciona, está validado nas folhas das vias — mas um revisor da equipa de Fiscalidade não consegue confirmar visualmente uma fórmula com mil caracteres. Na prática, tem de confiar.
+A causa é o cálculo do IRS por escalões, replicado inline em cada sítio onde é preciso em vez de viver numa coluna auxiliar. Funciona, está validado nas folhas das vias, mas um revisor da equipa de Fiscalidade não consegue confirmar visualmente uma fórmula com mil caracteres. Na prática, tem de confiar.
 
 ### 3. Zero intervalos nomeados
 
@@ -110,12 +110,12 @@ Todas as referências têm a forma `Parametros!$C$12`. Combinado com o ponto ant
 | Faturação real do ano 1 (com rampa de arranque) | 78.097 € |
 | Diferença | **−23%** |
 
-As duas folhas estão certas isoladamente e respondem a perguntas diferentes. Mas **a recomendação assenta num líquido de cruzeiro que o ano 1 não vai produzir**, e nada no ficheiro avisa disso. Para uma cliente sem experiência, é precisamente o tipo de diferença que gera a frase «mas vocês disseram que eu ganhava X».
+As duas folhas estão certas isoladamente e respondem a perguntas diferentes. Mas a recomendação assenta num líquido de cruzeiro que o ano 1 não vai produzir, e nada no ficheiro avisa disso. Para uma cliente sem experiência, é precisamente o tipo de diferença que gera a frase «mas vocês disseram que eu ganhava X».
 
 ### 5. Sem proteção nem validação de dados
 
-- **0 de 18 folhas protegidas.** Qualquer pessoa escreve por cima de uma fórmula sem dar por isso, e não há forma de saber depois.
-- **0 regras de validação de dados.** Nada impede escrever `MOD_COLAB = 3`, que não existe e produz silenciosamente resultados errados; ou introduzir uma renda como texto.
+- 0 de 18 folhas protegidas. Qualquer pessoa escreve por cima de uma fórmula sem dar por isso, e não há forma de saber depois.
+- 0 regras de validação de dados. Nada impede escrever `MOD_COLAB = 3`, que não existe e produz silenciosamente resultados errados; ou introduzir uma renda como texto.
 
 Para um ficheiro que vai passar por três equipas, é a lacuna mais fácil de fechar e a mais provável de morder.
 
@@ -125,7 +125,7 @@ Baixo, Base e Alto movem simultaneamente faturação, custos, investimento e nú
 
 ### 7. Nunca aberto em Excel real
 
-Validado com um avaliador de fórmulas em Python. O LibreOffice não funciona neste ambiente — não recalcula sequer um ficheiro de três células. O recálculo na abertura está forçado, mas **o comportamento em Excel não foi observado**.
+Validado com um avaliador de fórmulas em Python. O LibreOffice não funciona neste ambiente — não recalcula sequer um ficheiro de três células. O recálculo na abertura está forçado, mas o comportamento em Excel não foi observado.
 
 ---
 
@@ -146,8 +146,8 @@ Os pontos 1 e 2 deviam estar feitos **antes** de o ficheiro ser partilhado com a
 
 ## Corrigido durante esta auditoria
 
-- **Coima do risco laboral** estava cravada a 50% dentro de uma fórmula, valendo 17.955 €. Passou a parâmetro.
-- **Limiares de utilização** (100%, 85%, 30%) estavam cravados em três sítios. Passaram a parâmetros.
+- Coima do risco laboral estava cravada a 50% dentro de uma fórmula, valendo 17.955 €. Passou a parâmetro.
+- Limiares de utilização (100%, 85%, 30%) estavam cravados em três sítios. Passaram a parâmetros.
 
 Resta um único literal em fórmula: a tolerância de 0,50 € na comparação da folha `Validacao`, que é uma tolerância de arredondamento e não um parâmetro de modelo.
 
@@ -173,7 +173,7 @@ Os quatro primeiros pontos do plano de correção foram executados e verificados
 | 3 | Auditabilidade das fórmulas | 69 acima de 500 caracteres, máximo de **1.030** | **zero** acima de 500, máximo de **262**. O quociente conjugal passou a linha própria e a coleta do agregado sem a atividade, que era recalculada em cada linha das tabelas, passou a ser calculada uma só vez |
 | 4 | Incoerência cruzeiro vs. ano 1 | Silenciosa | Bloco de aviso no `Comparativo`, com a receita de cruzeiro, a do ano 1 e a diferença de **−23%**, e a instrução de nunca dar o valor de cruzeiro sem a ressalva |
 
-Reverificação após as correções: **3.752 células, zero erros de fórmula, 32 verificações de recálculo independente, todas conformes.**
+Reverificação após as correções: 3.752 células, zero erros de fórmula, 32 verificações de recálculo independente, todas conformes.
 
 ## Notas revistas
 
