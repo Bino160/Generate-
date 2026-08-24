@@ -361,7 +361,10 @@ orow("PRECO_FIS", "Preço médio por consulta", (45, 48, 50), fmt=EUR, note="EM 
 
 section(wso, r, "Capacidade", span=6); r += 1
 orow("CAP_DIA", "Capacidade diária por gabinete (consultas)", fn=lambda c:
-     "={h}*60/{d}".format(h=oc("HORAS_DIA", c), d=oc("DUR_CONS", c)), fmt='#,##0.0', style="calc")
+     "=IF({d}<=0,0,{h}*60/{d})".format(h=oc("HORAS_DIA", c), d=oc("DUR_CONS", c)),
+     fmt='#,##0.0', style="calc",
+     note="A guarda contra duração zero não é zelo excessivo: sem ela, um zero nesta coluna propaga "
+          "erro de divisão por todas as folhas do ficheiro.")
 orow("CAP_ANO", "Capacidade anual instalada (consultas)", fn=lambda c:
      "={g}*{d}*{k}".format(g=oc("N_GAB", c), d=oc("DIAS_ANO", c), k=oc("CAP_DIA", c)), style="result")
 
@@ -1630,7 +1633,10 @@ def ec(key, col):
 
 
 section(we, r, "Características de cada espaço", span=5); r += 1
-erow("N_GAB", "N.º de gabinetes", (2, 3), fmt=NUM)
+erow("N_GAB", "N.º de gabinetes desta opção", (2, 3), fmt=NUM,
+     note="Independente da folha Operacao, e é essa a intenção: aqui compara-se a hipótese de 2 com a "
+          "hipótese de 3, enquanto na Operacao está o espaço efetivamente escolhido. Alterar um não "
+          "altera o outro.")
 erow("RENDA", "Renda anual", (14400, 19200), note="Input cliente 3 — EM FALTA, para os dois espaços.")
 erow("CONDOM", "Condomínio e encargos anuais", (1500, 2000), note="EM FALTA.")
 erow("OBRAS", "Obras de adaptação", (25000, 38000), note="Input cliente 4 — EM FALTA.")
@@ -2793,7 +2799,7 @@ for _sn, _rng in [("Alertas", [SW[k].replace("$", "") for k in SW]),
 # regras genericas sobre as celulas de preenchimento, por formato
 for sn in wb.sheetnames:
     ws_ = wb[sn]
-    eur, pct = [], []
+    eur, pct, num = [], [], []
     for row in ws_.iter_rows():
         for c in row:
             if c.fill is None or c.fill.fgColor is None:
@@ -2806,6 +2812,8 @@ for sn in wb.sheetnames:
                 eur.append(c.coordinate)
             elif c.number_format in (PCT, PCT2):
                 pct.append(c.coordinate)
+            elif c.number_format in (NUM, '#,##0.0', 'General'):
+                num.append(c.coordinate)
     if eur:
         dv = DataValidation(type="decimal", operator="greaterThanOrEqual", formula1="0",
                             showErrorMessage=True, errorTitle="Valor inválido",
@@ -2820,6 +2828,26 @@ for sn in wb.sheetnames:
         ws_.add_data_validation(dv)
         for ref in pct:
             dv.add(ws_[ref])
+    if num:
+        dv = DataValidation(type="decimal", operator="greaterThanOrEqual", formula1="0",
+                            showErrorMessage=True, errorTitle="Valor inválido",
+                            error="Introduza um número não negativo.")
+        ws_.add_data_validation(dv)
+        for ref in num:
+            dv.add(ws_[ref])
+
+# celulas que sao divisores em alguma formula: tem de ser estritamente positivas
+for _sn, _refs in [("Operacao", ["%s%d" % (cl, O["DUR_CONS"]) for cl in "CDE"]
+                                + ["%s%d" % (cl, O["HORAS_DIA"]) for cl in "CDE"]
+                                + ["%s%d" % (cl, O["DIAS_ANO"]) for cl in "CDE"]
+                                + ["%s%d" % (cl, O["N_GAB"]) for cl in "CDE"])]:
+    dv = DataValidation(type="decimal", operator="greaterThan", formula1="0",
+                        showErrorMessage=True, errorTitle="Tem de ser maior do que zero",
+                        error="Este valor é divisor no cálculo da capacidade. A zero, o modelo inteiro "
+                              "fica em erro.")
+    wb[_sn].add_data_validation(dv)
+    for ref in _refs:
+        dv.add(wb[_sn][ref])
 
 # bloquear tudo excepto as celulas de preenchimento
 for sn in wb.sheetnames:
