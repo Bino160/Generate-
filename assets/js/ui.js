@@ -386,7 +386,13 @@
     renderBarraExercicios();
     renderFormulario('#form-sociedade', CAMPOS_SOCIEDADE,
       function (c) { return ex().sociedade[c.chave]; },
-      function (c, v) { ex().sociedade[c.chave] = v; },
+      function (c, v) {
+        ex().sociedade[c.chave] = v;
+        // A sociedade é a mesma em todos os exercícios: o nome acompanha-os.
+        if (c.chave === 'designacao') {
+          dados.exercicios.forEach(function (e) { e.sociedade.designacao = v; });
+        }
+      },
       ex().sociedade, 'Reconciliação e valores já pagos');
     verificarCoerencia();
   }
@@ -573,7 +579,12 @@
 
   function simular() {
     renderBarraExercicios();
-    var vazio = F.numeroBruto(ex().sociedade.materiaColetavel) <= 0;
+    // Só não há nada a simular quando nenhum exercício tem matéria coletável.
+    // Um ano ainda por preencher não pode esconder os anos que já estão.
+    var vazio = !dados.exercicios.some(function (e) {
+      return F.numeroBruto(e.sociedade.materiaColetavel) > 0;
+    });
+    var ativoVazio = F.numeroBruto(ex().sociedade.materiaColetavel) <= 0;
     $('#ecra-4').classList.toggle('resultado--vazio', vazio);
     $('#vazio').hidden = !vazio;
     if (vazio) {
@@ -597,8 +608,17 @@
       ]));
       return;
     }
+    // O detalhe mostra um exercício preenchido; o consolidado mostra todos.
+    var indiceDetalhe = dados.ativo;
+    if (ativoVazio) {
+      indiceDetalhe = dados.exercicios.findIndex(function (e) {
+        return F.numeroBruto(e.sociedade.materiaColetavel) > 0;
+      });
+    }
+    var detalhe = dados.exercicios[indiceDetalhe];
+
     try {
-      resultado = Motor.simular({ sociedade: ex().sociedade, socios: ex().socios, parametros: dados.parametros });
+      resultado = Motor.simular({ sociedade: detalhe.sociedade, socios: detalhe.socios, parametros: dados.parametros });
       consolidado = Motor.consolidar(dados);
     } catch (erro) {
       $('#avisos').innerHTML = '';
@@ -609,6 +629,14 @@
     window.__consolidado = consolidado;
     renderConsolidado();
     renderHeroi();
+
+    if (ativoVazio) {
+      $('#heroi').insertBefore(
+        el('p', { class: 'heroi__nota',
+          texto: 'O exercício de ' + F.numeroBruto(ex().sociedade.exercicio) +
+            ' ainda não tem matéria coletável. Em baixo está o detalhe de ' + resultado.meta.exercicio + '.' }),
+        $('#heroi').firstChild);
+    }
     renderAvisos();
     renderConfianca();
     renderKPIs();

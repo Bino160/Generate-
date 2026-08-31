@@ -585,3 +585,7 @@ input:focus-visible, select:focus-visible {
   .consolidado__resumo { text-align: left; }
   .exercicio--remover { margin-left: 0; }
 }
+.heroi__nota {
+  font-size: .84rem; color: var(--aviso); background: var(--aviso-claro);
+  border-radius: 6px; padding: .45rem .7rem; margin: 0 0 .8rem;
+}
