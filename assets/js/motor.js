@@ -952,6 +952,90 @@
     };
   }
 
+  /* ================================================================== *
+   * 12. Custo de esperar
+   *
+   * Adiar a decisao nao tem apenas um efeito. Os juros continuam a correr,
+   * o que agrava; mas ha exercicios que saem do prazo de caducidade, o que
+   * alivia — e leva consigo o IRC que deixa de ser recuperavel. O saldo pode
+   * ir em qualquer direccao, e e por isso que tem de ser calculado e nao
+   * assumido.
+   * ================================================================== */
+
+  function projetarEspera(dados, horizontes) {
+    horizontes = horizontes || [0, 1, 2, 3];
+    var referenciaBase = data(dados.parametros && dados.parametros.dataReferencia);
+
+    var pontos = horizontes.map(function (anos) {
+      var copia = JSON.parse(JSON.stringify(dados));
+      var ref = new Date(referenciaBase.getTime());
+      ref.setUTCFullYear(ref.getUTCFullYear() + anos);
+      copia.parametros.dataReferencia = ref.toISOString().slice(0, 10);
+
+      var c = consolidar(copia);
+      var abertos = c.exercicios.filter(function (x) { return !x.caducado; });
+      var porAno = {};
+      c.exercicios.forEach(function (x) { porAno[x.exercicio] = x; });
+
+      return {
+        anos: anos,
+        data: copia.parametros.dataReferencia,
+        exposicao: c.totais.exposicaoLiquida,
+        juros: c.totais.juros,
+        irsAdicional: c.totais.irsAdicional,
+        ircRecuperavel: c.totais.ircRecuperavel,
+        abertos: c.totais.abertos,
+        exerciciosAbertos: abertos.map(function (x) { return x.exercicio; }),
+        porAno: porAno
+      };
+    });
+
+    var hoje = pontos[0];
+    pontos.forEach(function (ponto) {
+      ponto.variacao = arred(ponto.exposicao - hoje.exposicao);
+      ponto.perdidos = hoje.exerciciosAbertos.filter(function (ano) {
+        return ponto.exerciciosAbertos.indexOf(ano) === -1;
+      });
+
+      // A variacao tem duas origens de sinal contrario. Apresentar so o saldo
+      // seria dizer que esperar compensa, quando o que se passa e que ha
+      // exercicios a sair do alcance da Autoridade Tributaria.
+      var comuns = ponto.exerciciosAbertos.filter(function (ano) {
+        return hoje.exerciciosAbertos.indexOf(ano) !== -1;
+      });
+      ponto.jurosAcrescidos = arred(comuns.reduce(function (a, ano) {
+        return a + (ponto.porAno[ano].juros - hoje.porAno[ano].juros);
+      }, 0));
+      ponto.exposicaoCaducada = arred(ponto.perdidos.reduce(function (a, ano) {
+        return a + hoje.porAno[ano].exposicaoLiquida;
+      }, 0));
+      ponto.ircPerdido = arred(ponto.perdidos.reduce(function (a, ano) {
+        return a + hoje.porAno[ano].ircRecuperavel;
+      }, 0));
+    });
+
+    // Custo medio de cada mes de espera no primeiro ano, que e o horizonte
+    // em que a decisao costuma ser tomada.
+    var primeiroAno = pontos.filter(function (p) { return p.anos === 1; })[0];
+    var custoMensal = primeiroAno ? arred(primeiroAno.variacao / 12) : 0;
+
+    var ultimo = pontos[pontos.length - 1];
+    return {
+      pontos: pontos,
+      custoMensalPrimeiroAno: custoMensal,
+      // Quando a exposicao desce com o tempo, e porque ha exercicios a cair
+      // fora do prazo — e nao porque esperar seja gratuito.
+      desceComEspera: pontos.some(function (p) { return p.variacao < 0; }),
+      haCaducidades: pontos.some(function (p) { return p.perdidos.length > 0; }),
+      ircPerdidoNoHorizonte: ultimo ? ultimo.ircPerdido : 0,
+      ressalva: 'A descida da exposição com o tempo resulta de exercícios saírem do prazo de ' +
+        'caducidade, e não de esperar ser gratuito. O prazo suspende-se com a ação de inspeção ' +
+        '(artigo 46.º da LGT): se a Autoridade Tributária atuar antes do termo, a exposição ' +
+        'mantém-se e os juros continuam a correr. O IRC desses exercícios deixa também de ser ' +
+        'recuperável, e essa perda é definitiva.'
+    };
+  }
+
   /** Funde parametros do utilizador sobre os valores por omissao. */
   function mesclarParametros(personalizados) {
     var base = Parametros.porOmissao();
@@ -972,6 +1056,7 @@
   return {
     simular: simular,
     consolidar: consolidar,
+    projetarEspera: projetarEspera,
     avaliarQualidade: avaliarQualidade,
     liquidarIRS: liquidarIRS,
     coletaProgressiva: coletaProgressiva,

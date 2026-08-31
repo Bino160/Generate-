@@ -601,6 +601,28 @@ input:focus-visible, select:focus-visible {
   border-radius: 6px; padding: .45rem .7rem; margin: 0 0 .8rem;
 }
 
+/* ------------------------ Custo de esperar -------------------------- */
+.espera { list-style: none; margin: 0 0 .8rem; padding: 0; display: grid; gap: .55rem; }
+.espera__linha {
+  display: grid; grid-template-columns: minmax(7rem, 9rem) 1fr minmax(9rem, 12rem);
+  gap: .8rem; align-items: center;
+}
+.espera__rotulo { display: flex; flex-direction: column; }
+.espera__momento { font-family: var(--titulo); font-size: .85rem; font-weight: 600; }
+.espera__data { font-size: .72rem; color: var(--tinta-tenue); }
+.espera__trilho { height: 14px; background: var(--linha); border-radius: 4px; overflow: hidden; }
+.espera__barra { height: 100%; background: var(--marca); border-radius: 4px; }
+.espera__linha--hoje .espera__barra { background: var(--alerta); }
+.espera__valores { display: flex; flex-direction: column; text-align: right; }
+.espera__valor { font-family: var(--titulo); font-weight: 600; font-size: .95rem; font-variant-numeric: tabular-nums; }
+.espera__detalhe { font-size: .72rem; color: var(--tinta-suave); }
+@media (max-width: 640px) {
+  .espera__linha { grid-template-columns: 1fr auto; grid-template-areas: "rotulo valores" "trilho trilho"; }
+  .espera__rotulo { grid-area: rotulo; }
+  .espera__valores { grid-area: valores; }
+  .espera__trilho { grid-area: trilho; }
+}
+
 </style>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚖️</text></svg>">
 </head>
@@ -739,6 +761,11 @@ input:focus-visible, select:focus-visible {
     <div id="avisos"></div>
 
     <div class="cartoes" id="cartoes-financeiros"></div>
+
+    <div class="cartao" id="espera">
+      <h3>Quanto custa esperar</h3>
+      <div id="espera-conteudo"></div>
+    </div>
 
     <div class="cartao">
       <h3>Comparador</h3>
@@ -2031,6 +2058,90 @@ input:focus-visible, select:focus-visible {
     };
   }
 
+  /* ================================================================== *
+   * 12. Custo de esperar
+   *
+   * Adiar a decisao nao tem apenas um efeito. Os juros continuam a correr,
+   * o que agrava; mas ha exercicios que saem do prazo de caducidade, o que
+   * alivia — e leva consigo o IRC que deixa de ser recuperavel. O saldo pode
+   * ir em qualquer direccao, e e por isso que tem de ser calculado e nao
+   * assumido.
+   * ================================================================== */
+
+  function projetarEspera(dados, horizontes) {
+    horizontes = horizontes || [0, 1, 2, 3];
+    var referenciaBase = data(dados.parametros && dados.parametros.dataReferencia);
+
+    var pontos = horizontes.map(function (anos) {
+      var copia = JSON.parse(JSON.stringify(dados));
+      var ref = new Date(referenciaBase.getTime());
+      ref.setUTCFullYear(ref.getUTCFullYear() + anos);
+      copia.parametros.dataReferencia = ref.toISOString().slice(0, 10);
+
+      var c = consolidar(copia);
+      var abertos = c.exercicios.filter(function (x) { return !x.caducado; });
+      var porAno = {};
+      c.exercicios.forEach(function (x) { porAno[x.exercicio] = x; });
+
+      return {
+        anos: anos,
+        data: copia.parametros.dataReferencia,
+        exposicao: c.totais.exposicaoLiquida,
+        juros: c.totais.juros,
+        irsAdicional: c.totais.irsAdicional,
+        ircRecuperavel: c.totais.ircRecuperavel,
+        abertos: c.totais.abertos,
+        exerciciosAbertos: abertos.map(function (x) { return x.exercicio; }),
+        porAno: porAno
+      };
+    });
+
+    var hoje = pontos[0];
+    pontos.forEach(function (ponto) {
+      ponto.variacao = arred(ponto.exposicao - hoje.exposicao);
+      ponto.perdidos = hoje.exerciciosAbertos.filter(function (ano) {
+        return ponto.exerciciosAbertos.indexOf(ano) === -1;
+      });
+
+      // A variacao tem duas origens de sinal contrario. Apresentar so o saldo
+      // seria dizer que esperar compensa, quando o que se passa e que ha
+      // exercicios a sair do alcance da Autoridade Tributaria.
+      var comuns = ponto.exerciciosAbertos.filter(function (ano) {
+        return hoje.exerciciosAbertos.indexOf(ano) !== -1;
+      });
+      ponto.jurosAcrescidos = arred(comuns.reduce(function (a, ano) {
+        return a + (ponto.porAno[ano].juros - hoje.porAno[ano].juros);
+      }, 0));
+      ponto.exposicaoCaducada = arred(ponto.perdidos.reduce(function (a, ano) {
+        return a + hoje.porAno[ano].exposicaoLiquida;
+      }, 0));
+      ponto.ircPerdido = arred(ponto.perdidos.reduce(function (a, ano) {
+        return a + hoje.porAno[ano].ircRecuperavel;
+      }, 0));
+    });
+
+    // Custo medio de cada mes de espera no primeiro ano, que e o horizonte
+    // em que a decisao costuma ser tomada.
+    var primeiroAno = pontos.filter(function (p) { return p.anos === 1; })[0];
+    var custoMensal = primeiroAno ? arred(primeiroAno.variacao / 12) : 0;
+
+    var ultimo = pontos[pontos.length - 1];
+    return {
+      pontos: pontos,
+      custoMensalPrimeiroAno: custoMensal,
+      // Quando a exposicao desce com o tempo, e porque ha exercicios a cair
+      // fora do prazo — e nao porque esperar seja gratuito.
+      desceComEspera: pontos.some(function (p) { return p.variacao < 0; }),
+      haCaducidades: pontos.some(function (p) { return p.perdidos.length > 0; }),
+      ircPerdidoNoHorizonte: ultimo ? ultimo.ircPerdido : 0,
+      ressalva: 'A descida da exposição com o tempo resulta de exercícios saírem do prazo de ' +
+        'caducidade, e não de esperar ser gratuito. O prazo suspende-se com a ação de inspeção ' +
+        '(artigo 46.º da LGT): se a Autoridade Tributária atuar antes do termo, a exposição ' +
+        'mantém-se e os juros continuam a correr. O IRC desses exercícios deixa também de ser ' +
+        'recuperável, e essa perda é definitiva.'
+    };
+  }
+
   /** Funde parametros do utilizador sobre os valores por omissao. */
   function mesclarParametros(personalizados) {
     var base = Parametros.porOmissao();
@@ -2051,6 +2162,7 @@ input:focus-visible, select:focus-visible {
   return {
     simular: simular,
     consolidar: consolidar,
+    projetarEspera: projetarEspera,
     avaliarQualidade: avaliarQualidade,
     liquidarIRS: liquidarIRS,
     coletaProgressiva: coletaProgressiva,
@@ -2473,6 +2585,37 @@ input:focus-visible, select:focus-visible {
     ].join('\n');
   }
 
+  /** Custo de esperar: a secção que transforma o relatório numa decisão. */
+  function esperaSeccao(e) {
+    if (!e || !e.pontos || e.pontos.length < 2) return '';
+    var linhas = e.pontos.map(function (p) {
+      var nota = [];
+      if (p.jurosAcrescidos > 0) nota.push('juros +' + F.euro(p.jurosAcrescidos));
+      if (p.perdidos.length) nota.push('sai do prazo ' + p.perdidos.join(', '));
+      return {
+        celulas: [
+          { html: '<strong>' + esc(p.anos === 0 ? 'Regularizar hoje' : '+' + p.anos + (p.anos === 1 ? ' ano' : ' anos')) +
+            '</strong><br><span class="nota">' + esc(F.data(p.data)) + (nota.length ? ' · ' + esc(nota.join(' · ')) : '') + '</span>' },
+          F.euro(p.exposicao),
+          p.anos === 0 ? '—' : (p.variacao > 0 ? '+' : '') + F.euro(p.variacao)
+        ],
+        total: p.anos === 0
+      };
+    });
+
+    return [
+      '<h2>5. Custo de esperar</h2>',
+      tabela(['Momento da regularização', 'Exposição líquida', 'Variação'], linhas),
+      e.haCaducidades
+        ? '<div class="aviso">' + esc(e.ressalva) + '</div>' +
+          '<p>IRC que deixa de ser recuperável no horizonte de ' +
+          esc(e.pontos[e.pontos.length - 1].anos) + ' anos: <strong>' +
+          esc(F.euro(e.ircPerdidoNoHorizonte)) + '</strong>.</p>'
+        : '<p>Cada mês de espera acrescenta em média <strong>' + esc(F.euro(e.custoMensalPrimeiroAno)) +
+          '</strong> no primeiro ano, apenas em juros compensatórios.</p>'
+    ].join('\n');
+  }
+
   function resumoExecutivo(d, r) {
     var i = r.indicadores;
     var nome = d.sociedade.designacao || 'a sociedade';
@@ -2658,7 +2801,7 @@ input:focus-visible, select:focus-visible {
     linhas.push('Avaliar o impacto nos exercícios seguintes e corrigir o enquadramento declarativo para o futuro, ' +
       'de modo a interromper a acumulação de exposição.');
 
-    return '<h2>5. Recomendações</h2><ol class="plano">' +
+    return '<h2>6. Recomendações</h2><ol class="plano">' +
       linhas.map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ol>';
   }
 
@@ -2682,12 +2825,12 @@ input:focus-visible, select:focus-visible {
       ['Fase 6 — Correção prospetiva',
         'Adequação do enquadramento declarativo dos exercícios seguintes e, se aplicável, revisão da estrutura societária.']
     ];
-    return '<h2>6. Plano de regularização</h2>' + passos.map(function (p) {
+    return '<h2>7. Plano de regularização</h2>' + passos.map(function (p) {
       return '<h3>' + esc(p[0]) + '</h3><p>' + esc(p[1]) + '</p>';
     }).join('');
   }
 
-  function html(d, r, c, semBarra) {
+  function html(d, r, c, e, semBarra) {
     var titulo = 'Relatório de impacto — transparência fiscal — exercício de ' + r.meta.exercicio;
     return [
       '<!DOCTYPE html><html lang="pt-PT"><head><meta charset="utf-8"><title>' + esc(titulo) + '</title>',
@@ -2711,6 +2854,7 @@ input:focus-visible, select:focus-visible {
       resumoExecutivo(d, r),
       fundamentacao(r),
       simulacaoFinanceira(d, r),
+      esperaSeccao(e),
       recomendacoes(d, r),
       plano(d, r),
       '<div class="rodape-doc">',
@@ -2727,7 +2871,7 @@ input:focus-visible, select:focus-visible {
    * Alternativa para contextos em que as janelas emergentes são bloqueadas
    * (telemóvel, páginas em moldura): o relatório abre sobreposto à aplicação.
    */
-  function sobrepor(d, r, c) {
+  function sobrepor(d, r, c, e) {
     var fundo = document.createElement('div');
     fundo.setAttribute('role', 'dialog');
     fundo.setAttribute('aria-label', 'Relatório');
@@ -2756,7 +2900,7 @@ input:focus-visible, select:focus-visible {
     var moldura = document.createElement('iframe');
     moldura.title = 'Relatório de impacto';
     moldura.style.cssText = 'flex:1;width:100%;border:0;background:#fff;';
-    moldura.srcdoc = html(d, r, c, true);
+    moldura.srcdoc = html(d, r, c, e, true);
 
     imprimir.addEventListener('click', function () {
       try {
@@ -2782,12 +2926,12 @@ input:focus-visible, select:focus-visible {
   raiz.Relatorio = {
     html: html,
     sobrepor: sobrepor,
-    abrir: function (d, r, c) {
+    abrir: function (d, r, c, e) {
       var janela = null;
-      try { janela = window.open('', '_blank'); } catch (e) { janela = null; }
-      if (!janela) { sobrepor(d, r, c); return; }
+      try { janela = window.open('', '_blank'); } catch (erro) { janela = null; }
+      if (!janela) { sobrepor(d, r, c, e); return; }
       janela.document.open();
-      janela.document.write(html(d, r, c));
+      janela.document.write(html(d, r, c, e));
       janela.document.close();
     }
   };
@@ -3426,6 +3570,7 @@ input:focus-visible, select:focus-visible {
     window.__consolidado = consolidado;
     renderConsolidado();
     renderHeroi();
+    renderEspera();
 
     if (ativoVazio) {
       $('#heroi').insertBefore(
@@ -3461,6 +3606,59 @@ input:focus-visible, select:focus-visible {
    * é o total e a ordem por que os anos têm de ser tratados — não o detalhe
    * de um deles.
    */
+  /**
+   * Custo de esperar. A exposição pode subir com os juros e descer com a
+   * caducidade dos exercícios mais antigos: mostrar só o saldo diria que
+   * esperar compensa, quando o que se passa é outra coisa.
+   */
+  function renderEspera() {
+    var alvo = $('#espera-conteudo');
+    alvo.innerHTML = '';
+    var projecao;
+    try { projecao = Motor.projetarEspera(dados); } catch (e) { $('#espera').hidden = true; return; }
+    $('#espera').hidden = false;
+
+    var maximo = Math.max.apply(null, projecao.pontos.map(function (p) { return Math.abs(p.exposicao); }).concat([1]));
+    var lista = el('ol', { class: 'espera' });
+
+    projecao.pontos.forEach(function (ponto) {
+      var rotulo = ponto.anos === 0 ? 'Regularizar hoje'
+        : '+' + ponto.anos + (ponto.anos === 1 ? ' ano' : ' anos');
+      var detalhes = [];
+      if (ponto.jurosAcrescidos > 0) detalhes.push('juros +' + F.euro(ponto.jurosAcrescidos));
+      if (ponto.perdidos.length) {
+        detalhes.push('sai do prazo ' + ponto.perdidos.join(', ') + ' (−' + F.euro(ponto.exposicaoCaducada) + ')');
+      }
+
+      lista.appendChild(el('li', { class: 'espera__linha' + (ponto.anos === 0 ? ' espera__linha--hoje' : '') }, [
+        el('div', { class: 'espera__rotulo' }, [
+          el('span', { class: 'espera__momento', texto: rotulo }),
+          el('span', { class: 'espera__data', texto: F.data(ponto.data) })
+        ]),
+        el('div', { class: 'espera__trilho' }, [
+          el('div', { class: 'espera__barra', style: 'width:' + Math.max(1, (Math.abs(ponto.exposicao) / maximo) * 100) + '%' })
+        ]),
+        el('div', { class: 'espera__valores' }, [
+          el('span', { class: 'espera__valor', texto: F.euro(ponto.exposicao) }),
+          detalhes.length ? el('span', { class: 'espera__detalhe', texto: detalhes.join(' · ') }) : null
+        ])
+      ]));
+    });
+
+    alvo.appendChild(lista);
+
+    if (projecao.haCaducidades) {
+      alvo.appendChild(el('div', { class: 'aviso-caixa aviso-caixa--aviso', texto: projecao.ressalva }));
+      alvo.appendChild(el('p', { class: 'ajuda',
+        texto: 'IRC que deixa de ser recuperável no horizonte de ' +
+          projecao.pontos[projecao.pontos.length - 1].anos + ' anos: ' + F.euro(projecao.ircPerdidoNoHorizonte) + '.' }));
+    } else if (projecao.custoMensalPrimeiroAno > 0) {
+      alvo.appendChild(el('p', { class: 'ajuda',
+        texto: 'Cada mês de espera acrescenta em média ' + F.euro(projecao.custoMensalPrimeiroAno) +
+          ' no primeiro ano, só em juros compensatórios.' }));
+    }
+  }
+
   function renderConsolidado() {
     var alvo = $('#consolidado');
     alvo.innerHTML = '';
@@ -3898,8 +4096,10 @@ input:focus-visible, select:focus-visible {
     },
     relatorio: function () {
       if (!resultado) simular();
+      var projecao = null;
+      try { projecao = Motor.projetarEspera(dados); } catch (e) { projecao = null; }
       window.Relatorio.abrir({ sociedade: ex().sociedade, socios: ex().socios, parametros: dados.parametros },
-        resultado, consolidado);
+        resultado, consolidado, projecao);
     }
   };
 

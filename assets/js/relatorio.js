@@ -108,6 +108,37 @@
     ].join('\n');
   }
 
+  /** Custo de esperar: a secção que transforma o relatório numa decisão. */
+  function esperaSeccao(e) {
+    if (!e || !e.pontos || e.pontos.length < 2) return '';
+    var linhas = e.pontos.map(function (p) {
+      var nota = [];
+      if (p.jurosAcrescidos > 0) nota.push('juros +' + F.euro(p.jurosAcrescidos));
+      if (p.perdidos.length) nota.push('sai do prazo ' + p.perdidos.join(', '));
+      return {
+        celulas: [
+          { html: '<strong>' + esc(p.anos === 0 ? 'Regularizar hoje' : '+' + p.anos + (p.anos === 1 ? ' ano' : ' anos')) +
+            '</strong><br><span class="nota">' + esc(F.data(p.data)) + (nota.length ? ' · ' + esc(nota.join(' · ')) : '') + '</span>' },
+          F.euro(p.exposicao),
+          p.anos === 0 ? '—' : (p.variacao > 0 ? '+' : '') + F.euro(p.variacao)
+        ],
+        total: p.anos === 0
+      };
+    });
+
+    return [
+      '<h2>5. Custo de esperar</h2>',
+      tabela(['Momento da regularização', 'Exposição líquida', 'Variação'], linhas),
+      e.haCaducidades
+        ? '<div class="aviso">' + esc(e.ressalva) + '</div>' +
+          '<p>IRC que deixa de ser recuperável no horizonte de ' +
+          esc(e.pontos[e.pontos.length - 1].anos) + ' anos: <strong>' +
+          esc(F.euro(e.ircPerdidoNoHorizonte)) + '</strong>.</p>'
+        : '<p>Cada mês de espera acrescenta em média <strong>' + esc(F.euro(e.custoMensalPrimeiroAno)) +
+          '</strong> no primeiro ano, apenas em juros compensatórios.</p>'
+    ].join('\n');
+  }
+
   function resumoExecutivo(d, r) {
     var i = r.indicadores;
     var nome = d.sociedade.designacao || 'a sociedade';
@@ -293,7 +324,7 @@
     linhas.push('Avaliar o impacto nos exercícios seguintes e corrigir o enquadramento declarativo para o futuro, ' +
       'de modo a interromper a acumulação de exposição.');
 
-    return '<h2>5. Recomendações</h2><ol class="plano">' +
+    return '<h2>6. Recomendações</h2><ol class="plano">' +
       linhas.map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ol>';
   }
 
@@ -317,12 +348,12 @@
       ['Fase 6 — Correção prospetiva',
         'Adequação do enquadramento declarativo dos exercícios seguintes e, se aplicável, revisão da estrutura societária.']
     ];
-    return '<h2>6. Plano de regularização</h2>' + passos.map(function (p) {
+    return '<h2>7. Plano de regularização</h2>' + passos.map(function (p) {
       return '<h3>' + esc(p[0]) + '</h3><p>' + esc(p[1]) + '</p>';
     }).join('');
   }
 
-  function html(d, r, c, semBarra) {
+  function html(d, r, c, e, semBarra) {
     var titulo = 'Relatório de impacto — transparência fiscal — exercício de ' + r.meta.exercicio;
     return [
       '<!DOCTYPE html><html lang="pt-PT"><head><meta charset="utf-8"><title>' + esc(titulo) + '</title>',
@@ -346,6 +377,7 @@
       resumoExecutivo(d, r),
       fundamentacao(r),
       simulacaoFinanceira(d, r),
+      esperaSeccao(e),
       recomendacoes(d, r),
       plano(d, r),
       '<div class="rodape-doc">',
@@ -362,7 +394,7 @@
    * Alternativa para contextos em que as janelas emergentes são bloqueadas
    * (telemóvel, páginas em moldura): o relatório abre sobreposto à aplicação.
    */
-  function sobrepor(d, r, c) {
+  function sobrepor(d, r, c, e) {
     var fundo = document.createElement('div');
     fundo.setAttribute('role', 'dialog');
     fundo.setAttribute('aria-label', 'Relatório');
@@ -391,7 +423,7 @@
     var moldura = document.createElement('iframe');
     moldura.title = 'Relatório de impacto';
     moldura.style.cssText = 'flex:1;width:100%;border:0;background:#fff;';
-    moldura.srcdoc = html(d, r, c, true);
+    moldura.srcdoc = html(d, r, c, e, true);
 
     imprimir.addEventListener('click', function () {
       try {
@@ -417,12 +449,12 @@
   raiz.Relatorio = {
     html: html,
     sobrepor: sobrepor,
-    abrir: function (d, r, c) {
+    abrir: function (d, r, c, e) {
       var janela = null;
-      try { janela = window.open('', '_blank'); } catch (e) { janela = null; }
-      if (!janela) { sobrepor(d, r, c); return; }
+      try { janela = window.open('', '_blank'); } catch (erro) { janela = null; }
+      if (!janela) { sobrepor(d, r, c, e); return; }
       janela.document.open();
-      janela.document.write(html(d, r, c));
+      janela.document.write(html(d, r, c, e));
       janela.document.close();
     }
   };

@@ -177,7 +177,22 @@ Total consolidado = Σ exposição líquida dos exercícios DENTRO do prazo de c
 
 Os exercícios são independentes entre si. Não é modelada a transmissão de prejuízos nem qualquer interação entre anos.
 
-## 10. Confiança da simulação
+## 10. Custo de esperar
+
+`Motor.projetarEspera(dados)` recalcula a consolidação com a data de referência deslocada 1, 2 e 3 anos. Não é uma extrapolação: é a mesma simulação noutra data, pelo que apanha os dois efeitos de sinal contrário que o adiamento produz.
+
+```
+variação = juros acrescidos nos exercícios que continuam abertos
+         − exposição dos exercícios que saíram do prazo de caducidade
+```
+
+A decomposição é apresentada sempre. Mostrar apenas o saldo diria que esperar compensa, quando o que se passa é que há exercícios a sair do alcance da Autoridade Tributária — com três ressalvas que a aplicação declara:
+
+- O prazo **suspende-se com a ação de inspeção** (artigo 46.º da LGT). Se a AT atuar antes do termo, a exposição mantém-se e os juros continuam a correr.
+- O **IRC desses exercícios deixa de ser recuperável**, e a perda é definitiva. O montante é apresentado.
+- Quando nenhum exercício caduca no horizonte, a projeção é puramente de juros e mostra o custo médio mensal do adiamento.
+
+## 11. Confiança da simulação
 
 Cada simulação produz um índice de confiança a partir do estado dos inputs, apresentado no ecrã de resultado e no relatório. Sete verificações, ponderadas (`ok` = 1, `aviso` = 0,5, `em falta` = 0):
 
@@ -191,11 +206,11 @@ Cada simulação produz um índice de confiança a partir do estado dos inputs, 
 
 O índice nunca chega a 100%: o cenário de recuperação é, por natureza, uma hipótese. É deliberado — a ferramenta não deve poder apresentar-se como certa.
 
-## 11. Versão das regras fiscais
+## 12. Versão das regras fiscais
 
 O conjunto de parâmetros tem versão e data (`Parametros.VERSAO`), apresentadas no rodapé da aplicação e no relatório. Um relatório emitido hoje tem de poder ser lido daqui a dois anos com a indicação de que regras usou.
 
-## 12. Validações automáticas
+## 13. Validações automáticas
 
 - Soma das participações diferente de 100% → **erro** (imputação sub ou sobreavaliada).
 - `resultado contabilístico + correções ≠ matéria coletável` → **aviso** com a diferença quantificada (justificável por prejuízos fiscais reportados ou benefícios).
@@ -206,9 +221,9 @@ O conjunto de parâmetros tem versão e data (`Parametros.VERSAO`), apresentadas
 
 ---
 
-## 13. Testes
+## 14. Testes
 
-`tests/motor.test.js` (40 testes) cobre a coleta progressiva contra valores calculados à mão, a taxa de solidariedade por faixas, o quociente conjugal, o piso zero do imposto, a imputação integral da matéria coletável, **os quatro regimes de juros e os respetivos limites**, a ordenação dos cenários de coima e a **ausência da palavra «provável»**, a não multiplicação automática da coima declarativa, a base de recuperação do IRC e os seus rótulos, a matriz de sensibilidade, a **não compensação** dos lucros distribuídos, o efeito das deduções à coleta reais, o **índice de confiança**, a **regra aplicável em cada evento da cronologia**, a ancoragem dos prazos na data de liquidação, a versão das regras, a sobreposição de parâmetros do utilizador, a substituição de tabelas em falta e as validações.
+`tests/motor.test.js` (48 testes) cobre a coleta progressiva contra valores calculados à mão, a taxa de solidariedade por faixas, o quociente conjugal, o piso zero do imposto, a imputação integral da matéria coletável, **os quatro regimes de juros e os respetivos limites**, a ordenação dos cenários de coima e a **ausência da palavra «provável»**, a não multiplicação automática da coima declarativa, a base de recuperação do IRC e os seus rótulos, a matriz de sensibilidade, a **não compensação** dos lucros distribuídos, o efeito das deduções à coleta reais, o **índice de confiança**, a **regra aplicável em cada evento da cronologia**, a ancoragem dos prazos na data de liquidação, a versão das regras, a sobreposição de parâmetros do utilizador, a substituição de tabelas em falta e as validações.
 
 ```bash
 npm test

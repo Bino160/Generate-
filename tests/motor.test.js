@@ -461,3 +461,44 @@ test('remover um exercicio remove o indicado, nao o que esta selecionado', () =>
   assert.strictEqual(Estado.removerExercicio(d, 0), false);
   assert.strictEqual(d.exercicios.length, 1);
 });
+
+/* ==================================================================== *
+ * Custo de esperar
+ * ==================================================================== */
+
+test('esperar acrescenta juros quando nenhum exercicio sai do prazo', () => {
+  // 2025 so caduca em 31/12/2029, portanto continua aberto em +3 anos.
+  const pr = Motor.projetarEspera(multiplo([2025]));
+  assert.strictEqual(pr.pontos.length, 4);
+  assert.strictEqual(pr.haCaducidades, false);
+  assert.strictEqual(pr.desceComEspera, false);
+  // A exposicao cresce monotonicamente, so por juros.
+  for (let i = 1; i < pr.pontos.length; i++) {
+    assert.ok(pr.pontos[i].exposicao > pr.pontos[i - 1].exposicao);
+    eq(pr.pontos[i].exposicaoCaducada, 0);
+  }
+  assert.ok(pr.custoMensalPrimeiroAno > 0);
+});
+
+test('a variacao decompoe-se em juros acrescidos menos exposicao caducada', () => {
+  const pr = Motor.projetarEspera(multiplo([2022, 2023, 2024]));
+  pr.pontos.forEach((ponto) => {
+    eq(ponto.variacao, ponto.jurosAcrescidos - ponto.exposicaoCaducada, 1);
+  });
+});
+
+test('exercicios que saem do prazo sao identificados, com o IRC que se perde', () => {
+  const pr = Motor.projetarEspera(multiplo([2022, 2023, 2024]));
+  const maisUm = pr.pontos.find((p) => p.anos === 1);
+  assert.deepStrictEqual(maisUm.perdidos, [2022]);
+  assert.ok(maisUm.ircPerdido > 0, 'o IRC do exercicio que caduca deixa de ser recuperavel');
+  assert.strictEqual(pr.haCaducidades, true);
+  assert.ok(/artigo 46\.º da LGT/.test(pr.ressalva));
+  assert.ok(/não de esperar ser gratuito/.test(pr.ressalva));
+});
+
+test('a descida nunca e apresentada sem a ressalva da suspensao do prazo', () => {
+  const pr = Motor.projetarEspera(multiplo([2022]));
+  assert.strictEqual(pr.desceComEspera, true);
+  assert.ok(pr.ressalva && pr.ressalva.length > 100);
+});

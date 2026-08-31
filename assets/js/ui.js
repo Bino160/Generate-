@@ -629,6 +629,7 @@
     window.__consolidado = consolidado;
     renderConsolidado();
     renderHeroi();
+    renderEspera();
 
     if (ativoVazio) {
       $('#heroi').insertBefore(
@@ -664,6 +665,59 @@
    * é o total e a ordem por que os anos têm de ser tratados — não o detalhe
    * de um deles.
    */
+  /**
+   * Custo de esperar. A exposição pode subir com os juros e descer com a
+   * caducidade dos exercícios mais antigos: mostrar só o saldo diria que
+   * esperar compensa, quando o que se passa é outra coisa.
+   */
+  function renderEspera() {
+    var alvo = $('#espera-conteudo');
+    alvo.innerHTML = '';
+    var projecao;
+    try { projecao = Motor.projetarEspera(dados); } catch (e) { $('#espera').hidden = true; return; }
+    $('#espera').hidden = false;
+
+    var maximo = Math.max.apply(null, projecao.pontos.map(function (p) { return Math.abs(p.exposicao); }).concat([1]));
+    var lista = el('ol', { class: 'espera' });
+
+    projecao.pontos.forEach(function (ponto) {
+      var rotulo = ponto.anos === 0 ? 'Regularizar hoje'
+        : '+' + ponto.anos + (ponto.anos === 1 ? ' ano' : ' anos');
+      var detalhes = [];
+      if (ponto.jurosAcrescidos > 0) detalhes.push('juros +' + F.euro(ponto.jurosAcrescidos));
+      if (ponto.perdidos.length) {
+        detalhes.push('sai do prazo ' + ponto.perdidos.join(', ') + ' (−' + F.euro(ponto.exposicaoCaducada) + ')');
+      }
+
+      lista.appendChild(el('li', { class: 'espera__linha' + (ponto.anos === 0 ? ' espera__linha--hoje' : '') }, [
+        el('div', { class: 'espera__rotulo' }, [
+          el('span', { class: 'espera__momento', texto: rotulo }),
+          el('span', { class: 'espera__data', texto: F.data(ponto.data) })
+        ]),
+        el('div', { class: 'espera__trilho' }, [
+          el('div', { class: 'espera__barra', style: 'width:' + Math.max(1, (Math.abs(ponto.exposicao) / maximo) * 100) + '%' })
+        ]),
+        el('div', { class: 'espera__valores' }, [
+          el('span', { class: 'espera__valor', texto: F.euro(ponto.exposicao) }),
+          detalhes.length ? el('span', { class: 'espera__detalhe', texto: detalhes.join(' · ') }) : null
+        ])
+      ]));
+    });
+
+    alvo.appendChild(lista);
+
+    if (projecao.haCaducidades) {
+      alvo.appendChild(el('div', { class: 'aviso-caixa aviso-caixa--aviso', texto: projecao.ressalva }));
+      alvo.appendChild(el('p', { class: 'ajuda',
+        texto: 'IRC que deixa de ser recuperável no horizonte de ' +
+          projecao.pontos[projecao.pontos.length - 1].anos + ' anos: ' + F.euro(projecao.ircPerdidoNoHorizonte) + '.' }));
+    } else if (projecao.custoMensalPrimeiroAno > 0) {
+      alvo.appendChild(el('p', { class: 'ajuda',
+        texto: 'Cada mês de espera acrescenta em média ' + F.euro(projecao.custoMensalPrimeiroAno) +
+          ' no primeiro ano, só em juros compensatórios.' }));
+    }
+  }
+
   function renderConsolidado() {
     var alvo = $('#consolidado');
     alvo.innerHTML = '';
@@ -1101,8 +1155,10 @@
     },
     relatorio: function () {
       if (!resultado) simular();
+      var projecao = null;
+      try { projecao = Motor.projetarEspera(dados); } catch (e) { projecao = null; }
       window.Relatorio.abrir({ sociedade: ex().sociedade, socios: ex().socios, parametros: dados.parametros },
-        resultado, consolidado);
+        resultado, consolidado, projecao);
     }
   };
 
