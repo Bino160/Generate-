@@ -159,12 +159,13 @@
       ', este último a abater ao custo total.</p>',
       tabela(['Indicador', 'Montante'], [
         ['IRS adicional estimado dos sócios', F.euro(i.irsAdicional)],
-        ['Juros compensatórios', F.euro(i.juros)],
+        ['Juros compensatórios', F.euro(i.juros)]
+      ].concat(i.mora > 0 ? [['Juros de mora', F.euro(i.mora)]] : []).concat([
         ['Coimas (cenário de referência)', F.euro(i.coimas)],
         { celulas: ['Exposição bruta', F.euro(i.exposicaoBruta)], total: true },
         ['IRC potencialmente recuperável', '−' + F.euro(i.ircRecuperavel)],
         { celulas: ['Exposição fiscal líquida', F.euro(i.exposicaoLiquida)], total: true }
-      ]),
+      ])),
       confianca(r),
       r.avisos.filter(function (a) { return a.nivel === 'erro'; })
         .map(function (a) { return '<div class="aviso">' + esc(a.texto) + '</div>'; }).join('')
@@ -210,6 +211,14 @@
       'Regime aplicado nesta simulação: <strong>' + esc(r.juros.regimeRotulo) + '</strong>. ' + esc(r.juros.regra) + ' ' +
       'Taxa de ' + esc(F.percentagem(r.juros.taxaAnual, 2)) + ' ao ano, de ' + esc(F.data(r.juros.dataInicio)) +
       ' a ' + esc(F.data(r.juros.dataFim)) + '.</dd>',
+      '<dt>Artigo 44.º da LGT — Juros de mora</dt>',
+      '<dd>Devidos quando o imposto liquidado não é pago no prazo de pagamento voluntário. ' +
+      'Não se confundem com os compensatórios: estes correm até à liquidação, os de mora a partir dela. ' +
+      'A contagem tem o limite de três anos, ou de oito quando a dívida é paga em prestações. ' +
+      (r.mora.montante > 0
+        ? 'Nesta simulação foram considerados ' + esc(r.mora.mesesContados) + ' meses de atraso à taxa de ' +
+          esc(F.percentagem(r.mora.taxaAnual, 3)) + ', num total de ' + esc(F.euro(r.mora.montante)) + '.'
+        : 'Nesta simulação assume-se pagamento dentro do prazo, pelo que não há juros de mora.') + '</dd>',
       '<dt>Artigos 114.º e 119.º do RGIT — Coimas</dt>',
       '<dd>Falta de entrega da prestação tributária e inexatidão das declarações. ' +
       'Redução por regularização voluntária nos termos dos artigos 29.º e 30.º do RGIT. ' +
@@ -283,6 +292,13 @@
       ' (' + esc(F.data(r.juros.dataInicio)) + ' a ' + esc(F.data(r.juros.dataFim)) +
       '), num total de <strong>' + esc(F.euro(r.juros.montante)) + '</strong>.</p>',
       (r.juros.notas || []).map(function (n) { return '<div class="aviso">' + esc(n) + '</div>'; }).join(''),
+      (r.mora.montante > 0
+        ? '<h3>4.3-A Juros de mora</h3><p>' + esc(r.mora.regra) + ' Base de ' + esc(F.euro(r.mora.base)) +
+          ', ' + esc(r.mora.mesesContados) + ' meses' +
+          (r.mora.limiteAplicado ? ' (dos ' + esc(r.mora.meses) + ' declarados, por aplicação do limite legal)' : '') +
+          ', à taxa de ' + esc(F.percentagem(r.mora.taxaAnual, 3)) + ', num total de <strong>' +
+          esc(F.euro(r.mora.montante)) + '</strong>.</p>'
+        : ''),
       '<h3>4.4 Cenários de coima</h3>', coimas,
       '<h3>4.5 Recuperação do IRC</h3>',
       '<p>Base potencialmente recuperável de ' + esc(F.euro(r.recuperacaoIRC.base)) + ', correspondente à coleta de IRC ' +

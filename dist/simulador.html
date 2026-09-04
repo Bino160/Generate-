@@ -708,6 +708,11 @@ input:focus-visible, select:focus-visible {
     </div>
 
     <div class="cartao">
+      <h3>Juros de mora <small>artigo 44.º da LGT</small></h3>
+      <div id="form-mora"></div>
+    </div>
+
+    <div class="cartao">
       <h3>Coimas <small>artigos 114.º e 119.º do RGIT</small></h3>
       <div class="grelha" id="form-coimas"></div>
     </div>
@@ -992,6 +997,27 @@ input:focus-visible, select:focus-visible {
   };
 
   /* ------------------------------------------------------------------ *
+   * Juros de mora (artigo 44.º da LGT)
+   *
+   * Sao devidos quando o imposto liquidado nao e pago no prazo legal. Nao se
+   * confundem com os compensatorios: estes correm ate a liquidacao, os de
+   * mora correm a partir do fim do prazo de pagamento voluntario.
+   * ------------------------------------------------------------------ */
+  var MORA = {
+    estado: 'confirmado',
+    fonte: 'Artigo 44.º da LGT. Taxa das dívidas ao Estado fixada em 7,221% para 2026 ' +
+      '(Aviso n.º 18/2026/2, de 2 de janeiro). A taxa é revista anualmente: confirme a do ano em causa.',
+    taxaAnual: 0.07221,
+    baseDias: 365,
+    // Artigo 44.º, n.º 2 da LGT: o prazo maximo de contagem e de tres anos,
+    // salvo pagamento em prestacoes, caso em que vai ate oito.
+    limiteAnos: 3,
+    limiteAnosPrestacoes: 8,
+    // Prazo de pagamento voluntario apos a notificacao da liquidacao.
+    prazoPagamentoDias: 30
+  };
+
+  /* ------------------------------------------------------------------ *
    * Coimas (RGIT)
    * ------------------------------------------------------------------ */
   var COIMAS = {
@@ -1070,6 +1096,7 @@ input:focus-visible, select:focus-visible {
       escaloesIRS: ESCALOES_IRS,
       solidariedade: SOLIDARIEDADE,
       juros: JUROS,
+      mora: MORA,
       coimas: COIMAS,
       irs: IRS,
       prazos: PRAZOS,
@@ -1428,6 +1455,43 @@ input:focus-visible, select:focus-visible {
 
   function iso(d) {
     return data(d).toISOString().slice(0, 10);
+  }
+
+  /* ================================================================== *
+   * 5-B. Juros de mora (artigo 44.º da LGT)
+   *
+   * Correm depois da liquidacao, quando o imposto nao e pago no prazo de
+   * pagamento voluntario. So entram no calculo quando o utilizador declara
+   * um atraso: assumir que o cliente paga tarde seria inventar um cenario.
+   * ================================================================== */
+
+  function calcularMora(impostoEmFalta, dados, p) {
+    var base = Math.max(0, num(impostoEmFalta));
+    var par = dados.parametros || {};
+    var meses = Math.max(0, num(par.mesesAtrasoPagamento));
+    var prestacoes = !!par.pagamentoEmPrestacoes;
+
+    var limiteAnos = prestacoes ? num(p.mora.limiteAnosPrestacoes) : num(p.mora.limiteAnos);
+    var mesesMaximos = limiteAnos * 12;
+    var limitado = meses > mesesMaximos;
+    var mesesContados = limitado ? mesesMaximos : meses;
+
+    var montante = base * num(p.mora.taxaAnual) * (mesesContados / 12);
+
+    return {
+      base: arred(base),
+      taxaAnual: num(p.mora.taxaAnual),
+      meses: meses,
+      mesesContados: mesesContados,
+      limiteAnos: limiteAnos,
+      limiteAplicado: limitado,
+      prestacoes: prestacoes,
+      prazoPagamentoDias: num(p.mora.prazoPagamentoDias),
+      regra: 'Artigo 44.º da LGT: juros de mora desde o termo do prazo de pagamento voluntário de ' +
+        num(p.mora.prazoPagamentoDias) + ' dias, com o limite de ' + limiteAnos + ' anos' +
+        (prestacoes ? ' por a dívida ser paga em prestações' : '') + '.',
+      montante: arred(montante)
+    };
   }
 
   /* ================================================================== *
@@ -1861,6 +1925,7 @@ input:focus-visible, select:focus-visible {
     var irsAdicional = irsAdicionalBruto;
 
     var juros = calcularJuros(irsAdicional, dados, p);
+    var mora = calcularMora(irsAdicional, dados, p);
     var coimas = calcularCoimas(irsAdicional, dados, p);
     var recuperacao = calcularRecuperacaoIRC(actual, dados, p);
 
@@ -1883,7 +1948,7 @@ input:focus-visible, select:focus-visible {
     });
 
     function exposicao(valorCoima, valorIRC) {
-      return arred(irsAdicional + juros.montante + valorCoima - valorIRC);
+      return arred(irsAdicional + juros.montante + mora.montante + valorCoima - valorIRC);
     }
 
     var exposicaoLiquida = exposicao(coimas.referencia.valor, recuperacao.valorConsiderado);
@@ -1905,8 +1970,9 @@ input:focus-visible, select:focus-visible {
       { indicador: 'Tributações autónomas', atual: actual.irc.tributacoesAutonomas, corrigido: corrigido.irc.tributacoesAutonomas },
       { indicador: 'IRS dos sócios', atual: actual.irsTotal, corrigido: corrigido.irsTotal },
       { indicador: 'Juros compensatórios', atual: 0, corrigido: juros.montante },
+      { indicador: 'Juros de mora', atual: 0, corrigido: mora.montante },
       { indicador: 'Coimas (cenário de referência)', atual: 0, corrigido: coimas.referencia.valor },
-      { indicador: 'Carga fiscal total', atual: arred(actual.impostoTotal), corrigido: arred(corrigido.impostoTotal + juros.montante + coimas.referencia.valor) }
+      { indicador: 'Carga fiscal total', atual: arred(actual.impostoTotal), corrigido: arred(corrigido.impostoTotal + juros.montante + mora.montante + coimas.referencia.valor) }
     ].map(function (l) {
       l.variacao = arred(l.corrigido - l.atual);
       return l;
@@ -1925,6 +1991,7 @@ input:focus-visible, select:focus-visible {
       corrigido: corrigido,
       socios: porSocio,
       juros: juros,
+      mora: mora,
       coimas: coimas,
       recuperacaoIRC: recuperacao,
       indicadores: {
@@ -1932,9 +1999,10 @@ input:focus-visible, select:focus-visible {
         distribuicoesAssinaladas: arred(distribuicoesAssinaladas),
         irsAdicional: arred(irsAdicional),
         juros: juros.montante,
+        mora: mora.montante,
         coimas: coimas.referencia.valor,
         ircRecuperavel: recuperacao.valorConsiderado,
-        exposicaoBruta: arred(irsAdicional + juros.montante + coimas.referencia.valor),
+        exposicaoBruta: arred(irsAdicional + juros.montante + mora.montante + coimas.referencia.valor),
         exposicaoLiquida: exposicaoLiquida
       },
       matrizSensibilidade: matriz,
@@ -1976,6 +2044,7 @@ input:focus-visible, select:focus-visible {
         exposicaoLiquida: resultado.indicadores.exposicaoLiquida,
         irsAdicional: resultado.indicadores.irsAdicional,
         juros: resultado.indicadores.juros,
+        mora: resultado.indicadores.mora,
         coimas: resultado.indicadores.coimas,
         ircRecuperavel: resultado.indicadores.ircRecuperavel,
         favoravel: resultado.indicadores.exposicaoLiquida < 0,
@@ -2046,6 +2115,7 @@ input:focus-visible, select:focus-visible {
         abertos: abertos.length,
         irsAdicional: somaAbertos('irsAdicional'),
         juros: somaAbertos('juros'),
+        mora: somaAbertos('mora'),
         coimas: somaAbertos('coimas'),
         ircRecuperavel: somaAbertos('ircRecuperavel'),
         exposicaoLiquida: somaAbertos('exposicaoLiquida'),
@@ -2168,6 +2238,7 @@ input:focus-visible, select:focus-visible {
     coletaProgressiva: coletaProgressiva,
     solidariedade: solidariedade,
     calcularJuros: calcularJuros,
+    calcularMora: calcularMora,
     calcularCoimas: calcularCoimas,
     calcularRecuperacaoIRC: calcularRecuperacaoIRC,
     mesclarParametros: mesclarParametros,
@@ -2636,12 +2707,13 @@ input:focus-visible, select:focus-visible {
       ', este último a abater ao custo total.</p>',
       tabela(['Indicador', 'Montante'], [
         ['IRS adicional estimado dos sócios', F.euro(i.irsAdicional)],
-        ['Juros compensatórios', F.euro(i.juros)],
+        ['Juros compensatórios', F.euro(i.juros)]
+      ].concat(i.mora > 0 ? [['Juros de mora', F.euro(i.mora)]] : []).concat([
         ['Coimas (cenário de referência)', F.euro(i.coimas)],
         { celulas: ['Exposição bruta', F.euro(i.exposicaoBruta)], total: true },
         ['IRC potencialmente recuperável', '−' + F.euro(i.ircRecuperavel)],
         { celulas: ['Exposição fiscal líquida', F.euro(i.exposicaoLiquida)], total: true }
-      ]),
+      ])),
       confianca(r),
       r.avisos.filter(function (a) { return a.nivel === 'erro'; })
         .map(function (a) { return '<div class="aviso">' + esc(a.texto) + '</div>'; }).join('')
@@ -2687,6 +2759,14 @@ input:focus-visible, select:focus-visible {
       'Regime aplicado nesta simulação: <strong>' + esc(r.juros.regimeRotulo) + '</strong>. ' + esc(r.juros.regra) + ' ' +
       'Taxa de ' + esc(F.percentagem(r.juros.taxaAnual, 2)) + ' ao ano, de ' + esc(F.data(r.juros.dataInicio)) +
       ' a ' + esc(F.data(r.juros.dataFim)) + '.</dd>',
+      '<dt>Artigo 44.º da LGT — Juros de mora</dt>',
+      '<dd>Devidos quando o imposto liquidado não é pago no prazo de pagamento voluntário. ' +
+      'Não se confundem com os compensatórios: estes correm até à liquidação, os de mora a partir dela. ' +
+      'A contagem tem o limite de três anos, ou de oito quando a dívida é paga em prestações. ' +
+      (r.mora.montante > 0
+        ? 'Nesta simulação foram considerados ' + esc(r.mora.mesesContados) + ' meses de atraso à taxa de ' +
+          esc(F.percentagem(r.mora.taxaAnual, 3)) + ', num total de ' + esc(F.euro(r.mora.montante)) + '.'
+        : 'Nesta simulação assume-se pagamento dentro do prazo, pelo que não há juros de mora.') + '</dd>',
       '<dt>Artigos 114.º e 119.º do RGIT — Coimas</dt>',
       '<dd>Falta de entrega da prestação tributária e inexatidão das declarações. ' +
       'Redução por regularização voluntária nos termos dos artigos 29.º e 30.º do RGIT. ' +
@@ -2760,6 +2840,13 @@ input:focus-visible, select:focus-visible {
       ' (' + esc(F.data(r.juros.dataInicio)) + ' a ' + esc(F.data(r.juros.dataFim)) +
       '), num total de <strong>' + esc(F.euro(r.juros.montante)) + '</strong>.</p>',
       (r.juros.notas || []).map(function (n) { return '<div class="aviso">' + esc(n) + '</div>'; }).join(''),
+      (r.mora.montante > 0
+        ? '<h3>4.3-A Juros de mora</h3><p>' + esc(r.mora.regra) + ' Base de ' + esc(F.euro(r.mora.base)) +
+          ', ' + esc(r.mora.mesesContados) + ' meses' +
+          (r.mora.limiteAplicado ? ' (dos ' + esc(r.mora.meses) + ' declarados, por aplicação do limite legal)' : '') +
+          ', à taxa de ' + esc(F.percentagem(r.mora.taxaAnual, 3)) + ', num total de <strong>' +
+          esc(F.euro(r.mora.montante)) + '</strong>.</p>'
+        : ''),
       '<h3>4.4 Cenários de coima</h3>', coimas,
       '<h3>4.5 Recuperação do IRC</h3>',
       '<p>Base potencialmente recuperável de ' + esc(F.euro(r.recuperacaoIRC.base)) + ', correspondente à coleta de IRC ' +
@@ -3011,7 +3098,9 @@ input:focus-visible, select:focus-visible {
     { grupo: null, chave: 'dataInicioJuros', rotulo: 'Início dos juros (opcional)', tipo: 'data', ajuda: 'Vazio = termo do prazo de entrega da Modelo 3.' },
     { grupo: null, chave: 'dataLiquidacaoIRC', rotulo: 'Data de liquidação do IRC (opcional)', tipo: 'data', ajuda: 'Ancora os prazos de revisão e caducidade. Sem ela, os prazos são aproximados.' },
     { grupo: null, chave: 'dataPagamentoIRC', rotulo: 'Data de pagamento do IRC (opcional)', tipo: 'data' },
-    { grupo: null, chave: 'cenarioIRC', rotulo: 'Cenário de recuperação do IRC', tipo: 'opcoes', opcoes: [['integral', 'Recuperação 100%'], ['parcial', 'Recuperação parcial (percentagem abaixo)'], ['inexistente', 'Recuperação 0%']] }
+    { grupo: null, chave: 'cenarioIRC', rotulo: 'Cenário de recuperação do IRC', tipo: 'opcoes', opcoes: [['integral', 'Recuperação 100%'], ['parcial', 'Recuperação parcial (percentagem abaixo)'], ['inexistente', 'Recuperação 0%']] },
+    { grupo: null, chave: 'mesesAtrasoPagamento', rotulo: 'Meses de atraso no pagamento', tipo: 'inteiro', min: 0, max: 120, ajuda: 'Depois do prazo de pagamento voluntário. Zero assume pagamento dentro do prazo. Gera juros de mora (artigo 44.º da LGT).' },
+    { grupo: null, chave: 'pagamentoEmPrestacoes', rotulo: 'Pagamento em prestações (limite de mora sobe para 8 anos)', tipo: 'booleano', largo: true, visivel: function () { return F.numeroBruto(dados.parametros.mesesAtrasoPagamento) > 0; } }
   ];
 
   var CAMPOS_JUROS = [
@@ -3020,6 +3109,13 @@ input:focus-visible, select:focus-visible {
     { grupo: 'juros', chave: 'limiteDias', rotulo: 'Limite de dias (sobrepõe o regime)', tipo: 'inteiro', ajuda: 'Deixe vazio para usar o limite próprio do regime selecionado no cenário.' },
     { grupo: 'juros', chave: 'diaLimiteIRS', rotulo: 'Dia limite da Modelo 3', tipo: 'inteiro', min: 1, max: 31 },
     { grupo: 'juros', chave: 'mesLimiteIRS', rotulo: 'Mês limite da Modelo 3', tipo: 'inteiro', min: 1, max: 12 }
+  ];
+
+  var CAMPOS_MORA = [
+    { grupo: 'mora', chave: 'taxaAnual', rotulo: 'Taxa anual (%)', tipo: 'percentagem', ajuda: 'Taxa das dívidas ao Estado, revista anualmente. 7,221% para 2026.' },
+    { grupo: 'mora', chave: 'limiteAnos', rotulo: 'Limite de contagem (anos)', tipo: 'inteiro', ajuda: 'Artigo 44.º, n.º 2 da LGT.' },
+    { grupo: 'mora', chave: 'limiteAnosPrestacoes', rotulo: 'Limite com pagamento em prestações (anos)', tipo: 'inteiro' },
+    { grupo: 'mora', chave: 'prazoPagamentoDias', rotulo: 'Prazo de pagamento voluntário (dias)', tipo: 'inteiro' }
   ];
 
   var CAMPOS_COIMAS = [
@@ -3226,8 +3322,8 @@ input:focus-visible, select:focus-visible {
     atualizarProgresso();
     if (campo && campo.chave === 'tributacao') renderSocios();
     if (campo && (campo.chave === 'exercicio')) renderEscaloes();
-    // O regime de juros controla a visibilidade da data de conclusão da inspeção.
-    if (campo && campo.chave === 'regimeJuros') {
+    // Alguns campos do cenário controlam a visibilidade de outros.
+    if (campo && (campo.chave === 'regimeJuros' || campo.chave === 'mesesAtrasoPagamento')) {
       renderFormulario('#form-cenario', CAMPOS_CENARIO, valorEfetivo, definirParametro);
     }
     if (campo && campo.chave === 'participacao') atualizarSomaParticipacoes();
@@ -3442,6 +3538,7 @@ input:focus-visible, select:focus-visible {
     var definir = definirParametro;
     renderFormulario('#form-cenario', CAMPOS_CENARIO, obter, definir);
     renderFormulario('#form-juros', CAMPOS_JUROS, obter, definir);
+    renderFormulario('#form-mora', CAMPOS_MORA, obter, definir);
     renderFormulario('#form-coimas', CAMPOS_COIMAS, obter, definir);
     renderFormulario('#form-irs', CAMPOS_IRS, obter, definir);
     renderFormulario('#form-recuperacao', CAMPOS_RECUPERACAO, obter, definir);
@@ -3676,7 +3773,8 @@ input:focus-visible, select:focus-visible {
       ]),
       el('div', { class: 'consolidado__resumo' }, [
         el('div', { texto: 'IRS adicional ' + F.euro(t.irsAdicional) }),
-        el('div', { texto: 'Juros ' + F.euro(t.juros) }),
+        el('div', { texto: 'Juros compensatórios ' + F.euro(t.juros) }),
+        t.mora > 0 ? el('div', { texto: 'Juros de mora ' + F.euro(t.mora) }) : null,
         el('div', { texto: 'Coimas ' + F.euro(t.coimas) }),
         el('div', { texto: 'IRC recuperável −' + F.euro(t.ircRecuperavel) })
       ])
@@ -3755,10 +3853,11 @@ input:focus-visible, select:focus-visible {
 
     var parcelas = [
       { rotulo: 'IRS adicional', valor: i.irsAdicional, sinal: '+' },
-      { rotulo: 'Juros', valor: i.juros, sinal: '+' },
-      { rotulo: 'Coima', valor: i.coimas, sinal: '+' },
-      { rotulo: 'IRC recuperável', valor: i.ircRecuperavel, sinal: '−' }
+      { rotulo: 'Juros compensatórios', valor: i.juros, sinal: '+' }
     ];
+    if (i.mora > 0) parcelas.push({ rotulo: 'Juros de mora', valor: i.mora, sinal: '+' });
+    parcelas.push({ rotulo: 'Coima', valor: i.coimas, sinal: '+' });
+    parcelas.push({ rotulo: 'IRC recuperável', valor: i.ircRecuperavel, sinal: '−' });
     var lista = el('ol', { class: 'composicao' });
     parcelas.forEach(function (p) {
       lista.appendChild(el('li', { class: 'composicao__item' }, [
@@ -3827,6 +3926,11 @@ input:focus-visible, select:focus-visible {
       'Imputação de ' + F.euro(resultado.atual.irc.materiaColetavel) + ', antes das restantes deduções à coleta'));
     alvo.appendChild(kpi('Juros compensatórios', i.juros,
       resultado.juros.dias + ' dias · ' + resultado.juros.regimeRotulo));
+    if (i.mora > 0) {
+      alvo.appendChild(kpi('Juros de mora', i.mora,
+        resultado.mora.mesesContados + ' meses à taxa de ' + F.percentagem(resultado.mora.taxaAnual, 3) +
+        (resultado.mora.limiteAplicado ? ' · limite de ' + resultado.mora.limiteAnos + ' anos aplicado' : '')));
+    }
     alvo.appendChild(kpi('Coimas', i.coimas, 'Cenário de referência. Não é uma previsão'));
     alvo.appendChild(kpi('IRC recuperável', i.ircRecuperavel,
       resultado.recuperacaoIRC.cenarios[resultado.recuperacaoIRC.cenarioSelecionado].rotulo, 'positivo'));
@@ -3998,6 +4102,7 @@ input:focus-visible, select:focus-visible {
     alvo.appendChild(detalhe('Composição da exposição', [
       linhaMemoria('IRS adicional estimado (antes de outras deduções à coleta)', r.indicadores.irsAdicional),
       linhaMemoria('Juros compensatórios', r.indicadores.juros),
+      linhaMemoria('Juros de mora' + (r.mora.montante > 0 ? ' (' + r.mora.mesesContados + ' meses)' : ''), r.indicadores.mora),
       linhaMemoria('Coima (cenário de referência)', r.indicadores.coimas),
       linhaMemoria('IRC recuperado', -r.indicadores.ircRecuperavel),
       linhaMemoria('Exposição fiscal líquida', r.indicadores.exposicaoLiquida, true)

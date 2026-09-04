@@ -66,6 +66,7 @@ A soma das participações é verificada em tempo real: se não totalizar 100%, 
 |---|---|
 | **Cenário atual** | Apura o imposto efetivamente pago: IRC, derramas, tributações autónomas, saldo após pagamentos por conta e retenções; e o IRS dos sócios sem imputação. |
 | **Cenário corrigido** | Imputa a matéria coletável a cada sócio na proporção da participação, engloba-a como rendimento líquido da categoria B e reliquida o IRS. A sociedade fica apenas com as tributações autónomas. |
+| **Juros de mora** | Artigo 44.º da LGT: correm a partir do fim do prazo de pagamento voluntário, à taxa das dívidas ao Estado, com o limite de três anos — oito, com pagamento em prestações. Por omissão assume-se pagamento dentro do prazo. |
 | **Juros compensatórios** | Regra selecionável em função da **origem da correção**, e não uma fórmula única: omissão não evidenciada, regularização voluntária, erro evidenciado na declaração (máx. 180 dias) ou falta apurada em inspeção (até 90 dias após a conclusão). Artigo 35.º, n.º 7 da LGT. |
 | **Coimas** | Três **cenários de simulação** — baixo, de referência e alto — cada um com o fundamento legal explícito. Nenhum é apresentado como previsão da coima que a AT venha a aplicar. |
 | **Confiança** | Índice de confiança calculado a partir do estado dos inputs, apresentado no resultado e no relatório. |
@@ -180,7 +181,7 @@ Três decisões deliberadas contra a ilusão de precisão:
 | Versão | Âmbito |
 |---|---|
 | **MVP** ✅ | Introdução manual dos dados, multi-exercício, custo de esperar, simulação e relatório. |
-| **v2** | Juros de mora; juros por sujeito passivo; importação do ficheiro SAF-T. |
+| **v2** | juros por sujeito passivo; importação do ficheiro SAF-T. |
 | **v3** | Integração com software de contabilidade. |
 | **v4** | Benchmark setorial. |
 

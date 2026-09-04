@@ -96,6 +96,18 @@ O campo «limite de dias» dos parâmetros continua a existir e sobrepõe-se ao 
 
 ---
 
+## 4-B. Juros de mora
+
+Coisa distinta dos compensatórios: estes correm **até** à liquidação, os de mora correm **a partir** dela, quando o imposto liquidado não é pago no prazo de pagamento voluntário (artigo 44.º da LGT).
+
+```
+Mora = IRS adicional × taxa anual × (meses contados / 12)
+```
+
+- **Taxa:** 7,221% para 2026 (Aviso n.º 18/2026/2, de 2 de janeiro). É revista anualmente — confirme a do ano em causa.
+- **Limite:** três anos de contagem (artigo 44.º, n.º 2 da LGT), ou oito quando a dívida é paga em prestações. O limite é aplicado e assinalado.
+- **Por omissão não há mora:** assume-se pagamento dentro do prazo. Só entra quando o utilizador declara um atraso — presumir que o cliente paga tarde seria inventar um cenário.
+
 ## 5. Coimas
 
 Artigo 114.º, n.º 2 do RGIT — falta de entrega da prestação tributária a título de negligência: coima de 15% a 50% do imposto em falta. Artigo 26.º do RGIT — tetos. Artigo 119.º do RGIT — declarações inexatas ou omitidas.
@@ -137,7 +149,7 @@ O artigo 78.º da LGT **não é um prazo único de quatro anos**. Prevê vias e 
 ## 7. Exposição fiscal líquida
 
 ```
-Exposição bruta   = IRS adicional + juros + coima
+Exposição bruta   = IRS adicional + juros compensatórios + juros de mora + coima
 Exposição líquida = exposição bruta − IRC recuperado
 ```
 
@@ -223,7 +235,7 @@ O conjunto de parâmetros tem versão e data (`Parametros.VERSAO`), apresentadas
 
 ## 14. Testes
 
-`tests/motor.test.js` (48 testes) cobre a coleta progressiva contra valores calculados à mão, a taxa de solidariedade por faixas, o quociente conjugal, o piso zero do imposto, a imputação integral da matéria coletável, **os quatro regimes de juros e os respetivos limites**, a ordenação dos cenários de coima e a **ausência da palavra «provável»**, a não multiplicação automática da coima declarativa, a base de recuperação do IRC e os seus rótulos, a matriz de sensibilidade, a **não compensação** dos lucros distribuídos, o efeito das deduções à coleta reais, o **índice de confiança**, a **regra aplicável em cada evento da cronologia**, a ancoragem dos prazos na data de liquidação, a versão das regras, a sobreposição de parâmetros do utilizador, a substituição de tabelas em falta e as validações.
+`tests/motor.test.js` (54 testes) cobre a coleta progressiva contra valores calculados à mão, a taxa de solidariedade por faixas, o quociente conjugal, o piso zero do imposto, a imputação integral da matéria coletável, **os quatro regimes de juros e os respetivos limites**, a ordenação dos cenários de coima e a **ausência da palavra «provável»**, a não multiplicação automática da coima declarativa, a base de recuperação do IRC e os seus rótulos, a matriz de sensibilidade, a **não compensação** dos lucros distribuídos, o efeito das deduções à coleta reais, o **índice de confiança**, a **regra aplicável em cada evento da cronologia**, a ancoragem dos prazos na data de liquidação, a versão das regras, a sobreposição de parâmetros do utilizador, a substituição de tabelas em falta e as validações.
 
 ```bash
 npm test

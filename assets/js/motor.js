@@ -325,6 +325,43 @@
   }
 
   /* ================================================================== *
+   * 5-B. Juros de mora (artigo 44.º da LGT)
+   *
+   * Correm depois da liquidacao, quando o imposto nao e pago no prazo de
+   * pagamento voluntario. So entram no calculo quando o utilizador declara
+   * um atraso: assumir que o cliente paga tarde seria inventar um cenario.
+   * ================================================================== */
+
+  function calcularMora(impostoEmFalta, dados, p) {
+    var base = Math.max(0, num(impostoEmFalta));
+    var par = dados.parametros || {};
+    var meses = Math.max(0, num(par.mesesAtrasoPagamento));
+    var prestacoes = !!par.pagamentoEmPrestacoes;
+
+    var limiteAnos = prestacoes ? num(p.mora.limiteAnosPrestacoes) : num(p.mora.limiteAnos);
+    var mesesMaximos = limiteAnos * 12;
+    var limitado = meses > mesesMaximos;
+    var mesesContados = limitado ? mesesMaximos : meses;
+
+    var montante = base * num(p.mora.taxaAnual) * (mesesContados / 12);
+
+    return {
+      base: arred(base),
+      taxaAnual: num(p.mora.taxaAnual),
+      meses: meses,
+      mesesContados: mesesContados,
+      limiteAnos: limiteAnos,
+      limiteAplicado: limitado,
+      prestacoes: prestacoes,
+      prazoPagamentoDias: num(p.mora.prazoPagamentoDias),
+      regra: 'Artigo 44.º da LGT: juros de mora desde o termo do prazo de pagamento voluntário de ' +
+        num(p.mora.prazoPagamentoDias) + ' dias, com o limite de ' + limiteAnos + ' anos' +
+        (prestacoes ? ' por a dívida ser paga em prestações' : '') + '.',
+      montante: arred(montante)
+    };
+  }
+
+  /* ================================================================== *
    * 6. Coimas (RGIT)
    * ================================================================== */
 
@@ -755,6 +792,7 @@
     var irsAdicional = irsAdicionalBruto;
 
     var juros = calcularJuros(irsAdicional, dados, p);
+    var mora = calcularMora(irsAdicional, dados, p);
     var coimas = calcularCoimas(irsAdicional, dados, p);
     var recuperacao = calcularRecuperacaoIRC(actual, dados, p);
 
@@ -777,7 +815,7 @@
     });
 
     function exposicao(valorCoima, valorIRC) {
-      return arred(irsAdicional + juros.montante + valorCoima - valorIRC);
+      return arred(irsAdicional + juros.montante + mora.montante + valorCoima - valorIRC);
     }
 
     var exposicaoLiquida = exposicao(coimas.referencia.valor, recuperacao.valorConsiderado);
@@ -799,8 +837,9 @@
       { indicador: 'Tributações autónomas', atual: actual.irc.tributacoesAutonomas, corrigido: corrigido.irc.tributacoesAutonomas },
       { indicador: 'IRS dos sócios', atual: actual.irsTotal, corrigido: corrigido.irsTotal },
       { indicador: 'Juros compensatórios', atual: 0, corrigido: juros.montante },
+      { indicador: 'Juros de mora', atual: 0, corrigido: mora.montante },
       { indicador: 'Coimas (cenário de referência)', atual: 0, corrigido: coimas.referencia.valor },
-      { indicador: 'Carga fiscal total', atual: arred(actual.impostoTotal), corrigido: arred(corrigido.impostoTotal + juros.montante + coimas.referencia.valor) }
+      { indicador: 'Carga fiscal total', atual: arred(actual.impostoTotal), corrigido: arred(corrigido.impostoTotal + juros.montante + mora.montante + coimas.referencia.valor) }
     ].map(function (l) {
       l.variacao = arred(l.corrigido - l.atual);
       return l;
@@ -819,6 +858,7 @@
       corrigido: corrigido,
       socios: porSocio,
       juros: juros,
+      mora: mora,
       coimas: coimas,
       recuperacaoIRC: recuperacao,
       indicadores: {
@@ -826,9 +866,10 @@
         distribuicoesAssinaladas: arred(distribuicoesAssinaladas),
         irsAdicional: arred(irsAdicional),
         juros: juros.montante,
+        mora: mora.montante,
         coimas: coimas.referencia.valor,
         ircRecuperavel: recuperacao.valorConsiderado,
-        exposicaoBruta: arred(irsAdicional + juros.montante + coimas.referencia.valor),
+        exposicaoBruta: arred(irsAdicional + juros.montante + mora.montante + coimas.referencia.valor),
         exposicaoLiquida: exposicaoLiquida
       },
       matrizSensibilidade: matriz,
@@ -870,6 +911,7 @@
         exposicaoLiquida: resultado.indicadores.exposicaoLiquida,
         irsAdicional: resultado.indicadores.irsAdicional,
         juros: resultado.indicadores.juros,
+        mora: resultado.indicadores.mora,
         coimas: resultado.indicadores.coimas,
         ircRecuperavel: resultado.indicadores.ircRecuperavel,
         favoravel: resultado.indicadores.exposicaoLiquida < 0,
@@ -940,6 +982,7 @@
         abertos: abertos.length,
         irsAdicional: somaAbertos('irsAdicional'),
         juros: somaAbertos('juros'),
+        mora: somaAbertos('mora'),
         coimas: somaAbertos('coimas'),
         ircRecuperavel: somaAbertos('ircRecuperavel'),
         exposicaoLiquida: somaAbertos('exposicaoLiquida'),
@@ -1062,6 +1105,7 @@
     coletaProgressiva: coletaProgressiva,
     solidariedade: solidariedade,
     calcularJuros: calcularJuros,
+    calcularMora: calcularMora,
     calcularCoimas: calcularCoimas,
     calcularRecuperacaoIRC: calcularRecuperacaoIRC,
     mesclarParametros: mesclarParametros,

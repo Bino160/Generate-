@@ -502,3 +502,60 @@ test('a descida nunca e apresentada sem a ressalva da suspensao do prazo', () =>
   assert.strictEqual(pr.desceComEspera, true);
   assert.ok(pr.ressalva && pr.ressalva.length > 100);
 });
+
+/* ==================================================================== *
+ * Juros de mora
+ * ==================================================================== */
+
+test('sem atraso declarado nao ha juros de mora', () => {
+  const r = Motor.simular(cenarioBase());
+  eq(r.indicadores.mora, 0);
+  eq(r.mora.meses, 0);
+});
+
+test('juros de mora correm sobre o imposto e entram na exposicao', () => {
+  const dados = cenarioBase();
+  const sem = Motor.simular(dados);
+  dados.parametros.mesesAtrasoPagamento = 12;
+  const com = Motor.simular(dados);
+
+  eq(com.indicadores.mora, com.indicadores.irsAdicional * 0.07221);
+  eq(com.indicadores.exposicaoLiquida, sem.indicadores.exposicaoLiquida + com.indicadores.mora);
+  assert.ok(com.comparador.some((l) => l.indicador === 'Juros de mora' && l.corrigido > 0));
+});
+
+test('a contagem da mora para nos tres anos do artigo 44.º', () => {
+  const dados = cenarioBase();
+  dados.parametros.mesesAtrasoPagamento = 60;
+  const r = Motor.simular(dados);
+  assert.strictEqual(r.mora.mesesContados, 36);
+  assert.strictEqual(r.mora.limiteAplicado, true);
+  eq(r.indicadores.mora, r.indicadores.irsAdicional * 0.07221 * 3);
+});
+
+test('pagamento em prestacoes estende o limite para oito anos', () => {
+  const dados = cenarioBase();
+  dados.parametros.mesesAtrasoPagamento = 60;
+  dados.parametros.pagamentoEmPrestacoes = true;
+  const r = Motor.simular(dados);
+  assert.strictEqual(r.mora.mesesContados, 60);
+  assert.strictEqual(r.mora.limiteAnos, 8);
+  assert.strictEqual(r.mora.limiteAplicado, false);
+});
+
+test('mora nao se confunde com juros compensatorios', () => {
+  const dados = cenarioBase();
+  dados.parametros.mesesAtrasoPagamento = 12;
+  const r = Motor.simular(dados);
+  assert.notStrictEqual(r.mora.taxaAnual, r.juros.taxaAnual);
+  assert.ok(/artigo 44\.º da LGT/i.test(r.mora.regra));
+  assert.ok(/artigo 35\.º/i.test(r.juros.regra));
+});
+
+test('o consolidado soma a mora de todos os exercicios abertos', () => {
+  const dados = multiplo([2023, 2024]);
+  dados.parametros.mesesAtrasoPagamento = 12;
+  const c = Motor.consolidar(dados);
+  eq(c.totais.mora, c.exercicios.reduce((a, x) => a + x.mora, 0));
+  assert.ok(c.totais.mora > 0);
+});

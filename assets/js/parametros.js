@@ -153,6 +153,27 @@
   };
 
   /* ------------------------------------------------------------------ *
+   * Juros de mora (artigo 44.º da LGT)
+   *
+   * Sao devidos quando o imposto liquidado nao e pago no prazo legal. Nao se
+   * confundem com os compensatorios: estes correm ate a liquidacao, os de
+   * mora correm a partir do fim do prazo de pagamento voluntario.
+   * ------------------------------------------------------------------ */
+  var MORA = {
+    estado: 'confirmado',
+    fonte: 'Artigo 44.º da LGT. Taxa das dívidas ao Estado fixada em 7,221% para 2026 ' +
+      '(Aviso n.º 18/2026/2, de 2 de janeiro). A taxa é revista anualmente: confirme a do ano em causa.',
+    taxaAnual: 0.07221,
+    baseDias: 365,
+    // Artigo 44.º, n.º 2 da LGT: o prazo maximo de contagem e de tres anos,
+    // salvo pagamento em prestacoes, caso em que vai ate oito.
+    limiteAnos: 3,
+    limiteAnosPrestacoes: 8,
+    // Prazo de pagamento voluntario apos a notificacao da liquidacao.
+    prazoPagamentoDias: 30
+  };
+
+  /* ------------------------------------------------------------------ *
    * Coimas (RGIT)
    * ------------------------------------------------------------------ */
   var COIMAS = {
@@ -231,6 +252,7 @@
       escaloesIRS: ESCALOES_IRS,
       solidariedade: SOLIDARIEDADE,
       juros: JUROS,
+      mora: MORA,
       coimas: COIMAS,
       irs: IRS,
       prazos: PRAZOS,
