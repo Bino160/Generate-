@@ -1079,6 +1079,75 @@
     };
   }
 
+  /* ================================================================== *
+   * 13. Leitura de gestao
+   *
+   * Um numero em euros diz pouco a quem decide. Meses de resultado, uma
+   * fatia do volume de negocios e uma fatia da tesouraria dizem tudo. Nada
+   * disto e fiscal: sao criterios de gestao, e a ferramenta declara-o.
+   * ================================================================== */
+
+  function traduzirParaNegocio(exposicao, dados) {
+    var p = mesclarParametros(dados.parametros);
+    var n = (dados.parametros && dados.parametros.negocio) || {};
+    var valor = num(exposicao);
+
+    var ebitda = num(n.ebitdaAnual);
+    var volume = num(n.volumeNegocios);
+    var tesouraria = num(n.tesourariaDisponivel);
+
+    var leituras = [];
+    if (ebitda > 0) {
+      leituras.push({
+        chave: 'ebitda',
+        rotulo: 'Meses de EBITDA',
+        valor: arred(valor / (ebitda / 12), 1),
+        unidade: 'meses',
+        texto: arred(valor / (ebitda / 12), 1) + ' meses de EBITDA'
+      });
+    }
+    if (volume > 0) {
+      leituras.push({
+        chave: 'volume',
+        rotulo: 'Do volume de negócios',
+        valor: arred(valor / volume, 4),
+        unidade: 'percentagem',
+        texto: arred((valor / volume) * 100, 1) + '% do volume de negócios anual'
+      });
+    }
+
+    var stress = null;
+    if (tesouraria > 0) {
+      var racio = valor / tesouraria;
+      var grau = racio > num(p.negocio.limiarTesourariaElevado) ? 'Excede a tesouraria'
+        : racio > num(p.negocio.limiarTesourariaSignificativo) ? 'Elevado'
+        : racio > num(p.negocio.limiarTesourariaContido) ? 'Significativo'
+        : 'Contido';
+      stress = {
+        racio: arred(racio, 4),
+        grau: grau,
+        tesouraria: arred(tesouraria),
+        texto: arred(racio * 100, 1) + '% da tesouraria disponível'
+      };
+      leituras.push({
+        chave: 'tesouraria',
+        rotulo: 'Da tesouraria disponível',
+        valor: stress.racio,
+        unidade: 'percentagem',
+        texto: stress.texto
+      });
+    }
+
+    return {
+      exposicao: arred(valor),
+      leituras: leituras,
+      stress: stress,
+      disponivel: leituras.length > 0,
+      ressalva: 'Leitura de gestão, sem base fiscal. Dimensiona o impacto face ao negócio; ' +
+        'não altera nem qualifica a exposição apurada.'
+    };
+  }
+
   /** Funde parametros do utilizador sobre os valores por omissao. */
   function mesclarParametros(personalizados) {
     var base = Parametros.porOmissao();
@@ -1100,6 +1169,7 @@
     simular: simular,
     consolidar: consolidar,
     projetarEspera: projetarEspera,
+    traduzirParaNegocio: traduzirParaNegocio,
     avaliarQualidade: avaliarQualidade,
     liquidarIRS: liquidarIRS,
     coletaProgressiva: coletaProgressiva,

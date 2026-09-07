@@ -215,6 +215,20 @@
   };
 
   /* ------------------------------------------------------------------ *
+   * Leitura de gestao
+   *
+   * Os limiares abaixo NAO tem base fiscal. Sao criterios de gestao, para
+   * traduzir a exposicao em termos que um gestor decide: quanto do resultado
+   * anual, do volume de negocios e da tesouraria e que isto representa.
+   * ------------------------------------------------------------------ */
+  var NEGOCIO = {
+    fonte: 'Critérios de gestão, sem base legal. Servem para dimensionar o impacto, não para o qualificar juridicamente.',
+    limiarTesourariaContido: 0.25,
+    limiarTesourariaSignificativo: 0.50,
+    limiarTesourariaElevado: 1.00
+  };
+
+  /* ------------------------------------------------------------------ *
    * Prazos (LGT)
    * ------------------------------------------------------------------ */
   var PRAZOS = {
@@ -255,6 +269,7 @@
       mora: MORA,
       coimas: COIMAS,
       irs: IRS,
+      negocio: NEGOCIO,
       prazos: PRAZOS,
       recuperacao: RECUPERACAO
     }));

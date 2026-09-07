@@ -79,6 +79,10 @@ Três cenários: reembolso integral, parcial (percentagem configurável) e inexi
 
 Projeção da exposição a +1, +2 e +3 anos, decomposta nos dois efeitos que o adiamento produz: os juros que continuam a correr e os exercícios que saem do prazo de caducidade. Quando a exposição desce com o tempo, a aplicação diz porquê — e lembra que o prazo se suspende com a ação de inspeção e que o IRC dos anos caducados se perde definitivamente.
 
+### Módulo 4.6 · Leitura de gestão
+
+Opcional. Com o EBITDA anual, o volume de negócios ou a tesouraria disponível, a exposição é traduzida em meses de EBITDA, fatia do volume de negócios e pressão sobre a tesouraria — graduada de contido a excede a tesouraria. São critérios de gestão, sem base fiscal, e a aplicação diz isso: dimensionam o impacto, não o qualificam.
+
 ### Módulo 5 · Dashboard
 
 Um painel de **confiança da simulação** abre o resultado, antes de qualquer número: índice, grau e a lista do que está validado, do que é hipótese e do que falta. Depois, cinco indicadores em cartões financeiros — IRS adicional, juros compensatórios, coimas, IRC potencialmente recuperável e exposição fiscal líquida — acompanhados de:

@@ -611,3 +611,22 @@ input:focus-visible, select:focus-visible {
   .espera__valores { grid-area: valores; }
   .espera__trilho { grid-area: trilho; }
 }
+
+/* --------------------- Leitura de gestão ---------------------------- */
+.negocio { display: grid; gap: .8rem; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); margin-bottom: .8rem; }
+.negocio__leitura {
+  background: var(--marca-clara); border-radius: 10px; padding: .85rem 1rem;
+  display: flex; flex-direction: column; gap: .1rem;
+}
+.negocio__valor {
+  font-family: var(--titulo); font-size: 1.5rem; font-weight: 700;
+  font-variant-numeric: tabular-nums; line-height: 1.05; letter-spacing: -.02em;
+}
+.negocio__rotulo { font-size: .78rem; color: var(--tinta-suave); }
+.negocio__stress {
+  font-size: .9rem; font-weight: 500; border-radius: 8px; padding: .6rem .85rem;
+  border-left: 3px solid var(--linha-forte); margin: 0 0 .6rem;
+}
+.negocio__stress--ok { background: var(--positivo-claro); border-left-color: var(--positivo); }
+.negocio__stress--aviso { background: var(--aviso-claro); border-left-color: var(--aviso); }
+.negocio__stress--alerta { background: var(--alerta-claro); border-left-color: var(--alerta); }

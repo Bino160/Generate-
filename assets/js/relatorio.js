@@ -108,6 +108,25 @@
     ].join('\n');
   }
 
+  /** Leitura de gestão: o que a exposição representa para o negócio. */
+  function negocioSeccao(n) {
+    if (!n || !n.disponivel) return '';
+    var linhas = n.leituras.map(function (l) {
+      return [l.rotulo, l.unidade === 'meses' ? F.decimal(l.valor, 1) + ' meses' : F.percentagem(l.valor, 1)];
+    });
+    return [
+      '<h2>6. O que isto significa para o negócio</h2>',
+      '<p>A exposição de <strong>' + esc(F.euro(n.exposicao)) + '</strong> dimensionada face à atividade:</p>',
+      tabela(['Indicador', 'Valor'], linhas),
+      n.stress
+        ? '<p>Pressão sobre a tesouraria: <strong>' + esc(n.stress.grau) + '</strong> — representa ' +
+          esc(F.percentagem(n.stress.racio, 1)) + ' da tesouraria disponível (' +
+          esc(F.euro(n.stress.tesouraria)) + ').</p>'
+        : '',
+      '<p class="nota">' + esc(n.ressalva) + '</p>'
+    ].join('\n');
+  }
+
   /** Custo de esperar: a secção que transforma o relatório numa decisão. */
   function esperaSeccao(e) {
     if (!e || !e.pontos || e.pontos.length < 2) return '';
@@ -340,7 +359,7 @@
     linhas.push('Avaliar o impacto nos exercícios seguintes e corrigir o enquadramento declarativo para o futuro, ' +
       'de modo a interromper a acumulação de exposição.');
 
-    return '<h2>6. Recomendações</h2><ol class="plano">' +
+    return '<h2>7. Recomendações</h2><ol class="plano">' +
       linhas.map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ol>';
   }
 
@@ -364,12 +383,12 @@
       ['Fase 6 — Correção prospetiva',
         'Adequação do enquadramento declarativo dos exercícios seguintes e, se aplicável, revisão da estrutura societária.']
     ];
-    return '<h2>7. Plano de regularização</h2>' + passos.map(function (p) {
+    return '<h2>8. Plano de regularização</h2>' + passos.map(function (p) {
       return '<h3>' + esc(p[0]) + '</h3><p>' + esc(p[1]) + '</p>';
     }).join('');
   }
 
-  function html(d, r, c, e, semBarra) {
+  function html(d, r, c, e, n, semBarra) {
     var titulo = 'Relatório de impacto — transparência fiscal — exercício de ' + r.meta.exercicio;
     return [
       '<!DOCTYPE html><html lang="pt-PT"><head><meta charset="utf-8"><title>' + esc(titulo) + '</title>',
@@ -394,6 +413,7 @@
       fundamentacao(r),
       simulacaoFinanceira(d, r),
       esperaSeccao(e),
+      negocioSeccao(n),
       recomendacoes(d, r),
       plano(d, r),
       '<div class="rodape-doc">',
@@ -410,7 +430,7 @@
    * Alternativa para contextos em que as janelas emergentes são bloqueadas
    * (telemóvel, páginas em moldura): o relatório abre sobreposto à aplicação.
    */
-  function sobrepor(d, r, c, e) {
+  function sobrepor(d, r, c, e, n) {
     var fundo = document.createElement('div');
     fundo.setAttribute('role', 'dialog');
     fundo.setAttribute('aria-label', 'Relatório');
@@ -439,7 +459,7 @@
     var moldura = document.createElement('iframe');
     moldura.title = 'Relatório de impacto';
     moldura.style.cssText = 'flex:1;width:100%;border:0;background:#fff;';
-    moldura.srcdoc = html(d, r, c, e, true);
+    moldura.srcdoc = html(d, r, c, e, n, true);
 
     imprimir.addEventListener('click', function () {
       try {
@@ -465,12 +485,12 @@
   raiz.Relatorio = {
     html: html,
     sobrepor: sobrepor,
-    abrir: function (d, r, c, e) {
+    abrir: function (d, r, c, e, n) {
       var janela = null;
       try { janela = window.open('', '_blank'); } catch (erro) { janela = null; }
-      if (!janela) { sobrepor(d, r, c, e); return; }
+      if (!janela) { sobrepor(d, r, c, e, n); return; }
       janela.document.open();
-      janela.document.write(html(d, r, c, e));
+      janela.document.write(html(d, r, c, e, n));
       janela.document.close();
     }
   };

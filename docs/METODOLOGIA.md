@@ -204,6 +204,18 @@ A decomposição é apresentada sempre. Mostrar apenas o saldo diria que esperar
 - O **IRC desses exercícios deixa de ser recuperável**, e a perda é definitiva. O montante é apresentado.
 - Quando nenhum exercício caduca no horizonte, a projeção é puramente de juros e mostra o custo médio mensal do adiamento.
 
+## 10-B. Leitura de gestão
+
+Três traduções opcionais, que só aparecem quando o dado correspondente é introduzido:
+
+```
+Meses de EBITDA          = exposição ÷ (EBITDA anual ÷ 12)
+Fatia do volume          = exposição ÷ volume de negócios anual
+Pressão sobre tesouraria = exposição ÷ tesouraria disponível
+```
+
+A pressão sobre a tesouraria é graduada em contido (até 25%), significativo (até 50%), elevado (até 100%) e excede a tesouraria. **Estes limiares não têm base fiscal** — são critérios de gestão, parametrizáveis, e a aplicação declara-o junto do resultado. Nada disto altera ou qualifica a exposição apurada: apenas a dimensiona face ao negócio.
+
 ## 11. Confiança da simulação
 
 Cada simulação produz um índice de confiança a partir do estado dos inputs, apresentado no ecrã de resultado e no relatório. Sete verificações, ponderadas (`ok` = 1, `aviso` = 0,5, `em falta` = 0):
@@ -235,7 +247,7 @@ O conjunto de parâmetros tem versão e data (`Parametros.VERSAO`), apresentadas
 
 ## 14. Testes
 
-`tests/motor.test.js` (54 testes) cobre a coleta progressiva contra valores calculados à mão, a taxa de solidariedade por faixas, o quociente conjugal, o piso zero do imposto, a imputação integral da matéria coletável, **os quatro regimes de juros e os respetivos limites**, a ordenação dos cenários de coima e a **ausência da palavra «provável»**, a não multiplicação automática da coima declarativa, a base de recuperação do IRC e os seus rótulos, a matriz de sensibilidade, a **não compensação** dos lucros distribuídos, o efeito das deduções à coleta reais, o **índice de confiança**, a **regra aplicável em cada evento da cronologia**, a ancoragem dos prazos na data de liquidação, a versão das regras, a sobreposição de parâmetros do utilizador, a substituição de tabelas em falta e as validações.
+`tests/motor.test.js` (59 testes) cobre a coleta progressiva contra valores calculados à mão, a taxa de solidariedade por faixas, o quociente conjugal, o piso zero do imposto, a imputação integral da matéria coletável, **os quatro regimes de juros e os respetivos limites**, a ordenação dos cenários de coima e a **ausência da palavra «provável»**, a não multiplicação automática da coima declarativa, a base de recuperação do IRC e os seus rótulos, a matriz de sensibilidade, a **não compensação** dos lucros distribuídos, o efeito das deduções à coleta reais, o **índice de confiança**, a **regra aplicável em cada evento da cronologia**, a ancoragem dos prazos na data de liquidação, a versão das regras, a sobreposição de parâmetros do utilizador, a substituição de tabelas em falta e as validações.
 
 ```bash
 npm test

@@ -19,6 +19,7 @@
     euro: function (v) { return moeda.format(n(v)); },
     euroCurto: function (v) { return moedaCurta.format(n(v)); },
     numero: function (v) { return numero.format(n(v)); },
+    decimal: function (v, casas) { return numeroCasas(n(v), casas === undefined ? 1 : casas); },
     percentagem: function (v, casas) {
       return numeroCasas(n(v) * 100, casas === undefined ? 1 : casas) + '%';
     },

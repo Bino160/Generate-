@@ -617,6 +617,25 @@ input:focus-visible, select:focus-visible {
   .espera__trilho { grid-area: trilho; }
 }
 
+/* --------------------- Leitura de gestão ---------------------------- */
+.negocio { display: grid; gap: .8rem; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); margin-bottom: .8rem; }
+.negocio__leitura {
+  background: var(--marca-clara); border-radius: 10px; padding: .85rem 1rem;
+  display: flex; flex-direction: column; gap: .1rem;
+}
+.negocio__valor {
+  font-family: var(--titulo); font-size: 1.5rem; font-weight: 700;
+  font-variant-numeric: tabular-nums; line-height: 1.05; letter-spacing: -.02em;
+}
+.negocio__rotulo { font-size: .78rem; color: var(--tinta-suave); }
+.negocio__stress {
+  font-size: .9rem; font-weight: 500; border-radius: 8px; padding: .6rem .85rem;
+  border-left: 3px solid var(--linha-forte); margin: 0 0 .6rem;
+}
+.negocio__stress--ok { background: var(--positivo-claro); border-left-color: var(--positivo); }
+.negocio__stress--aviso { background: var(--aviso-claro); border-left-color: var(--aviso); }
+.negocio__stress--alerta { background: var(--alerta-claro); border-left-color: var(--alerta); }
+
 </style>
 <text y='.9em' font-size='90'>⚖️</text></svg>">
 
@@ -692,6 +711,11 @@ input:focus-visible, select:focus-visible {
       <div id="form-cenario"></div>
     </div>
 
+    <div class="cartao">
+      <h3>O negócio <small>opcional, para dimensionar o impacto</small></h3>
+      <div id="form-negocio"></div>
+    </div>
+
     <details class="tecnicos">
       <summary>Parâmetros técnicos · taxas, coimas, deduções e escalões</summary>
 
@@ -759,6 +783,11 @@ input:focus-visible, select:focus-visible {
     <div id="avisos"></div>
 
     <div class="cartoes" id="cartoes-financeiros"></div>
+
+    <div class="cartao" id="negocio">
+      <h3>O que isto significa para o negócio</h3>
+      <div id="negocio-conteudo"></div>
+    </div>
 
     <div class="cartao" id="espera">
       <h3>Quanto custa esperar</h3>
@@ -1052,6 +1081,20 @@ input:focus-visible, select:focus-visible {
   };
 
   /* ------------------------------------------------------------------ *
+   * Leitura de gestao
+   *
+   * Os limiares abaixo NAO tem base fiscal. Sao criterios de gestao, para
+   * traduzir a exposicao em termos que um gestor decide: quanto do resultado
+   * anual, do volume de negocios e da tesouraria e que isto representa.
+   * ------------------------------------------------------------------ */
+  var NEGOCIO = {
+    fonte: 'Critérios de gestão, sem base legal. Servem para dimensionar o impacto, não para o qualificar juridicamente.',
+    limiarTesourariaContido: 0.25,
+    limiarTesourariaSignificativo: 0.50,
+    limiarTesourariaElevado: 1.00
+  };
+
+  /* ------------------------------------------------------------------ *
    * Prazos (LGT)
    * ------------------------------------------------------------------ */
   var PRAZOS = {
@@ -1092,6 +1135,7 @@ input:focus-visible, select:focus-visible {
       mora: MORA,
       coimas: COIMAS,
       irs: IRS,
+      negocio: NEGOCIO,
       prazos: PRAZOS,
       recuperacao: RECUPERACAO
     }));
@@ -2205,6 +2249,75 @@ input:focus-visible, select:focus-visible {
     };
   }
 
+  /* ================================================================== *
+   * 13. Leitura de gestao
+   *
+   * Um numero em euros diz pouco a quem decide. Meses de resultado, uma
+   * fatia do volume de negocios e uma fatia da tesouraria dizem tudo. Nada
+   * disto e fiscal: sao criterios de gestao, e a ferramenta declara-o.
+   * ================================================================== */
+
+  function traduzirParaNegocio(exposicao, dados) {
+    var p = mesclarParametros(dados.parametros);
+    var n = (dados.parametros && dados.parametros.negocio) || {};
+    var valor = num(exposicao);
+
+    var ebitda = num(n.ebitdaAnual);
+    var volume = num(n.volumeNegocios);
+    var tesouraria = num(n.tesourariaDisponivel);
+
+    var leituras = [];
+    if (ebitda > 0) {
+      leituras.push({
+        chave: 'ebitda',
+        rotulo: 'Meses de EBITDA',
+        valor: arred(valor / (ebitda / 12), 1),
+        unidade: 'meses',
+        texto: arred(valor / (ebitda / 12), 1) + ' meses de EBITDA'
+      });
+    }
+    if (volume > 0) {
+      leituras.push({
+        chave: 'volume',
+        rotulo: 'Do volume de negócios',
+        valor: arred(valor / volume, 4),
+        unidade: 'percentagem',
+        texto: arred((valor / volume) * 100, 1) + '% do volume de negócios anual'
+      });
+    }
+
+    var stress = null;
+    if (tesouraria > 0) {
+      var racio = valor / tesouraria;
+      var grau = racio > num(p.negocio.limiarTesourariaElevado) ? 'Excede a tesouraria'
+        : racio > num(p.negocio.limiarTesourariaSignificativo) ? 'Elevado'
+        : racio > num(p.negocio.limiarTesourariaContido) ? 'Significativo'
+        : 'Contido';
+      stress = {
+        racio: arred(racio, 4),
+        grau: grau,
+        tesouraria: arred(tesouraria),
+        texto: arred(racio * 100, 1) + '% da tesouraria disponível'
+      };
+      leituras.push({
+        chave: 'tesouraria',
+        rotulo: 'Da tesouraria disponível',
+        valor: stress.racio,
+        unidade: 'percentagem',
+        texto: stress.texto
+      });
+    }
+
+    return {
+      exposicao: arred(valor),
+      leituras: leituras,
+      stress: stress,
+      disponivel: leituras.length > 0,
+      ressalva: 'Leitura de gestão, sem base fiscal. Dimensiona o impacto face ao negócio; ' +
+        'não altera nem qualifica a exposição apurada.'
+    };
+  }
+
   /** Funde parametros do utilizador sobre os valores por omissao. */
   function mesclarParametros(personalizados) {
     var base = Parametros.porOmissao();
@@ -2226,6 +2339,7 @@ input:focus-visible, select:focus-visible {
     simular: simular,
     consolidar: consolidar,
     projetarEspera: projetarEspera,
+    traduzirParaNegocio: traduzirParaNegocio,
     avaliarQualidade: avaliarQualidade,
     liquidarIRS: liquidarIRS,
     coletaProgressiva: coletaProgressiva,
@@ -2264,6 +2378,7 @@ input:focus-visible, select:focus-visible {
     euro: function (v) { return moeda.format(n(v)); },
     euroCurto: function (v) { return moedaCurta.format(n(v)); },
     numero: function (v) { return numero.format(n(v)); },
+    decimal: function (v, casas) { return numeroCasas(n(v), casas === undefined ? 1 : casas); },
     percentagem: function (v, casas) {
       return numeroCasas(n(v) * 100, casas === undefined ? 1 : casas) + '%';
     },
@@ -2649,6 +2764,25 @@ input:focus-visible, select:focus-visible {
     ].join('\n');
   }
 
+  /** Leitura de gestão: o que a exposição representa para o negócio. */
+  function negocioSeccao(n) {
+    if (!n || !n.disponivel) return '';
+    var linhas = n.leituras.map(function (l) {
+      return [l.rotulo, l.unidade === 'meses' ? F.decimal(l.valor, 1) + ' meses' : F.percentagem(l.valor, 1)];
+    });
+    return [
+      '<h2>6. O que isto significa para o negócio</h2>',
+      '<p>A exposição de <strong>' + esc(F.euro(n.exposicao)) + '</strong> dimensionada face à atividade:</p>',
+      tabela(['Indicador', 'Valor'], linhas),
+      n.stress
+        ? '<p>Pressão sobre a tesouraria: <strong>' + esc(n.stress.grau) + '</strong> — representa ' +
+          esc(F.percentagem(n.stress.racio, 1)) + ' da tesouraria disponível (' +
+          esc(F.euro(n.stress.tesouraria)) + ').</p>'
+        : '',
+      '<p class="nota">' + esc(n.ressalva) + '</p>'
+    ].join('\n');
+  }
+
   /** Custo de esperar: a secção que transforma o relatório numa decisão. */
   function esperaSeccao(e) {
     if (!e || !e.pontos || e.pontos.length < 2) return '';
@@ -2881,7 +3015,7 @@ input:focus-visible, select:focus-visible {
     linhas.push('Avaliar o impacto nos exercícios seguintes e corrigir o enquadramento declarativo para o futuro, ' +
       'de modo a interromper a acumulação de exposição.');
 
-    return '<h2>6. Recomendações</h2><ol class="plano">' +
+    return '<h2>7. Recomendações</h2><ol class="plano">' +
       linhas.map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ol>';
   }
 
@@ -2905,12 +3039,12 @@ input:focus-visible, select:focus-visible {
       ['Fase 6 — Correção prospetiva',
         'Adequação do enquadramento declarativo dos exercícios seguintes e, se aplicável, revisão da estrutura societária.']
     ];
-    return '<h2>7. Plano de regularização</h2>' + passos.map(function (p) {
+    return '<h2>8. Plano de regularização</h2>' + passos.map(function (p) {
       return '<h3>' + esc(p[0]) + '</h3><p>' + esc(p[1]) + '</p>';
     }).join('');
   }
 
-  function html(d, r, c, e, semBarra) {
+  function html(d, r, c, e, n, semBarra) {
     var titulo = 'Relatório de impacto — transparência fiscal — exercício de ' + r.meta.exercicio;
     return [
       '<!DOCTYPE html><html lang="pt-PT"><head><title>' + esc(titulo) + '</title>',
@@ -2935,6 +3069,7 @@ input:focus-visible, select:focus-visible {
       fundamentacao(r),
       simulacaoFinanceira(d, r),
       esperaSeccao(e),
+      negocioSeccao(n),
       recomendacoes(d, r),
       plano(d, r),
       '<div class="rodape-doc">',
@@ -2951,7 +3086,7 @@ input:focus-visible, select:focus-visible {
    * Alternativa para contextos em que as janelas emergentes são bloqueadas
    * (telemóvel, páginas em moldura): o relatório abre sobreposto à aplicação.
    */
-  function sobrepor(d, r, c, e) {
+  function sobrepor(d, r, c, e, n) {
     var fundo = document.createElement('div');
     fundo.setAttribute('role', 'dialog');
     fundo.setAttribute('aria-label', 'Relatório');
@@ -2980,7 +3115,7 @@ input:focus-visible, select:focus-visible {
     var moldura = document.createElement('iframe');
     moldura.title = 'Relatório de impacto';
     moldura.style.cssText = 'flex:1;width:100%;border:0;background:#fff;';
-    moldura.srcdoc = html(d, r, c, e, true);
+    moldura.srcdoc = html(d, r, c, e, n, true);
 
     imprimir.addEventListener('click', function () {
       try {
@@ -3006,12 +3141,12 @@ input:focus-visible, select:focus-visible {
   raiz.Relatorio = {
     html: html,
     sobrepor: sobrepor,
-    abrir: function (d, r, c, e) {
+    abrir: function (d, r, c, e, n) {
       var janela = null;
       try { janela = window.open('', '_blank'); } catch (erro) { janela = null; }
-      if (!janela) { sobrepor(d, r, c, e); return; }
+      if (!janela) { sobrepor(d, r, c, e, n); return; }
       janela.document.open();
-      janela.document.write(html(d, r, c, e));
+      janela.document.write(html(d, r, c, e, n));
       janela.document.close();
     }
   };
@@ -3102,6 +3237,14 @@ input:focus-visible, select:focus-visible {
     { grupo: 'juros', chave: 'limiteDias', rotulo: 'Limite de dias (sobrepõe o regime)', tipo: 'inteiro', ajuda: 'Deixe vazio para usar o limite próprio do regime selecionado no cenário.' },
     { grupo: 'juros', chave: 'diaLimiteIRS', rotulo: 'Dia limite da Modelo 3', tipo: 'inteiro', min: 1, max: 31 },
     { grupo: 'juros', chave: 'mesLimiteIRS', rotulo: 'Mês limite da Modelo 3', tipo: 'inteiro', min: 1, max: 12 }
+  ];
+
+  /* Dados do negócio. Não entram no cálculo fiscal: servem para dimensionar
+     o resultado em termos que quem decide reconhece. */
+  var CAMPOS_NEGOCIO = [
+    { grupo: 'negocio', chave: 'ebitdaAnual', rotulo: 'EBITDA anual', tipo: 'euro', ajuda: 'Resultado operacional antes de juros, impostos, depreciações e amortizações.' },
+    { grupo: 'negocio', chave: 'volumeNegocios', rotulo: 'Volume de negócios anual', tipo: 'euro' },
+    { grupo: 'negocio', chave: 'tesourariaDisponivel', rotulo: 'Tesouraria disponível', tipo: 'euro', ajuda: 'Caixa e depósitos à ordem, líquidos de compromissos de curto prazo.' }
   ];
 
   var CAMPOS_MORA = [
@@ -3202,6 +3345,9 @@ input:focus-visible, select:focus-visible {
    * ================================================================== */
 
   function valorEfetivo(campo) {
+    if (campo.grupo === 'negocio') {
+      return (dados.parametros.negocio || {})[campo.chave];
+    }
     if (!campo.grupo) return dados.parametros[campo.chave];
     var base = Parametros.porOmissao();
     var sobre = (dados.parametros[campo.grupo] || {});
@@ -3209,6 +3355,11 @@ input:focus-visible, select:focus-visible {
   }
 
   function definirParametro(campo, valor) {
+    if (campo.grupo === 'negocio') {
+      if (!dados.parametros.negocio) dados.parametros.negocio = {};
+      dados.parametros.negocio[campo.chave] = valor;
+      return;
+    }
     if (!campo.grupo) { dados.parametros[campo.chave] = valor; return; }
     if (!dados.parametros[campo.grupo]) dados.parametros[campo.grupo] = {};
     dados.parametros[campo.grupo][campo.chave] = valor;
@@ -3532,6 +3683,7 @@ input:focus-visible, select:focus-visible {
     renderFormulario('#form-cenario', CAMPOS_CENARIO, obter, definir);
     renderFormulario('#form-juros', CAMPOS_JUROS, obter, definir);
     renderFormulario('#form-mora', CAMPOS_MORA, obter, definir);
+    renderFormulario('#form-negocio', CAMPOS_NEGOCIO, obter, definir);
     renderFormulario('#form-coimas', CAMPOS_COIMAS, obter, definir);
     renderFormulario('#form-irs', CAMPOS_IRS, obter, definir);
     renderFormulario('#form-recuperacao', CAMPOS_RECUPERACAO, obter, definir);
@@ -3660,6 +3812,7 @@ input:focus-visible, select:focus-visible {
     window.__consolidado = consolidado;
     renderConsolidado();
     renderHeroi();
+    renderNegocio();
     renderEspera();
 
     if (ativoVazio) {
@@ -3701,6 +3854,50 @@ input:focus-visible, select:focus-visible {
    * caducidade dos exercícios mais antigos: mostrar só o saldo diria que
    * esperar compensa, quando o que se passa é outra coisa.
    */
+  /**
+   * Leitura de gestão. «62 mil euros» diz pouco; «quatro meses de EBITDA»
+   * decide. Só aparece quando há com que comparar.
+   */
+  function renderNegocio() {
+    var alvo = $('#negocio-conteudo');
+    alvo.innerHTML = '';
+    var exposicao = consolidado && consolidado.exercicios.length > 1
+      ? consolidado.totais.exposicaoLiquida
+      : resultado.indicadores.exposicaoLiquida;
+    var t = Motor.traduzirParaNegocio(exposicao, dados);
+
+    if (!t.disponivel) {
+      $('#negocio').hidden = false;
+      alvo.appendChild(el('p', { class: 'ajuda',
+        texto: 'Introduza o EBITDA, o volume de negócios ou a tesouraria disponível no ecrã do cenário ' +
+          'para ver o que ' + F.euro(exposicao) + ' representa para este negócio.' }));
+      alvo.appendChild(el('button', {
+        type: 'button', class: 'btn btn--secundario btn--pequeno',
+        texto: 'Introduzir dados do negócio', 'data-ir': '3'
+      }));
+      return;
+    }
+
+    $('#negocio').hidden = false;
+    var grelha = el('div', { class: 'negocio' });
+    t.leituras.forEach(function (l) {
+      grelha.appendChild(el('div', { class: 'negocio__leitura' }, [
+        el('div', { class: 'negocio__valor',
+          texto: l.unidade === 'meses' ? F.decimal(l.valor, 1) + ' meses' : F.percentagem(l.valor, 1) }),
+        el('div', { class: 'negocio__rotulo', texto: l.rotulo })
+      ]));
+    });
+    alvo.appendChild(grelha);
+
+    if (t.stress) {
+      var classe = { 'Contido': 'ok', 'Significativo': 'aviso', 'Elevado': 'alerta', 'Excede a tesouraria': 'alerta' }[t.stress.grau];
+      alvo.appendChild(el('p', { class: 'negocio__stress negocio__stress--' + classe,
+        texto: 'Pressão sobre a tesouraria: ' + t.stress.grau + ' — a exposição representa ' +
+          F.percentagem(t.stress.racio, 1) + ' da tesouraria disponível (' + F.euro(t.stress.tesouraria) + ').' }));
+    }
+    alvo.appendChild(el('p', { class: 'ajuda', texto: t.ressalva }));
+  }
+
   function renderEspera() {
     var alvo = $('#espera-conteudo');
     alvo.innerHTML = '';
@@ -4196,8 +4393,12 @@ input:focus-visible, select:focus-visible {
       if (!resultado) simular();
       var projecao = null;
       try { projecao = Motor.projetarEspera(dados); } catch (e) { projecao = null; }
+      var exposicao = consolidado && consolidado.exercicios.length > 1
+        ? consolidado.totais.exposicaoLiquida
+        : resultado.indicadores.exposicaoLiquida;
+      var leitura = Motor.traduzirParaNegocio(exposicao, dados);
       window.Relatorio.abrir({ sociedade: ex().sociedade, socios: ex().socios, parametros: dados.parametros },
-        resultado, consolidado, projecao);
+        resultado, consolidado, projecao, leitura);
     }
   };
 

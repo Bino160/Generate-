@@ -559,3 +559,50 @@ test('o consolidado soma a mora de todos os exercicios abertos', () => {
   eq(c.totais.mora, c.exercicios.reduce((a, x) => a + x.mora, 0));
   assert.ok(c.totais.mora > 0);
 });
+
+/* ==================================================================== *
+ * Leitura de gestão
+ * ==================================================================== */
+
+const comNegocio = (extra = {}) => ({
+  parametros: { negocio: Object.assign({ ebitdaAnual: 180000, volumeNegocios: 600000, tesourariaDisponivel: 100000 }, extra) }
+});
+
+test('sem dados do negocio nao ha leitura de gestao', () => {
+  const t = Motor.traduzirParaNegocio(50000, { parametros: {} });
+  assert.strictEqual(t.disponivel, false);
+  assert.strictEqual(t.leituras.length, 0);
+  assert.strictEqual(t.stress, null);
+});
+
+test('a exposicao traduz-se em meses de EBITDA e fatias do negocio', () => {
+  const t = Motor.traduzirParaNegocio(45000, comNegocio());
+  const ebitda = t.leituras.find((l) => l.chave === 'ebitda');
+  eq(ebitda.valor, 3); // 45 000 / (180 000 / 12)
+  const volume = t.leituras.find((l) => l.chave === 'volume');
+  eq(volume.valor, 0.075);
+  assert.strictEqual(t.disponivel, true);
+});
+
+test('a pressao sobre a tesouraria e graduada e declarada como criterio de gestao', () => {
+  eq(Motor.traduzirParaNegocio(20000, comNegocio()).stress.racio, 0.2);
+  assert.strictEqual(Motor.traduzirParaNegocio(20000, comNegocio()).stress.grau, 'Contido');
+  assert.strictEqual(Motor.traduzirParaNegocio(40000, comNegocio()).stress.grau, 'Significativo');
+  assert.strictEqual(Motor.traduzirParaNegocio(80000, comNegocio()).stress.grau, 'Elevado');
+  assert.strictEqual(Motor.traduzirParaNegocio(150000, comNegocio()).stress.grau, 'Excede a tesouraria');
+  assert.ok(/sem base fiscal/i.test(Motor.traduzirParaNegocio(1, comNegocio()).ressalva));
+});
+
+test('cada indicador aparece so quando o respetivo dado existe', () => {
+  const soEbitda = Motor.traduzirParaNegocio(45000, { parametros: { negocio: { ebitdaAnual: 120000 } } });
+  assert.deepStrictEqual(soEbitda.leituras.map((l) => l.chave), ['ebitda']);
+  assert.strictEqual(soEbitda.stress, null);
+});
+
+test('a leitura de gestao nao altera a exposicao apurada', () => {
+  const dados = cenarioBase();
+  const sem = Motor.simular(dados);
+  dados.parametros.negocio = { ebitdaAnual: 200000, tesourariaDisponivel: 50000 };
+  const com = Motor.simular(dados);
+  eq(com.indicadores.exposicaoLiquida, sem.indicadores.exposicaoLiquida);
+});

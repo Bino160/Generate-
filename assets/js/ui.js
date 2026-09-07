@@ -83,6 +83,14 @@
     { grupo: 'juros', chave: 'mesLimiteIRS', rotulo: 'Mês limite da Modelo 3', tipo: 'inteiro', min: 1, max: 12 }
   ];
 
+  /* Dados do negócio. Não entram no cálculo fiscal: servem para dimensionar
+     o resultado em termos que quem decide reconhece. */
+  var CAMPOS_NEGOCIO = [
+    { grupo: 'negocio', chave: 'ebitdaAnual', rotulo: 'EBITDA anual', tipo: 'euro', ajuda: 'Resultado operacional antes de juros, impostos, depreciações e amortizações.' },
+    { grupo: 'negocio', chave: 'volumeNegocios', rotulo: 'Volume de negócios anual', tipo: 'euro' },
+    { grupo: 'negocio', chave: 'tesourariaDisponivel', rotulo: 'Tesouraria disponível', tipo: 'euro', ajuda: 'Caixa e depósitos à ordem, líquidos de compromissos de curto prazo.' }
+  ];
+
   var CAMPOS_MORA = [
     { grupo: 'mora', chave: 'taxaAnual', rotulo: 'Taxa anual (%)', tipo: 'percentagem', ajuda: 'Taxa das dívidas ao Estado, revista anualmente. 7,221% para 2026.' },
     { grupo: 'mora', chave: 'limiteAnos', rotulo: 'Limite de contagem (anos)', tipo: 'inteiro', ajuda: 'Artigo 44.º, n.º 2 da LGT.' },
@@ -181,6 +189,9 @@
    * ================================================================== */
 
   function valorEfetivo(campo) {
+    if (campo.grupo === 'negocio') {
+      return (dados.parametros.negocio || {})[campo.chave];
+    }
     if (!campo.grupo) return dados.parametros[campo.chave];
     var base = Parametros.porOmissao();
     var sobre = (dados.parametros[campo.grupo] || {});
@@ -188,6 +199,11 @@
   }
 
   function definirParametro(campo, valor) {
+    if (campo.grupo === 'negocio') {
+      if (!dados.parametros.negocio) dados.parametros.negocio = {};
+      dados.parametros.negocio[campo.chave] = valor;
+      return;
+    }
     if (!campo.grupo) { dados.parametros[campo.chave] = valor; return; }
     if (!dados.parametros[campo.grupo]) dados.parametros[campo.grupo] = {};
     dados.parametros[campo.grupo][campo.chave] = valor;
@@ -511,6 +527,7 @@
     renderFormulario('#form-cenario', CAMPOS_CENARIO, obter, definir);
     renderFormulario('#form-juros', CAMPOS_JUROS, obter, definir);
     renderFormulario('#form-mora', CAMPOS_MORA, obter, definir);
+    renderFormulario('#form-negocio', CAMPOS_NEGOCIO, obter, definir);
     renderFormulario('#form-coimas', CAMPOS_COIMAS, obter, definir);
     renderFormulario('#form-irs', CAMPOS_IRS, obter, definir);
     renderFormulario('#form-recuperacao', CAMPOS_RECUPERACAO, obter, definir);
@@ -639,6 +656,7 @@
     window.__consolidado = consolidado;
     renderConsolidado();
     renderHeroi();
+    renderNegocio();
     renderEspera();
 
     if (ativoVazio) {
@@ -680,6 +698,50 @@
    * caducidade dos exercícios mais antigos: mostrar só o saldo diria que
    * esperar compensa, quando o que se passa é outra coisa.
    */
+  /**
+   * Leitura de gestão. «62 mil euros» diz pouco; «quatro meses de EBITDA»
+   * decide. Só aparece quando há com que comparar.
+   */
+  function renderNegocio() {
+    var alvo = $('#negocio-conteudo');
+    alvo.innerHTML = '';
+    var exposicao = consolidado && consolidado.exercicios.length > 1
+      ? consolidado.totais.exposicaoLiquida
+      : resultado.indicadores.exposicaoLiquida;
+    var t = Motor.traduzirParaNegocio(exposicao, dados);
+
+    if (!t.disponivel) {
+      $('#negocio').hidden = false;
+      alvo.appendChild(el('p', { class: 'ajuda',
+        texto: 'Introduza o EBITDA, o volume de negócios ou a tesouraria disponível no ecrã do cenário ' +
+          'para ver o que ' + F.euro(exposicao) + ' representa para este negócio.' }));
+      alvo.appendChild(el('button', {
+        type: 'button', class: 'btn btn--secundario btn--pequeno',
+        texto: 'Introduzir dados do negócio', 'data-ir': '3'
+      }));
+      return;
+    }
+
+    $('#negocio').hidden = false;
+    var grelha = el('div', { class: 'negocio' });
+    t.leituras.forEach(function (l) {
+      grelha.appendChild(el('div', { class: 'negocio__leitura' }, [
+        el('div', { class: 'negocio__valor',
+          texto: l.unidade === 'meses' ? F.decimal(l.valor, 1) + ' meses' : F.percentagem(l.valor, 1) }),
+        el('div', { class: 'negocio__rotulo', texto: l.rotulo })
+      ]));
+    });
+    alvo.appendChild(grelha);
+
+    if (t.stress) {
+      var classe = { 'Contido': 'ok', 'Significativo': 'aviso', 'Elevado': 'alerta', 'Excede a tesouraria': 'alerta' }[t.stress.grau];
+      alvo.appendChild(el('p', { class: 'negocio__stress negocio__stress--' + classe,
+        texto: 'Pressão sobre a tesouraria: ' + t.stress.grau + ' — a exposição representa ' +
+          F.percentagem(t.stress.racio, 1) + ' da tesouraria disponível (' + F.euro(t.stress.tesouraria) + ').' }));
+    }
+    alvo.appendChild(el('p', { class: 'ajuda', texto: t.ressalva }));
+  }
+
   function renderEspera() {
     var alvo = $('#espera-conteudo');
     alvo.innerHTML = '';
@@ -1175,8 +1237,12 @@
       if (!resultado) simular();
       var projecao = null;
       try { projecao = Motor.projetarEspera(dados); } catch (e) { projecao = null; }
+      var exposicao = consolidado && consolidado.exercicios.length > 1
+        ? consolidado.totais.exposicaoLiquida
+        : resultado.indicadores.exposicaoLiquida;
+      var leitura = Motor.traduzirParaNegocio(exposicao, dados);
       window.Relatorio.abrir({ sociedade: ex().sociedade, socios: ex().socios, parametros: dados.parametros },
-        resultado, consolidado, projecao);
+        resultado, consolidado, projecao, leitura);
     }
   };
 
