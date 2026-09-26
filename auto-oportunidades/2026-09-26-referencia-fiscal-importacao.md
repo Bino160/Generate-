@@ -96,6 +96,23 @@ Exemplo confirmado: gasolina 1.598 cm³, 139 g/km WLTP, componente ambiental
   IVA adicional em Portugal (Confirmado).
 - Conta rápida de uma Tageszulassung alemã: preço bruto / 1,19 × 1,23.
 
+### 2.1 Compra pela ENI (IVA em regime normal)
+
+| Situação | Dedução do IVA | Estado |
+| --- | --- | --- |
+| Elétrico, custo de aquisição ≤ €62.500 sem IVA | 100% | Confirmado (fontes de mercado) |
+| Plug-in com autonomia elétrica ≥ 50 km, CO2 ≤ 80 g/km, custo ≤ €50.000 sem IVA | 50% | Confirmado (OCC, art. 21.º CIVA) |
+| Usado comprado em regime de margem | 0% (não há IVA na fatura) | Confirmado |
+| Importação UE de carro "novo" (≤ 6 meses ou ≤ 6.000 km) | Autoliquidação e dedução: IVA neutro | Não confirmado nesta pesquisa |
+
+Contas:
+
+- Custo líquido de um elétrico = preço com IVA / 1,23.
+- Custo líquido de um plug-in = preço sem IVA + 50% do IVA.
+- Na venda futura pela ENI, liquida-se IVA sobre o preço de venda.
+- Uso particular, tributação autónoma e regularizações: confirmar com o
+  contabilista.
+
 ---
 
 ## 3. Custos de importação (intervalos de mercado, 2026)
@@ -121,8 +138,9 @@ Para um elétrico usado, o custo de importação típico fica entre **€1.000 e
 - Fundo Ambiental 2026: €4.000 para particulares na compra de elétrico novo até
   €38.500, com abate obrigatório de carro a combustão com mais de 10 anos.
   Candidaturas de 11/06 a 27/07/2026, esgotadas (Confirmado).
-- Empresa: IVA dedutível em elétricos com custo de aquisição até €62.500
-  (Não confirmado nesta pesquisa, confirmar com o contabilista).
+- ENI/empresa: ver secção 2.1.
+- Campanhas "para empresas e ENI" (preço + IVA) são frequentes e acabam no fim
+  de cada trimestre ou mês. Registar sempre a data "válido até".
 
 ---
 
@@ -136,4 +154,6 @@ Para um elétrico usado, o custo de importação típico fica entre **€1.000 e
 - [Carlink24: taxas de importação DE → PT](https://www.carlink24.com/pt/guia/taxas-importacao-carro-alemanha-portugal-pt)
 - [Your Europe: IVA na compra de automóveis](https://europa.eu/youreurope/citizens/vehicles/cars/vat-buying-selling-cars/faq/index_pt.htm)
 - [Fundo Ambiental: incentivo 2025/2026](https://www.fundoambiental.pt/apoios-2026/mitigacao-as-alteracoes-climaticas/incentivo-pela-aquisicao-de-veiculos-de-emissoes-nulas-ano-20252026-mobilidade-verde-passageiros-2-fase.aspx)
+- [Caetano: IVA dedutível 2026](https://caetano.pt/blog/iva-dedutivel-carros/)
+- [OCC: dedução do IVA em viatura híbrida](https://www.occ.pt/pt-pt/noticias/iva-direito-deducao-em-viatura-hibrida)
 - [CGD: incentivos 2026](https://www.cgd.pt/Site/Saldo-Positivo/mobilidade/Pages/incentivo-compra-veiculos.aspx)

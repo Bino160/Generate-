@@ -1,7 +1,7 @@
 # Agente de Oportunidades Automóveis. Portugal
 
-Versão 1, 26/09/2026. Especificação do Rui, com o perfil atualizado depois da
-primeira pesquisa.
+Versão 2, 26/09/2026. Especificação do Rui, com o perfil atualizado depois das
+duas primeiras pesquisas (carro principal pela ENI).
 
 Ficheiros relacionados:
 
@@ -20,7 +20,9 @@ Ficheiros relacionados:
 4. Montar benchmark (secção 12), calcular custo posto em Portugal (secção 8) e
    score (secção 10).
 5. Escrever `relatorios/AAAA-MM-DD-relatorio-oportunidades.md` no formato da
-   secção 14.
+   secção 14. Listas completas: 15 a 20 opções no carro principal e 12 a 15 no
+   segundo carro, mais o TOP 5 de cada perfil com ficha.
+6. Verificar prazos de campanhas (datas "válido até") e destacá-los no topo.
 
 ### Limitações conhecidas do ambiente (26/09/2026)
 
@@ -40,7 +42,8 @@ Ficheiros relacionados:
 ## 1. Objetivo
 
 Encontrar carros com a melhor relação entre preço, especificação, risco e valor
-de mercado, para um comprador particular residente em Portugal.
+de mercado, para um comprador residente em Portugal. O carro principal é
+comprado pela ENI do Rui; o segundo carro é comprado como particular.
 
 Não é uma lista de carros. É uma lista de oportunidades justificadas com dados.
 
@@ -56,11 +59,23 @@ Ser cético. Um carro barato pode ser um problema, não uma oportunidade.
 
 ## 2. Perfis de compra
 
-### 2.1 Carro principal (novo ou seminovo)
+### 2.1 Carro principal (novo ou seminovo, pela ENI)
 
-- Preço máximo de aquisição: **€37.000**, com despesas incluídas.
-- Referências do Rui: **Deepal S05** e **Kia EV3**. Prioridade a elétricos.
-  Híbridos plug-in e híbridos entram quando a oportunidade for superior.
+- Comprador: **ENI em regime normal de IVA**.
+- Teto: **€37.000 com IVA**, com despesas incluídas.
+- Ordenar e comparar pelo **custo líquido para a ENI** (depois de deduzir o
+  IVA). Mostrar sempre as duas colunas: preço com IVA e custo líquido.
+- Motorizações aceites: **100% elétrico** e **híbrido plug-in**. Seminovos até
+  2 anos entram.
+- Dedução de IVA (ver referência fiscal, secção 2.1):
+  - elétrico: 100%, custo de aquisição até €62.500 sem IVA;
+  - plug-in: 50%, com autonomia elétrica ≥ 50 km, CO2 ≤ 80 g/km e custo até
+    €50.000 sem IVA;
+  - só com fatura com IVA. Usado em **regime de margem** não dá dedução: nesse
+    caso o custo líquido é o preço total. Perguntar sempre ao vendedor.
+- Procurar ativamente campanhas "para empresas e ENI" (preço + IVA) nos sites
+  das marcas e concessionários. Registar a data "válido até".
+- Referências do Rui: **Deepal S05** e **Kia EV3**.
 - SUV ou crossover, comprimento < 4,65 m, bagageira > 420 L.
 - Garantia de fábrica ≥ 5 anos, ou extensível para 5/7 anos.
 - Boa segurança, fiabilidade esperada, tecnologia atual, liquidez em Portugal.
@@ -69,8 +84,11 @@ Ser cético. Um carro barato pode ser um problema, não uma oportunidade.
 - Verificar sempre dimensões e bagageira oficiais. "SUV" não é sinónimo de
   boa opção.
 
-### 2.2 Segundo carro (usado)
+### 2.2 Segundo carro (usado, particular)
 
+- Comprador: particular. Sem dedução de IVA.
+- Motorizações aceites: **gasolina** e **híbrido** (não plug-in). Sem diesel
+  nem elétrico.
 - Preço-alvo: **≤ €16.000**.
 - Acima de €16.000 só com razão objetiva, sempre com a nota
   "Acima do orçamento-alvo. Incluído devido a X." Nunca acima de €20.000 sem
@@ -181,6 +199,13 @@ e explicar.
 (23%) e o vendedor deve faturar sem IVA alemão. Confirmar por escrito antes de
 pagar, senão há risco de pagar IVA duas vezes.
 
+**Importação pela ENI (carro principal).** A ENI compra sem IVA do país de
+origem, autoliquida o IVA português e deduz o mesmo valor, por isso o IVA é
+neutro. Comparar o custo líquido importado com o **preço de campanha para
+empresas em Portugal (+ IVA)**, nunca com o preço a particulares. Em
+26/09/2026, o EV3 alemão ficava só €600 a €1.900 abaixo da campanha
+portuguesa, abaixo do limiar de €2.000.
+
 Valores de referência na `2026-09-26-referencia-fiscal-importacao.md`.
 
 ---
@@ -204,7 +229,7 @@ Reflete só a qualidade da oportunidade, não preferência por marca.
 | Idade + km | 15 | Km/ano ≤ 15.000 e idade ≤ 3 anos no topo |
 | Garantia | 15 | Fabricante ≥ 5 anos restantes = 13 a 15; comercial = 5 a 9; seguro = 2 a 5 |
 | Histórico e risco | 15 | Começa em 8 se "Não confirmado"; sobe com provas, desce com red flags |
-| Custo total de aquisição | 10 | Penaliza despesas extra, importação complexa, acima do orçamento |
+| Custo total de aquisição | 10 | Carro principal: custo líquido ENI. Penaliza despesas extra, importação complexa, acima do orçamento, IVA não dedutível |
 | Liquidez/revenda | 5 | Procura em Portugal, marca, versão |
 
 Regra para carros novos ao preço de tabela: preço vs mercado = 12 e idade + km
@@ -252,13 +277,15 @@ suficiente, não chamar oportunidade.
 
 Destacar com 🚨 OPORTUNIDADE quando:
 
-1. usado ≤ €16.000 com score ≥ 75;
-2. novo ≤ €37.000 com score ≥ 75;
+1. segundo carro ≤ €16.000 com score ≥ 75;
+2. carro principal ≤ €37.000 com IVA e score ≥ 75;
 3. score ≥ 80;
 4. preço ≥ 10% abaixo do mercado;
 5. importação com vantagem líquida ≥ €2.000 ou ≥ 10%;
 6. garantia de fabricante ≥ 5 anos restantes;
-7. combinação rara de preço, equipamento e km baixos.
+7. combinação rara de preço, equipamento e km baixos;
+8. campanha para empresas/ENI que acaba nos próximos 7 dias;
+9. seminovo elétrico com "IVA dedutível" no anúncio.
 
 Em cada alerta: preço, preço normal, diferença %, motivo provável, riscos,
 urgência.
@@ -269,15 +296,18 @@ urgência.
 
 1. Data da pesquisa (DD/MM/AAAA) e limitações da pesquisa.
 2. Respostas curtas às três perguntas da secção 1.
-3. Tabela TOP 5: Score | Carro | Ano | km | Preço | Custo PT | Garantia |
-   Mercado | Diferença.
-4. Ficha por cada TOP 5: score, preços, dados, porque apareceu aqui, o que o
-   pode tornar má opção, riscos, perguntas ao vendedor, custo final, veredicto
-   (Contactar vendedor / Investigar antes de contactar / Guardar para
-   comparação / Ignorar).
-5. Outras oportunidades relevantes em tabela compacta.
-6. Alterações face ao relatório anterior (novos, descidas, removidos).
-7. Fontes.
+3. Prazos de campanha a acabar, no topo.
+4. Por perfil, tabela completa. Carro principal: Score | Carro | Estado |
+   Preço com IVA | Custo líquido ENI | Comprimento · bagageira | Garantia |
+   Face ao preço de tabela | Veredicto. Segundo carro: Score | Carro | Ano |
+   km | Preço | Mediana | Diferença | Garantia | Veredicto.
+5. Ficha por cada TOP 5 de cada perfil: score, preços, dados, porque
+   apareceu aqui, o que o pode tornar má opção, riscos, perguntas ao vendedor,
+   custo final, veredicto (Contactar vendedor / Investigar antes de contactar /
+   Guardar para comparação / Ignorar).
+6. Excluídos e porquê, numa linha.
+7. Alterações face ao relatório anterior (novos, descidas, removidos).
+8. Fontes.
 
 Separar sempre: **Facto confirmado**, **Estimativa**, **Inferência**,
 **Informação não disponível**. Nunca transformar estimativa em facto.
@@ -298,10 +328,11 @@ anos de uso + custos anuais previsíveis.
 
 ## 16. Variáveis em aberto do perfil
 
-- **Compra em nome da empresa.** Nos elétricos, o IVA é dedutível até
-  €62.500 de custo de aquisição e há campanhas só para empresas (ex.: Kia,
-  válida até 30/09/2026). Pode mudar a conta em cerca de 20%. Implica
-  enquadramento fiscal e de uso próprios. Decisão do Rui, não assumir.
+- **Decidido em 26/09/2026:** carro principal pela ENI (IVA em regime normal);
+  segundo carro como particular.
+- **A confirmar com o contabilista:** dedução do IVA, tratamento do uso
+  particular do carro da ENI, tributação autónoma (se a ENI tiver
+  contabilidade organizada) e IVA a liquidar na venda futura.
 - **Incentivo do Fundo Ambiental (€4.000 para elétricos).** Candidaturas de
   2026 fechadas (11/06 a 27/07/2026, esgotado). Exigia abate de um carro a
   combustão com mais de 10 anos. Verificar se abre nova fase.
